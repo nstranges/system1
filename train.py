@@ -39,15 +39,20 @@ def model_config():
 
 # loading the dataset only
 def data_config(tokenizer, model):
-    """Build decision items and split off a holdout set."""
+    """Build decision items and split off disjoint eval and calibration sets."""
     dataset = load_dataset("LocalLLaMA/typed-decisions", "all", split = "train")
     items, report = FastDecisionModel.build_dataset(dataset, tokenizer, model)
     tqdm.write(f"Skipped {report['skipped']} of {report['total']} decisions")
 
-    train_items, eval_items = FastDecisionModel.split_holdout(items, seed = 3407)
-    tqdm.write(f"{len(train_items)} training rows, {len(eval_items)} held out")
+    train_items, holdout_items = FastDecisionModel.split_holdout(items, seed = 3407)
+    # Split the holdout again so calibration never sees the per-epoch eval rows
+    eval_items, cal_items = FastDecisionModel.split_holdout(holdout_items, seed = 3407)
+    tqdm.write(
+        f"{len(train_items)} training rows, {len(eval_items)} eval rows, "
+        f"{len(cal_items)} calibration rows"
+    )
 
-    return train_items, eval_items
+    return train_items, eval_items, cal_items
 
 # Calibrate on the holdout set
 def calibrate_model(model, tokenizer, cal_items):
@@ -110,7 +115,7 @@ def train():
         overall.update(1)
 
         overall.set_postfix_str(STAGES[1])
-        train_items, eval_items = data_config(tokenizer, model)
+        train_items, eval_items, cal_items = data_config(tokenizer, model)
         overall.update(1)
 
         overall.set_postfix_str(STAGES[2])
@@ -118,7 +123,7 @@ def train():
         overall.update(1)
 
         overall.set_postfix_str(STAGES[3])
-        cal_metrics = calibrate_model(model, tokenizer, eval_items)
+        cal_metrics = calibrate_model(model, tokenizer, cal_items)
         overall.update(1)
 
     save_adapter(model, tokenizer, "/outputs/lora")
