@@ -494,6 +494,29 @@ FastAPI backend (one Modal app, web endpoint; verifies Clerk sessions)
 - **Sign-in:** Clerk on both the frontend and the backend. API calls to the gateway use project keys instead.
 - **Repo layout:** `app/backend/`, `app/frontend/` and `.claude/skills/system1-onboard/`. The phase 1 scripts stay where they are. Coordinate with Nicholas before touching `train.py`.
 
+## Contracts and modularity
+
+Nicholas may not be reachable this week, and the training approach will probably change as we learn. So the product talks to the model side only through four small contracts, each with a fake for development and tests. Changing how sys1 is trained or served means writing or swapping one adapter, not touching the app.
+
+| Contract | Shape | Where it comes from today | Fake in V1 |
+|---|---|---|---|
+| **Dataset rows** | `id`, `split`, `state`, `questions` (Jev's request shape) and `gold`, plus metadata (difficulty, rule ID, option order) | Phase 1's parquet, written by `build_dataset.py` | The Tallyfern provisional parquet |
+| **Decision provider** | `decide(state, questions, model)` returns answers with probabilities, the model version, latency and usage | Jev's request and response shape, which `laya-serve` and Unsloth Studio also speak | A deterministic fake provider |
+| **Trainer** | `start(dataset, config)` returns a job id. `status(job_id)` and `result(job_id)` return an adapter reference and metrics | `train.py` on Modal. This is Nicholas's code: we wrap it and don't edit it without him | A fake trainer that finishes with fixed metrics |
+| **Evaluation results** | Per-answer records `{id, question, pred, gold, confidence, p_gold, correct}` plus a summary file | The output `eval_common.py` writes to `results/` | Fixture files |
+
+- **Ports and adapters.** The core (projects, rules engine, routing, registry, decision log) imports no vendor SDK. Adapters for Anthropic, TypeSafe, the sys1 server, Modal, Clerk and storage sit at the edge, and configuration picks which one runs. Every adapter has a fake.
+- **sys1 by URL.** The default sys1 adapter calls any Jev-compatible endpoint, set by a base URL and a model id. If Nicholas's server ends up with a different shape, we add one adapter class that maps it.
+- **If Nicholas can't serve sys1 in time,** Block C serves it with `laya-serve` or Unsloth Studio on Modal, behind the same adapter. It reuses the adapter-loading code in `eval_lora.py`. `train.py` stays untouched unless Nicholas agrees.
+- **Engineering basics:**
+  - typed models at every boundary: Pydantic in the backend, and TypeScript types generated from the backend's OpenAPI schema
+  - small modules with one job each
+  - configuration from environment variables
+  - linting and formatting
+  - unit tests on the core, plus contract tests that run each adapter and its fake against the same cases
+  - one end-to-end click-through
+- **Design changes are expected.** When the training approach changes, the contracts absorb it. If a change has to cross a contract, update the contract and its tests first.
+
 ## Roadmap
 
 | Version | What | When |
@@ -518,7 +541,7 @@ The full running list, including maybe items and things to check, is in [docs/ba
 | Tier | Piece | Owner |
 |---|---|---|
 | **Must** | M1 Gateway: Jev lane with rules attached, sys1 lane for the flagship project, decision log, project keys | Thomas |
-| | M2 sys1 served on Modal behind the Jev-compatible shape | Nicholas |
+| | M2 sys1 served on Modal behind the Jev-compatible shape | Nicholas, or Thomas with `laya-serve` or Unsloth Studio if Nicholas isn't free |
 | | M3 Flagship playground and report card, built from phase 1's results | Thomas |
 | | M4 Gallery, workspace and agent for stages 1–3 (use case, rules, try on Jev) | Thomas |
 | | M5 Use page: key, model picker, snippets | Thomas |
@@ -551,17 +574,17 @@ Any step that isn't live is labelled as such in the video.
 
 ## Build approach: blocks and gates
 
-Claude builds in blocks on a feature branch in its own worktree, and every task has an automated check. Thomas comes in only at gates, where a person has to decide something or an account is needed. Each gate takes about 10–20 minutes and comes with a short report and screenshots. This is the high-level plan. The detailed implementation plan gets written with Thomas in a separate session before Block A starts.
+Claude builds in blocks on the `product-design` branch, checked out in its own worktree so phase 1 work on `main` isn't disturbed. Every task has an automated check. Thomas comes in only at gates, where a person has to decide something or an account is needed. Each gate takes about 10–20 minutes and comes with a short report and screenshots. This is the high-level plan. The detailed implementation plan gets written with Thomas in a separate session before Block A starts.
 
 | Gate | When | What Thomas does | Time |
 |---|---|---|---|
 | **G0 Kickoff** | Wed Oct 21, evening | Approve this spec. Add the Anthropic and Clerk keys to `.env`. Confirm Modal sign-in works | 20 min |
-| **G1 Plan** | Thu Oct 22, morning | Write and approve the implementation plan with Claude. Agree the sys1 serving interface with Nicholas (request and response shape, adapter id) | 30 min, plus 10 min with Nicholas |
+| **G1 Plan** | Thu Oct 22, morning | Write and approve the implementation plan with Claude. The plan pins down the four contracts (see "Contracts and modularity"), and Nicholas reviews them when he's available | 30–40 min |
 | Block A (automatic) | Thu | Scaffold, store, Clerk sign-in, gateway Jev lane, gallery, playground on Jev | none |
 | **G2 Click-through** | Thu evening | Click through the app locally and fix wording | 15 min |
 | Block B (automatic) | Thu–Fri | Agent stages 1–3, confirmation cards, Use page, feedback and inbox, skill v1 | none |
 | **G3 Agent check** | Fri midday | One real onboarding conversation. Note anything that feels off | 15 min |
-| **G4 Decision gate** | Fri | Phase 1 results are in, so pick the demo story. Nicholas's sys1 lane is plugged in | 20 min |
+| **G4 Decision gate** | Fri | Phase 1 results are in, so pick the demo story. The real sys1 server is plugged in behind the provider adapter, whoever ends up serving it | 20 min |
 | Block C (automatic) | Fri–Sat | Real report card, sys1 and `auto` lanes, deploy to Modal, Should-tier items, then V2 if there's time | none |
 | **G5 Rehearse** | Sat Oct 24 | Run the demo on the live URL. Record the video | 1–2 h |
 | **G6 Submit** | Sun Oct 25 | Review the Devpost write-up Claude drafted, then submit | 30 min |
@@ -569,7 +592,7 @@ Claude builds in blocks on a feature branch in its own worktree, and every task 
 **What lets it run without Thomas:**
 - **Stand-ins for every outside service** (Claude, Jev, Modal, sys1, Clerk), so tests are free and deterministic. Real calls happen only in one tagged smoke test with a spending cap.
 - **One `make verify`.** It runs the unit tests, the frontend build, an automated browser click-through and screenshots. A block isn't done until it passes, and its output is the gate report.
-- **A stub sys1 server** that matches the interface agreed with Nicholas, so the app never waits on him. Swapping in the real server is a configuration change.
+- **A fake sys1 provider** that speaks the decision-provider contract, so the app never waits on the real server. Swapping in the real one is a configuration change, or one adapter class if its shape differs.
 - **A progress note at the end of each block** in the progress ledger, so Thomas can catch up in two minutes.
 
 **Commits:** Claude commits freely on the product branch with plain messages and no Claude attribution lines. Claude never commits to `main`. Thomas merges after reviewing at a gate.
@@ -602,12 +625,12 @@ Claude builds in blocks on a feature branch in its own worktree, and every task 
 | Day | Thomas | Nicholas |
 |---|---|---|
 | Wed Oct 21 | Run the read-back and build the dataset (phase 1). G0 | Generalise `train.py` and chase the LoRA gap (phase 1) |
-| Thu Oct 22 | G1. Jev benchmark runs and the results report (phase 1). Block A, then G2 | Train sys1 (seeds and the learning curve). Base Laya eval. Agree the serving interface |
+| Thu Oct 22 | G1. Jev benchmark runs and the results report (phase 1). Block A, then G2 | Train sys1 (seeds and the learning curve). Base Laya eval. Review the contracts when available |
 | Fri Oct 23 | Decision gate (G4). Block B, then G3 | Serve sys1 on Modal. Gateway sys1 lane. S5 test |
 | Sat Oct 24 | Block C. Deploy, rehearse and record (G5) | Phase 2 retrain if the gate passed. Keep the endpoint warm |
 | Sun Oct 25 | Buffer. Devpost write-up (disclose earlier Modal and Unsloth experiments, templates, and AI tools used). Submit by 23:59 ET (G6) | Buffer |
 
-Thomas decided to start the app on Thursday, before the decision gate, and to build it on the side with minimal hands-on time. The parts started early (gateway, Jev lane, agent, gallery) are useful whatever the benchmark shows.
+Thomas decided to start the app on Thursday, before the decision gate, and to build it on the side with minimal hands-on time. He won't hear from Nicholas for now, so the build doesn't wait on him. Everything on Nicholas's side sits behind the contracts, with fakes until the real pieces arrive. The parts started early (gateway, Jev lane, agent, gallery) are useful whatever the benchmark shows.
 
 ## Business story (for Devpost and the pitch)
 
@@ -667,6 +690,7 @@ Thomas decided to start the app on Thursday, before the decision gate, and to bu
 - Clerk sign-in in V1. Era by Eon in V2. SurrealDB Agent Memory in V3 if there's time.
 - The Claude connector and MCP server move to Future.
 - Build in blocks with gates, with the detailed implementation plan written with Thomas first.
+- Build now on the `product-design` branch, without waiting for Nicholas. Keep the code modular and clean, and keep the model side easy to plug in and to revise as training changes.
 
 **Claude's calls**, open to change:
 
@@ -680,6 +704,7 @@ Thomas decided to start the app on Thursday, before the decision gate, and to bu
 - One playbook shared by the skill and the website agent.
 - A single Modal app and SQLite.
 - The AI-engineering decisions: one question builder, the registry check before going live, mixing old examples into retrains, lineage, the rule-ID question (S5).
+- The four contracts (dataset rows, decision provider, trainer, evaluation results), with ports and adapters, and a fake for every outside service.
 - Refund approval as the live demo's new project.
 - The Must / Should / Could tiers, the gates and the timeline.
 - A video of about 3 minutes, with a section on how it works.

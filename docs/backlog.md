@@ -42,6 +42,8 @@ Last updated: Oct 21, 2026. The current plan lives in the [product design](super
 
 | Item | Why it matters | Owner | Added |
 |---|---|---|---|
+| Nicholas reviews the four contracts | Dataset rows, decision provider, trainer and evaluation results are defined without him for now (product spec, "Contracts and modularity") | Nicholas | Oct 21 |
+| Confirm the sys1 serving contract with Nicholas | The app assumes Jev's request and response shape, behind the decision-provider adapter. If his server differs, we add one adapter class | Thomas | Oct 21 |
 | Email TypeSafe about the project | §2.3(b) "competing product" is an open exposure. Get their written OK before anything commercial | Thomas | Oct 21 |
 | Laya's real input window (512 or 2,048) | Sets how long tickets and option descriptions can be | Nicholas | Oct 20 |
 | Why our LoRA scores 0.658 against about 0.77 published | Needs explaining before we rely on the training pipeline | Nicholas | Oct 20 |
