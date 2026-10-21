@@ -6,9 +6,16 @@ Build North hackathon entry by Thomas Michalski and Nicholas Stranges. Submissio
 
 A small fine-tuned decision model ("sys1") beats Jev, TypeSafe's general decision model, on one team's own decisions. sys1 is a LoRA on Laya, trained with Unsloth on Modal. It should match Jev's latency and cost, and sit behind a Jev-compatible API (`POST /v1/systemone`).
 
-## Current phase: benchmark (decided 2026-10-20)
+## Hackathon
 
-Prove or disprove the bet before building any product.
+- **Page:** [build-north.devpost.com](https://build-north.devpost.com/). Hosts include Georgian (an investor), Anthropic, Clerk, Eon and SurrealDB. The judges are two people from Georgian, an AI-engineering lead and a Google startups engineer.
+- **Judging:** innovation, real-world impact (a specific user, a clear value-add, a path to production), UI and design, tech and deployment (deployed and serving), and security and ethics.
+- **Submission:** a public repo, a live link, a demo video of 4 minutes or less, a write-up, the team, and a disclosure of prior work, templates and AI tools used.
+- **Demo Day:** the top 10 are announced on Oct 26 and demo in person in Toronto on Oct 29. At least one of us must attend.
+
+## Current phase: benchmark, with the product built alongside (updated 2026-10-21)
+
+The benchmark still decides the pitch. On 2026-10-21 Thomas decided to start building the product on Thu Oct 22, alongside the benchmark, so the demo is ready whichever way the results go. Phase 1 work comes first every day.
 
 - **Use case:** support-ticket triage.
 - **Data:** about 500 synthetic tickets, plus the company policy, written by Claude inside an agent session rather than through the Anthropic API (API-based generation is deferred). Gold labels are computed by applying the written policy rules to each ticket's sampled facts, not from Claude's judgment. No hand-labelling.
@@ -18,9 +25,19 @@ Prove or disprove the bet before building any product.
   - Jev with the policy
   - base Laya
   - sys1
-- **Deferred until results are in:** the confidence-based review queue, the retraining loop, user-built datasets, the web app and MCP.
+- **Product:** a B2B website for the support-ops lead at a 20–200 person SaaS company. It has:
+  - an onboarding agent
+  - a Jev-compatible gateway
+  - sys1 served live
+  - Clerk sign-in
 
-The full plan, covering phase 1 in detail and later phases in outline, is in [docs/superpowers/specs/2026-10-20-system1-plan-design.md](docs/superpowers/specs/2026-10-20-system1-plan-design.md). The step-by-step phase 1 build plan, with tasks, owners and tests, is in [docs/superpowers/plans/2026-10-20-phase1-benchmark.md](docs/superpowers/plans/2026-10-20-phase1-benchmark.md).
+  It's specified in [docs/superpowers/specs/2026-10-21-system1-product-design.md](docs/superpowers/specs/2026-10-21-system1-product-design.md). The detailed implementation plan gets written with Thomas before any product code. The build runs in blocks with gates where Thomas checks in.
+- **Roadmap after the hackathon product:**
+  - V2: Era by Eon, to test the agent
+  - V3: SurrealDB Agent Memory, if there's time
+  - Future: the Claude connector and MCP server
+
+The phase plan, with phase 1 in detail, is in [docs/superpowers/specs/2026-10-20-system1-plan-design.md](docs/superpowers/specs/2026-10-20-system1-plan-design.md). The step-by-step phase 1 build plan, with tasks, owners and tests, is in [docs/superpowers/plans/2026-10-20-phase1-benchmark.md](docs/superpowers/plans/2026-10-20-phase1-benchmark.md).
 
 ## Phase 1 data pipeline
 
@@ -48,8 +65,9 @@ The full plan, covering phase 1 in detail and later phases in outline, is in [do
 - Keep confidential and real customer data out of the repo, as the hackathon rules require.
 - Pin Jev to a versioned id (`jev-1.13.0`) for any result we report, and log the `model` field from each response.
 - Compute calibration from `probabilities`, not `confidence`, because Jev and Laya define `confidence` differently.
+- Never use Jev's answers as training labels, or to choose what gets labelled. TypeSafe's customer agreement (§2.3b) forbids it, and it would cap sys1 at Jev's quality.
 - Proposed ownership: Nicholas leads the engine (training, calibration, scoring), and Thomas leads the app, the loop, the endpoint and the video. Coordinate before restructuring `train.py`.
-- Disclose on Devpost the Modal/Unsloth experiments from before the build week and any templates used.
+- Disclose on Devpost the Modal/Unsloth experiments from before the build week, any templates used, and the AI tools used (including Claude Code).
 
 ## Environment and commands
 

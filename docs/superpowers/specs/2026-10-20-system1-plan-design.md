@@ -14,9 +14,9 @@ We prove or disprove that on a benchmark first. The product pieces (asking a per
 |---|---|---|
 | **1. Benchmark** | Does sys1 beat Jev on a company-specific triage task? | Now |
 | 2. Learn from a person | Does asking a person about ~20 uncertain tickets make sys1 better? | Phase 1 is promising (see the decision gate) |
-| 3. Product surface | Can someone use it: a Jev-compatible endpoint and a minimal web app? | After phase 1. It can run alongside phase 2 |
+| 3. Product | Can a real user use it? The B2B website, gateway and onboarding agent, specified in the [product design](2026-10-21-system1-product-design.md) | Thu Oct 22, alongside phase 1 (decided Oct 21) |
 | 4. Scale and stretch | API-generated data at scale, MCP, sponsor integrations | Only if time allows |
-| Submission | 2-minute video, Devpost write-up, links | Always, by Oct 25, 23:59 ET |
+| Submission | Demo video (4 minutes or less), Devpost write-up, links | Always, by Oct 25, 23:59 ET |
 
 Phase 1 is specified in detail below. Phases 2–4 are outlined only and get their own design when we reach them.
 
@@ -164,18 +164,13 @@ Output: `docs/results/phase1-benchmark.md`, with the table, a learning-curve cha
   - Each answer is expanded into variants. Whether that uses the Anthropic API gets revisited here.
   - sys1 retrains.
   - Headline chart: test accuracy after 0, 20 and 50 answers, on the same frozen test set.
-- **Phase 3, product surface:**
-  - Serve sys1 behind a Jev-compatible endpoint (`POST /v1/systemone`, via `laya-serve` or Unsloth Studio on Modal), kept warm during judging.
-  - A minimal web app: upload a policy and tickets, see benchmark results, and (if phase 2 lands) work through the review queue.
-  - Batch CSV labelling for non-technical users.
+- **Phase 3, product:** replaced by the [product design](2026-10-21-system1-product-design.md) (Oct 21).
 - **Phase 4, scale and stretch:**
   - Anthropic API generation for thousands of tickets
   - Qwen3.5-2B as the base model
-  - an MCP `decide` tool
-  - Clerk sign-in and a SurrealDB decision log
-  - realistic data from Era by Eon
+  - Clerk, Era by Eon, SurrealDB Agent Memory and MCP have moved to the product design's tiers and roadmap.
 - **Submission:**
-  - the 2-minute video
+  - the demo video (4 minutes or less)
   - the Devpost write-up, disclosing the Modal/Unsloth experiments from before the build week and any templates used
   - the public repo, and a live endpoint if phase 3 exists
 
