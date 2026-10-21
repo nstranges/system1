@@ -78,5 +78,6 @@ The phase plan, with phase 1 in detail, is in [docs/superpowers/specs/2026-10-20
 
 ## Reference
 
+- [docs/backlog.md](docs/backlog.md): the running catalog of maybe items, future ideas, things to check, and ideas we decided against. Add new parked ideas there, with the date, as they come up.
 - [docs/reference/jev-api.md](docs/reference/jev-api.md): Jev's request and response format, limits, pricing and known weaknesses.
 - [docs/reference/laya-unsloth.md](docs/reference/laya-unsloth.md): Laya facts and limits, the Unsloth decision-training API, the dataset format and the current state of `train.py`.

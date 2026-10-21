@@ -503,6 +503,8 @@ FastAPI backend (one Modal app, web endpoint; verifies Clerk sessions)
 | **V3: SurrealDB Agent Memory** | The agent remembers a user's workflows, past projects and preferences across sessions, so the second project starts from what it already knows. Qualifies for the SurrealDB prize | After V2, if there's time |
 | **Future** | See below | After the hackathon |
 
+The full running list, including maybe items and things to check, is in [docs/backlog.md](../../backlog.md).
+
 **Future:**
 - **The Claude connector and MCP server (journey E).**
   - system1 tools (`suggest_use_cases`, `fit_check`, `create_project`, `try_decision`, `decide`, `feedback`) callable from Claude.
@@ -531,7 +533,7 @@ FastAPI backend (one Modal app, web endpoint; verifies Clerk sessions)
 | | S5 Answers that cite the rule (rule-ID question), if queue accuracy holds | Nicholas |
 | **Could** | C1 Train a new project's sys1 from the UI · C3 One-off CSV batch (journey D) · C4 Bring-your-history CSV (journey C) | Whoever is free |
 
-Era by Eon, SurrealDB Agent Memory and the MCP server live in the Roadmap, not in this table.
+Era by Eon, SurrealDB Agent Memory and the MCP server live in the Roadmap, not in this table. The maybe items (ideas to revisit but not planned) and every future idea are tracked in the running catalog, [docs/backlog.md](../../backlog.md).
 
 If phase 1 slips, the Must list shrinks to M1, M2, M3, M5, M8 and M9: the benchmark story with a live endpoint and sign-in.
 
