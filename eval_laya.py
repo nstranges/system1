@@ -17,7 +17,7 @@ def model_config():
     """Load the untrained base model."""
     model, tokenizer = FastDecisionModel.from_pretrained(
         model_name = "convaiinnovations/laya",
-        max_seq_length = 2048,
+        max_seq_length = 512,
         load_in_4bit = False,
     )
     FastDecisionModel.for_inference(model)

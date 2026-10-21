@@ -1,4 +1,5 @@
 import json
+from pathlib import Path
 import modal
 
 app = modal.App("laya-lora-eval")
@@ -15,31 +16,42 @@ with image.imports():
     from unsloth import FastDecisionModel
     from datasets import load_dataset
 
-# Rebuild the exact train.py model so the saved weights line up by name
+# Rebuild the train.py model (same LoRA settings) so the saved weights line up by name
 def model_config():
     """Load Laya, attach LoRA adapters, then restore the trained weights."""
     model, tokenizer = FastDecisionModel.from_pretrained(
         model_name = "convaiinnovations/laya",
-        max_seq_length = 2048,
+        max_seq_length = 512,
         load_in_4bit = False,
     )
 
+    # Read the LoRA rank from the saved weights so any checkpoint loads (alpha = r, as in train.py)
+    trainable = torch.load("/lora/trainable.pt", map_location = "cpu")
+    rank = next(v.shape[0] for k, v in trainable.items() if "lora_A" in k)
+
     model = FastDecisionModel.get_peft_model(
         model,
-        r = 16,
-        lora_alpha = 16,
+        r = rank,
+        lora_alpha = rank,
         lora_dropout = 0,
         use_gradient_checkpointing = "unsloth",
         random_state = 3407,
     )
 
     # train.py saved raw trainable weights (LoRA + decision head) to lora/trainable.pt
-    trainable = torch.load("/lora/trainable.pt", map_location = "cpu")
     result = model.load_state_dict(trainable, strict = False)
     unexpected = set(result.unexpected_keys)
     if unexpected:
         raise RuntimeError(f"{len(unexpected)} saved weights did not match the model, e.g. {sorted(unexpected)[:3]}")
-    tqdm.write(f"Restored {len(trainable)} trained tensors from lora/trainable.pt")
+    tqdm.write(f"Restored {len(trainable)} trained tensors (LoRA rank {rank}) from lora/trainable.pt")
+
+    # calibrate() stores its temperatures in decision_config, which trainable.pt doesn't hold
+    calibration_file = Path("/lora/calibration.json")
+    if calibration_file.exists():
+        model.decision_config.update(json.loads(calibration_file.read_text()))
+        tqdm.write(f"Applied calibration: {json.loads(calibration_file.read_text())}")
+    else:
+        tqdm.write("WARNING: lora/calibration.json not found, evaluating uncalibrated (temperature 1.0)")
 
     FastDecisionModel.for_inference(model)
 

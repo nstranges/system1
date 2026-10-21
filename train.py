@@ -1,3 +1,4 @@
+import json
 from pathlib import Path
 import modal
 
@@ -15,6 +16,8 @@ with image.imports():
     from datasets import load_dataset
     from transformers import TrainingArguments
 
+# decision_config entries that calibrate() writes
+CALIBRATION_KEYS = ["temperature", "temperature_by_options", "head_temperature"]
 STAGES = ["Loading model", "Preparing data", "Training", "Calibrating"]
 
 # Init the model type and PEFT
@@ -22,14 +25,14 @@ def model_config():
     """Load the base model and attach LoRA adapters."""
     model, tokenizer = FastDecisionModel.from_pretrained(
         model_name = "convaiinnovations/laya",
-        max_seq_length = 2048,
+        max_seq_length = 512,
         load_in_4bit = False,
     )
 
     model = FastDecisionModel.get_peft_model(
         model,
-        r = 16,
-        lora_alpha = 16,
+        r = 32,
+        lora_alpha = 32,
         lora_dropout = 0,
         use_gradient_checkpointing = "unsloth",
         random_state = 3407,
@@ -44,9 +47,15 @@ def data_config(tokenizer, model):
     items, report = FastDecisionModel.build_dataset(dataset, tokenizer, model)
     tqdm.write(f"Skipped {report['skipped']} of {report['total']} decisions")
 
-    train_items, holdout_items = FastDecisionModel.split_holdout(items, seed = 3407)
-    # Split the holdout again so calibration never sees the per-epoch eval rows
-    eval_items, cal_items = FastDecisionModel.split_holdout(holdout_items, seed = 3407)
+    # split_holdout defaults to 10% of decisions, capped at 400, so raise both
+    # limits: 20% held out, then half of that for calibration so it never sees the eval rows
+    no_cap = 10**9
+    train_items, holdout_items = FastDecisionModel.split_holdout(
+        items, seed = 3407, fraction = 0.2, max_items = no_cap
+    )
+    eval_items, cal_items = FastDecisionModel.split_holdout(
+        holdout_items, seed = 3407, fraction = 0.5, max_items = no_cap
+    )
     tqdm.write(
         f"{len(train_items)} training rows, {len(eval_items)} eval rows, "
         f"{len(cal_items)} calibration rows"
@@ -74,9 +83,9 @@ def start_training(model, tokenizer, train_items, eval_items):
             per_device_train_batch_size = 16,
             gradient_accumulation_steps = 1, # Use GA to mimic batch size!
             warmup_steps = 10,
-            num_train_epochs = 2, # Set this for 1 full training run.
+            num_train_epochs = 3, # Set this for 1 full training run.
             #max_steps = 240,
-            learning_rate = 5e-5,
+            learning_rate = 2e-4,
             lr_scheduler_type = "cosine",
             weight_decay = 0.01,
             bf16 = is_bfloat16_supported(),
@@ -105,6 +114,11 @@ def save_adapter(model, tokenizer, out_dir):
         torch.save(trainable, out / "trainable.pt")
 
     tokenizer.save_pretrained(str(out))
+
+    # The fitted temperatures live in decision_config, not in the weights, so save them too
+    config = getattr(model, "decision_config", {})
+    calibration = {k: config[k] for k in CALIBRATION_KEYS if k in config}
+    (out / "calibration.json").write_text(json.dumps(calibration, indent = 2))
 
 @app.function(image = image, gpu = "L4", timeout = 60 * 60 * 4, volumes = {"/outputs": vol})
 def train():
