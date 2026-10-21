@@ -1,0 +1,196 @@
+{
+  "instructions": {
+    "terse": "Which team should handle this support ticket?",
+    "policy": {
+      "question": "Which Tallyfern support queue should handle this ticket? Check the rules in precedence order and choose the first queue whose rule matches.",
+      "precedence": [
+        "1. Any sign of account compromise, fraud or unauthorized activity, anywhere in the ticket: trust_safety.",
+        "2. Any report that Tallyfern is down or broadly failing, anywhere in the ticket: incident_response.",
+        "3. Any mention of a chargeback or a bank or card dispute, anywhere in the ticket: billing_disputes.",
+        "4. Otherwise, route by the customer's main request using each queue's covers and excludes.",
+        "5. If the ticket does not state a fact a rule needs (amount, timing, API version), treat that condition as not met."
+      ],
+      "account_fields": "state.customer holds the CRM fields: plan, region, seats and sso_enabled."
+    }
+  },
+  "queues": {
+    "trust_safety": {
+      "name": "Trust & Safety",
+      "terse": "Account compromise, fraud, unauthorized activity",
+      "policy": {
+        "covers": [
+          "Suspected or confirmed account compromise: someone else logged in, password or 2FA changed without the customer",
+          "Payout bank details changed without the customer's knowledge",
+          "Invoices or payments the customer did not create",
+          "Phishing emails or sites imitating Tallyfern"
+        ],
+        "excludes": [
+          "Ordinary sign-in problems with no sign of unauthorized activity (account_access or enterprise_identity)"
+        ]
+      }
+    },
+    "incident_response": {
+      "name": "Incident Response",
+      "terse": "Platform outages affecting many users",
+      "policy": {
+        "covers": [
+          "Tallyfern itself down or broadly failing: dashboard not loading, checkout or payments failing across the board, every API request erroring",
+          "Applies even when the outage is mentioned alongside another request"
+        ],
+        "excludes": [
+          "A single failed invoice, payment or API call (route by the main request)",
+          "Anything with signs of account compromise (trust_safety)"
+        ]
+      }
+    },
+    "billing_disputes": {
+      "name": "Billing Disputes",
+      "terse": "Chargebacks and bank disputes",
+      "policy": {
+        "covers": [
+          "A chargeback or dispute filed with a bank or card issuer, by the customer against a Tallyfern charge or by one of their payers",
+          "Applies even when the main request is a refund"
+        ],
+        "excludes": [
+          "Refund requests with no chargeback or dispute filed (billing_refunds or finance_review)"
+        ]
+      }
+    },
+    "finance_review": {
+      "name": "Finance Review",
+      "terse": "Large or late refund requests",
+      "policy": {
+        "covers": [
+          "Refund of a Tallyfern charge where the amount is more than $500",
+          "Refund of a Tallyfern charge made more than 30 days before the ticket"
+        ],
+        "excludes": [
+          "Refunds of $500 or less charged 30 days ago or less (billing_refunds)",
+          "Refunds where amount and timing are not stated (billing_refunds)",
+          "Any refund that also mentions a chargeback or bank dispute (billing_disputes)"
+        ]
+      }
+    },
+    "billing_refunds": {
+      "name": "Billing Refunds",
+      "terse": "Standard refund requests",
+      "policy": {
+        "covers": [
+          "Refunds of $500 or less, charged 30 days ago or less (exactly $500 and exactly 30 days count as standard)",
+          "Refund requests that do not state the amount or the timing"
+        ],
+        "excludes": [
+          "Refunds over $500 or charged more than 30 days ago (finance_review)",
+          "Any refund that also mentions a chargeback or bank dispute (billing_disputes)"
+        ]
+      }
+    },
+    "payments_ops": {
+      "name": "Payments Operations",
+      "terse": "Failed, late or short payouts",
+      "policy": {
+        "covers": [
+          "The customer's own payout to their bank account failed, is late, or arrived short"
+        ],
+        "excludes": [
+          "Payout bank details changed without the customer's knowledge (trust_safety)",
+          "Refunds of Tallyfern charges (billing_refunds or finance_review)"
+        ]
+      }
+    },
+    "legacy_api": {
+      "name": "Legacy API",
+      "terse": "Errors on the v1 API",
+      "policy": {
+        "covers": [
+          "API errors from an integration that uses the v1 API"
+        ],
+        "excludes": [
+          "API errors on v2, or where the version is not stated (api_support)",
+          "Every request failing because Tallyfern is down (incident_response)"
+        ]
+      }
+    },
+    "api_support": {
+      "name": "API Support",
+      "terse": "API errors and integration issues",
+      "policy": {
+        "covers": [
+          "API errors on the v2 API",
+          "API errors where the version is not stated"
+        ],
+        "excludes": [
+          "API errors on the v1 API (legacy_api)",
+          "Every request failing because Tallyfern is down (incident_response)"
+        ]
+      }
+    },
+    "enterprise_identity": {
+      "name": "Enterprise Identity",
+      "terse": "Enterprise single sign-on login problems",
+      "policy": {
+        "covers": [
+          "Sign-in problems on accounts with plan enterprise and sso_enabled true"
+        ],
+        "excludes": [
+          "Sign-in problems on any other account, including enterprise accounts without SSO (account_access)",
+          "Sign-in problems with signs of unauthorized activity (trust_safety)"
+        ]
+      }
+    },
+    "account_access": {
+      "name": "Account Access",
+      "terse": "Login, password and 2FA problems",
+      "policy": {
+        "covers": [
+          "Forgotten passwords, 2FA codes not arriving, locked accounts",
+          "Sign-in problems on any account that is not enterprise with SSO enabled"
+        ],
+        "excludes": [
+          "Enterprise accounts with sso_enabled true (enterprise_identity)",
+          "Sign-in problems with signs of unauthorized activity (trust_safety)"
+        ]
+      }
+    },
+    "privacy_legal": {
+      "name": "Privacy & Legal",
+      "terse": "EU/UK data access and deletion",
+      "policy": {
+        "covers": [
+          "Requests for a copy of the customer's data, or for deletion, when the account region is eu or uk"
+        ],
+        "excludes": [
+          "The same requests from any other region (general_support)"
+        ]
+      }
+    },
+    "sales": {
+      "name": "Sales",
+      "terse": "Plan changes for larger accounts",
+      "policy": {
+        "covers": [
+          "Plan or seat changes when the account has 50 or more seats",
+          "Plan or seat changes on enterprise accounts"
+        ],
+        "excludes": [
+          "Plan or seat changes on non-enterprise accounts with fewer than 50 seats (general_support)"
+        ]
+      }
+    },
+    "general_support": {
+      "name": "General Support",
+      "terse": "General billing and how-to questions",
+      "policy": {
+        "covers": [
+          "Billing questions: how an invoice was calculated, updating a card, tax fields",
+          "How-to questions about using Tallyfern",
+          "Data access or deletion requests outside the EU and UK",
+          "Plan or seat changes on non-enterprise accounts with fewer than 50 seats"
+        ],
+        "excludes": [
+          "Anything a more specific queue covers"
+        ]
+      }
+    }
+  }
+}

@@ -54,13 +54,33 @@ Researched 2026-10-20 from the Laya model card and Unsloth's docs. Laya is the b
   - `laya-serve`.
   - Studio's `confidence` uses a different formula from Jev's, so threshold on `probabilities` instead.
 
-## train.py today (commit f8ca43c)
+## Training and eval code today (as of commit b11a3ae)
 
-- **What it does:** a Modal app named `laya-training`, running on an L4 GPU with the volume `laya-outputs`. It fine-tunes a LoRA on Laya using `LocalLLaMA/typed-decisions` (subset `all`), calibrates, saves the adapter, and downloads it to `./lora`, which is gitignored. Run it with `modal run train.py`.
-- **Status:** a smoke test of the training stack. Gaps for phase 1:
-  - **Hardcoded dataset.** It trains on a public dataset that we can't use for evaluation, because it's in Unsloth's training mix.
-  - **One holdout for two jobs.** `split_holdout` produces a single set used for both evaluation and calibration. Phase 1 needs separate train, calibration and test splits.
-  - **No per-case predictions** with probabilities, and **no baselines.**
+All of it currently runs on `LocalLLaMA/typed-decisions` (subset `all`). Commands are in the `Makefile` (`make help`).
+
+- **`train.py`** (`make train`):
+  - Runs as the Modal app `laya-training` on an L4 GPU, with the volume `laya-outputs`.
+  - Fine-tunes a LoRA on Laya, splitting the data into separate train, per-epoch eval and calibration sets.
+  - Saves the adapter and downloads it to `./lora`, which is gitignored. When `save_pretrained` isn't available, it falls back to raw trainable weights in `lora/trainable.pt`.
+  - Settings: lr 5e-5, batch 16, 2 epochs, LoRA rank 16.
+- **`eval_laya.py` and `eval_lora.py`** (`make eval-laya`, `make eval-lora`): run on Modal and predict the test split with `FastDecisionModel.predict`. `eval_lora.py` rebuilds the `train.py` model and loads `lora/trainable.pt`.
+- **`eval_jev.py`** (`make eval-jev`): runs locally and calls `https://api.typesafe.ai/v1/systemone` with `TYPESAFE_API_KEY`, using 8 threads with retries on 429 and 5xx errors.
+- **`eval_common.py`:** shared scoring. Every answer is reduced to `{id, question, type, pred, gold, confidence, p_gold, correct}`. It reports accuracy, ECE (10 bins) and NLL, using the top *probability* as confidence, which follows our "use probabilities, not `confidence`" rule. Output goes to `results/<name>_{predictions.jsonl,summary.json}`.
+- **Verified by these runs:**
+  - `predict` returns per-option probabilities.
+  - The TypeSafe-direct route works, and `jev-latest` resolved to `jev-1.13.0`.
+- **First results** (typed-decisions test split, 400 rows and 2,000 decisions):
+
+  | Model | Accuracy | ECE |
+  |---|---|---|
+  | Jev | 0.752 | 0.036 |
+  | Laya + our LoRA | 0.658 | 0.166 |
+  | Untrained Laya | 0.360 | 0.176 |
+
+  - ⚠ Our LoRA is about 10 points below the published fine-tuned Laya numbers (0.766 on the model card, about 77% in Unsloth's table). That's worth explaining before phase 1 training relies on the same pipeline.
+  - Unconfirmed suspects: the learning rate (5e-5, against Unsloth's recommended 2e-4), too few epochs, or something lost in the `trainable.pt` save and load path.
+  - On this data Jev's calibration error is low (0.036), unlike the model card's 0.246.
+- **Gaps for phase 1:** the dataset is hardcoded, there are no terse and policy question variants, and the Jev model isn't pinned by default. The Makefile passes `--model $JEV_MODEL`.
 
 ## Sources
 

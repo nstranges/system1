@@ -20,7 +20,26 @@ Prove or disprove the bet before building any product.
   - sys1
 - **Deferred until results are in:** the confidence-based review queue, the retraining loop, user-built datasets, the web app and MCP.
 
-The full plan, covering phase 1 in detail and later phases in outline, is in [docs/superpowers/specs/2026-10-20-system1-plan-design.md](docs/superpowers/specs/2026-10-20-system1-plan-design.md).
+The full plan, covering phase 1 in detail and later phases in outline, is in [docs/superpowers/specs/2026-10-20-system1-plan-design.md](docs/superpowers/specs/2026-10-20-system1-plan-design.md). The step-by-step phase 1 build plan, with tasks, owners and tests, is in [docs/superpowers/plans/2026-10-20-phase1-benchmark.md](docs/superpowers/plans/2026-10-20-phase1-benchmark.md).
+
+## Phase 1 data pipeline
+
+**Steps, in order:**
+1. `make grid`
+2. `make tickets-check`
+3. `make blind`
+4. Thomas runs `agent-prompts/readback-check.md` in a fresh session. It writes `data/readback/extracted.jsonl`.
+5. `make readback`
+6. One retry round: `make blind ONLY_FAILED=1`, then the agent again, then `make readback EXTRA=data/readback/extracted_retry.jsonl`.
+7. `make dataset`
+
+**Status (2026-10-21):**
+- **Done:** the policy (`data/policy/`), the facts grid (`data/raw/facts.jsonl`), 550 validated tickets (`data/raw/tickets.jsonl`) and the blind file.
+- **Pending:** the read-back run.
+- **Provisional data:** `data/build/triage_provisional.parquet` holds all 550 tickets without the read-back filter. It's for wiring up Tasks 3, 4 and 10, never for reported results.
+- **Progress ledger:** `.superpowers/sdd/2026-10-20-phase1-benchmark/progress.md` (gitignored).
+
+**Source of truth:** labels come from `policy.route(facts)`. `policy.py` mirrors `data/policy/policy.md`, so change both together.
 
 ## Working rules
 
@@ -32,9 +51,12 @@ The full plan, covering phase 1 in detail and later phases in outline, is in [do
 - Proposed ownership: Nicholas leads the engine (training, calibration, scoring), and Thomas leads the app, the loop, the endpoint and the video. Coordinate before restructuring `train.py`.
 - Disclose on Devpost the Modal/Unsloth experiments from before the build week and any templates used.
 
-## Environment
+## Environment and commands
 
-- Local `.venv` (Python 3.12) with `modal` installed. Training runs remotely on Modal: `modal run train.py`.
+- **Commands:** run `make help` for the list (setup, `check-env`, `jev-check`, `train`, `eval-laya`, `eval-lora`, `eval-jev`). The evals take `LIMIT=50` for smoke tests.
+- **Environment:** a local `.venv` created with `uv`. Override the location with `VENV=...`. Training and the Laya evals run remotely on Modal. `eval_jev.py` runs locally.
+- **Secrets:** stored in `.env`, which is gitignored. The template is `.env.example`, and `make env` copies it. Never print or commit `.env`.
+- **Agent prompts:** prompts for separate agent sessions live in `agent-prompts/`, which is gitignored and local only. `readback-check.md` is the blind read-back check, which Thomas runs in a fresh session.
 
 ## Reference
 

@@ -88,7 +88,10 @@ Phase 1 is specified in detail below. Phases 2–4 are outlined only and get the
 
 - A reader that did not write the tickets sees only each ticket's `state` and the facts schema. It extracts the facts. It never sees the intended facts or the policy.
 - The extracted facts are compared with the intended facts that decide the label. If they don't match, the ticket is rewritten once. If it still doesn't match, it's dropped.
-- The reader should be a fresh agent with no memory of writing the tickets. See "Open questions".
+- **The reader is a fresh agent** with no memory of writing the tickets. Thomas runs it in a separate session, using the prompt in `agent-prompts/readback-check.md` (gitignored).
+  - The agent gets only `data/readback/tickets_blind.jsonl` (ids and `state`) and `data/readback/facts_schema.md`, copied into an empty folder outside the repo.
+  - It returns `extracted.jsonl`, with a value, a basis (`metadata` / `stated` / `implied` / `not_stated` / `conflicting`) and an evidence quote for every fact, plus flags for tickets that name a queue, raise several issues, or read as unrealistic.
+- **So the dataset step must produce** the blind file and a schema doc a stranger can apply. The comparison script must accept `implied` as a match, and treat `not_stated` or `conflicting` on a fact that decides the label as a failure.
 
 ### 5. Building the dataset and splitting it
 
@@ -206,8 +209,18 @@ Output: `docs/results/phase1-benchmark.md`, with the table, a learning-curve cha
 ## Verify early (unconfirmed facts)
 
 - The real input window `train.py` trains and predicts at (512 vs 2,048), and whether ~13 terse options plus a ~300-token ticket fit without cutting.
-- That `FastDecisionModel.predict` returns the full per-option probability distribution.
-- The Jev access route, and the Python SDK's package name (`typesafe-sdk`, according to Unsloth's docs).
+- **Why our typed-decisions LoRA scores 0.658** when published fine-tuned Laya scores about 0.77. Check the learning rate, the epoch count and the `trainable.pt` save and load path before training sys1 on our data. Details are in [laya-unsloth.md](../../reference/laya-unsloth.md).
+- ~~Whether `predict` returns per-option probabilities~~. Verified: Nicholas's eval scripts use them.
+- ~~The Jev access route~~. Verified: TypeSafe direct (`api.typesafe.ai`) works with our key, and `eval_jev.py` uses plain HTTP, so no SDK is needed.
+
+## Existing code to build on
+
+Nicholas's eval harness already covers most of what phase 1's benchmark needs. Phase 1 points it at our dataset instead of writing a new one:
+- `eval_common.py` scores every model the same way, using accuracy, ECE and NLL computed from probabilities.
+- `eval_jev.py`, `eval_laya.py` and `eval_lora.py` correspond to rows A/B, C and D.
+- The `Makefile` wraps them: `make eval-jev`, `make eval-laya`, `make eval-lora`, plus `LIMIT=` for smoke tests.
+
+Still missing: loading our parquet file, the terse and policy question variants, macro-F1, the bootstrap intervals, accuracy broken down by difficulty and rule type, latency and cost.
 
 ## Decision log
 
