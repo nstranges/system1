@@ -100,10 +100,18 @@ def _layout(hashes: list[str]) -> list[SplitName]:
     return out
 
 
+def _order(project: Project):
+    return lambda e: _hash(project.id, e.input_json)
+
+
 def _rebalance(session: Session, project: Project, labels: set[str]) -> None:
     """Re-assigns the split of every example in these buckets. Only valid while nothing is frozen."""
     for label in labels:
-        rows = list(session.scalars(select(Example).where(Example.project_id == project.id, Example.label == label)))
+        rows = list(
+            session.scalars(
+                select(Example).where(Example.project_id == project.id, Example.label == label).order_by(Example.id)
+            )
+        )
         for row, split in zip(rows, _layout([_hash(project.id, r.input_json) for r in rows]), strict=True):
             row.split = split
 
@@ -173,9 +181,13 @@ def _place_after_freeze(session: Session, project: Project, new: list[Example]) 
             .where(Example.project_id == project.id, Example.label == label, Example.split == "test")
         )
         need = max(0, MIN_TEST_PER_BUCKET - (have or 0))
-        ordered = sorted((e for e in new if e.label == label), key=lambda e: _hash(project.id, e.input_json))
-        for i, example in enumerate(ordered):
-            if i < need:
+        # A correction never lands in test, even in a short bucket: it would grade the model on its own fixes.
+        eligible = sorted((e for e in new if e.label == label and e.source != "corrected"), key=_order(project))
+        filling = {e.id for e in eligible[:need]}
+        for example in new:
+            if example.label != label:
+                continue
+            if example.id in filling:
                 example.split = "test"
                 test_added = True
             elif int(_hash(project.id, example.input_json), 16) % CAL_ONE_IN == 0:
@@ -189,7 +201,12 @@ def freeze(session: Session, project: Project) -> None:
         # Review moves and relabels may have left the buckets off-quota; settle them before the set locks.
         labels = set(session.scalars(select(Example.label).where(Example.project_id == project.id).distinct()))
         session.flush()
+        before = dict(session.execute(select(Example.id, Example.split).where(Example.project_id == project.id)).all())
         _rebalance(session, project, labels)
+        session.flush()
+        after = dict(session.execute(select(Example.id, Example.split).where(Example.project_id == project.id)).all())
+        if before != after:
+            project.dataset_version += 1
         project.frozen_at = now()
         session.commit()
 
@@ -261,7 +278,9 @@ def review(
     if action == "move":
         if to is None or to not in _bucket_keys(session, project):
             raise UnknownBucket()
-        if to != example.label:
+        if to == example.label:
+            example.review = "agree"  # nothing to move, but the card is answered
+        else:
             old = example.label
             example.label = to
             example.review = "moved"

@@ -256,12 +256,21 @@ def test_freeze_settles_buckets_unbalanced_by_pre_freeze_relabels(client_for):
             row.label = "b"
         session.commit()
     _freeze(client, pid)
+    assert _health(client, pid)["dataset_version"] == 2  # the add, then the freeze moved splits
     per_bucket = _health(client, pid)["per_bucket"]
     for key, counts in per_bucket.items():
         if not counts["total"]:
             continue
         assert counts["total"] >= MIN_TEST_PER_BUCKET + 1
         assert counts["test"] == max(MIN_TEST_PER_BUCKET, round(0.2 * counts["total"])), key
+
+
+def test_freeze_without_changes_keeps_dataset_version(client_for):
+    client = client_for("org_a")
+    pid = _project(client)
+    _add(client, pid, _rows("a", 30))
+    _freeze(client, pid)
+    assert _health(client, pid)["dataset_version"] == 1
 
 
 def test_unknown_labels_reject_the_whole_batch(client_for):
@@ -289,7 +298,7 @@ def test_review_versions_and_no_existence_oracle(client_for):
     start = _health(client, pid)["dataset_version"]
 
     assert client.post(f"/api/examples/{first}/review", json={"action": "agree"}).status_code == 200
-    assert client.post(f"/api/examples/{second}/review", json={"action": "move", "to": "a"}).json()["review"] is None
+    assert client.post(f"/api/examples/{second}/review", json={"action": "move", "to": "a"}).json()["review"] == "agree"
     assert _health(client, pid)["dataset_version"] == start
 
     assert client.post(f"/api/examples/{second}/review", json={"action": "move", "to": "b"}).json()["review"] == "moved"
@@ -334,3 +343,20 @@ def test_drop_with_reset_bumps_test_set_version_and_synthetic_test_flag(client_f
         row.split = "test"
         session.commit()
     assert _health(client, pid)["synthetic_test"] is False
+
+
+def test_corrections_never_fill_the_frozen_test_set(client_for):
+    client = client_for("org_a")
+    pid = _project(client)
+    _add(client, pid, _rows("a", 30))
+    _freeze(client, pid)
+    assert _health(client, pid)["per_bucket"]["b"]["test"] == 0
+
+    assert _add(client, pid, [NewExample(f"fix {i}", "b", "corrected") for i in range(8)]) == 8
+    health = _health(client, pid)
+    assert health["per_bucket"]["b"]["test"] == 0 and health["per_bucket"]["b"]["total"] == 8
+    assert health["test_set_version"] == 1
+
+    assert _add(client, pid, [NewExample("fresh generated", "b", "generated", 0.4)]) == 1
+    health = _health(client, pid)
+    assert health["per_bucket"]["b"]["test"] == 1 and health["test_set_version"] == 2
