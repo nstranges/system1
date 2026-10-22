@@ -50,22 +50,37 @@ class BlindLabels(BaseModel):
     items: list[BlindItem] = Field(default_factory=list)
 
 
+_DATA_TAG = re.compile(r"</?\s*data\s*>", re.IGNORECASE)
+
+
 def _data(text: str) -> str:
-    # User text can't close the block early, or its instructions would sit outside it.
-    return re.sub(r"</?\s*data\s*>", "", text, flags=re.IGNORECASE)
+    # User text can't close the block early, or its instructions would sit outside it. Removing a tag can join
+    # the pieces around it into a new one ("</da</data>ta>"), so repeat until nothing is left to remove.
+    while (cleaned := _DATA_TAG.sub("", text)) != text:
+        text = cleaned
+    return text
 
 
 def _words(text: str) -> str:
     return re.sub(r"\s+", " ", text.replace("_", " ")).strip().lower()
 
 
+# Catch-all words appear in ordinary text, so treating them as leaks would drop most candidates.
+GENERIC_NAMES = frozenset({"other", "misc", "miscellaneous", "general", "unknown", "none"})
+
+
 def leaks(text: str, options: list[Option]) -> bool:
-    """True if the input names any bucket by key or by name, so it would give its own label away."""
+    """True if the input names a bucket by key or by name, so it would give its own label away.
+    Single-character and catch-all names are ignored: they can't be told apart from ordinary words."""
     haystack = f" {_words(text)} "
     for option in options:
         for term in (option.key, option.name):
             needle = _words(term)
-            if needle and re.search(rf"(?<![a-z0-9]){re.escape(needle)}(?![a-z0-9])", haystack):
+            if (
+                len(needle) > 1
+                and needle not in GENERIC_NAMES
+                and re.search(rf"(?<![a-z0-9]){re.escape(needle)}(?![a-z0-9])", haystack)
+            ):
                 return True
     return False
 
@@ -116,7 +131,7 @@ class SimpleGenerator:
         targets: dict[str, int],
         on_progress: Callable[[float], None],
         before_batch: Callable[[], None] | None = None,
-        on_batch: Callable[[list[GeneratedExample], int], None] | None = None,
+        on_batch: Callable[[list[GeneratedExample], int], int | None] | None = None,
     ) -> tuple[list[GeneratedExample], int]:
         wanted = {k: n for k, n in targets.items() if n > 0}
         planned = sum(math.ceil(n / self._batch_size) for n in wanted.values())
@@ -136,13 +151,13 @@ class SimpleGenerator:
                 ask = min(self._batch_size, target - kept)
                 batch, used = await self._batch(policy, context, samples, bucket, ask, seen)
                 tokens += used
-                kept += len(batch)
                 out.extend(batch)
                 done += 1
                 # Capped below 1: extra attempts can push `done` past the plan, and only the job finishing is 100%.
                 on_progress(min(done / planned, 0.99))
-                if on_batch:
-                    on_batch(batch, used)
+                saved = on_batch(batch, used) if on_batch else None
+                # What the caller really kept: near-duplicates of existing examples are dropped when saving.
+                kept += len(batch) if saved is None else saved
         return out, tokens
 
     async def _batch(
@@ -180,7 +195,7 @@ class SimpleGenerator:
         keys = [o.key for o in policy.options]
         by_index = {item.index: _normalised(item.scores, keys) for item in labelled.items}
         batch = [
-            GeneratedExample(input=text, label=bucket.key, how_sure=by_index.get(i, {}).get(bucket.key, 0.0))
+            GeneratedExample(input=text, label=bucket.key, how_sure=by_index[i][bucket.key] if i in by_index else None)
             for i, text in enumerate(fresh)
         ]
         return batch, used + label_used

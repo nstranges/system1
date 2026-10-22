@@ -3,6 +3,7 @@ import logging
 import threading
 from collections.abc import Awaitable, Callable
 
+from sqlalchemy import Engine, update
 from sqlalchemy.orm import Session, sessionmaker
 
 from system1.auth.principal import Principal
@@ -19,8 +20,13 @@ UNEXPECTED_FAILURE = "Something went wrong on our side. Anything already saved w
 
 # The event loop only keeps weak references to tasks, so a running job must be held here.
 _tasks: set[asyncio.Task] = set()
-# Set when a job ends, whichever thread or event loop is asking, so tests can wait without polling.
-_finished: dict[str, threading.Event] = {}
+# Jobs still in flight, and the waiters (tests) that asked to be told when one ends. A waiter may come from
+# another thread or event loop, so both are guarded by a lock and entries are removed as soon as they're used.
+_lock = threading.Lock()
+_running: set[str] = set()
+_waiters: dict[str, threading.Event] = {}
+
+RESTARTED = "The server restarted. Anything already saved was kept. Try again."
 
 
 class JobContext:
@@ -30,6 +36,8 @@ class JobContext:
         self.session = session
         self._job_id = job_id
         self.result: dict | None = None
+        # Shown when the job succeeds, e.g. to say it came up short.
+        self.message: str | None = None
 
     def progress(self, value: float, stage: str | None = None) -> None:
         job = self.session.get(Job, self._job_id)
@@ -101,23 +109,43 @@ async def run_job(session_factory: SessionFactory, job_id: str, work: JobWork) -
             except Exception as exc:  # noqa: BLE001 - job boundary: nothing awaits this task, so any failure must be recorded on the job
                 _finish(session, job_id, "failed", _failure_message(exc), ctx.result)
             else:
-                _finish(session, job_id, "succeeded", None, result)
+                _finish(session, job_id, "succeeded", ctx.message, result)
     except Exception:
         log.exception("job %s could not be recorded", job_id)
     finally:
-        _finished.setdefault(job_id, threading.Event()).set()
+        with _lock:
+            _running.discard(job_id)
+            waiter = _waiters.pop(job_id, None)
+        if waiter:
+            waiter.set()
 
 
 def start_job(session_factory: SessionFactory, job_id: str, work: JobWork) -> None:
     """Needs a running event loop: call it from async code."""
-    _finished.setdefault(job_id, threading.Event())
+    with _lock:
+        _running.add(job_id)
     task = asyncio.get_running_loop().create_task(run_job(session_factory, job_id, work))
     _tasks.add(task)
     task.add_done_callback(_tasks.discard)
 
 
 def wait_for_job(job_id: str, timeout: float = 10.0) -> None:
-    """Blocks until the job ends. For tests: it never returns early and never polls."""
-    event = _finished.get(job_id)
-    if event is None or not event.wait(timeout):
+    """Blocks until the job ends (returns at once if it already has). For tests: it never polls."""
+    with _lock:
+        if job_id not in _running:
+            return
+        waiter = _waiters.setdefault(job_id, threading.Event())
+    if not waiter.wait(timeout):
         raise TimeoutError(f"job {job_id} did not finish")
+
+
+def fail_unfinished_jobs(engine: Engine) -> None:
+    """Jobs run inside the server process, so any job still queued or running at startup was cut off.
+    Assumes one server process: with several, a starting process would fail another's live jobs."""
+    with Session(engine) as session:
+        session.execute(
+            update(Job)
+            .where(Job.status.in_(("queued", "running")))
+            .values(status="failed", message=RESTARTED, finished_at=now())
+        )
+        session.commit()

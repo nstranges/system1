@@ -1,7 +1,7 @@
 import math
 
 from pydantic import BaseModel
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from system1.agent.context import AgentContext, register_action_handler
@@ -17,6 +17,7 @@ from system1.datasets.service import NewExample, UnknownBucket
 from system1.domain.policy import Policy, validate_policy
 from system1.errors import ApiError
 from system1.jobs import service as job_service
+from system1.jobs.models import Job
 from system1.jobs.service import JobContext
 from system1.projects import service as project_service
 from system1.projects.models import Project
@@ -45,6 +46,16 @@ class NothingToGenerate(ApiError):
     status_code = 422
     code = "nothing_to_generate"
     message = "Every bucket already has enough examples."
+
+
+class GenerationRunning(ApiError):
+    status_code = 409
+    code = "generation_running"
+    message = "A generation is already running for this project."
+
+
+class _ProjectGone(Exception):
+    """The project was deleted while the job ran; there is nothing left to write to."""
 
 
 class Estimate(BaseModel):
@@ -88,6 +99,21 @@ def resolve_targets(
     return policy, targets
 
 
+def targets_for_count(session: Session, project: Project, count: int) -> dict[str, int]:
+    """Spreads `count` examples over the buckets, giving each next one to the bucket furthest below the
+    default target, so once every bucket is at target the rest goes round evenly."""
+    policy, _ = project_service.latest_policy(session, project)
+    if validate_policy(policy):
+        raise BucketsUnfinished()
+    per_bucket = dataset_service.health(session, project).per_bucket
+    room = {o.key: DEFAULT_TARGET - per_bucket[o.key]["total"] for o in policy.options}
+    given = dict.fromkeys(room, 0)
+    for _ in range(min(max(count, 0), GENERATION_CAP)):
+        neediest = max(room, key=lambda k: room[k] - given[k])
+        given[neediest] += 1
+    return given
+
+
 def _style_samples(session: Session, project: Project, policy: Policy) -> list[str]:
     uploaded = session.scalars(
         select(Example.input_json)
@@ -109,46 +135,79 @@ def start_generation(
     """Starts the job and returns its id. Call it from the event loop thread (an async route or handler)."""
     project_service.get_project(session, principal, project.id)
     policy, wanted = resolve_targets(session, project, targets)
+    running = session.scalar(
+        select(func.count())
+        .select_from(Job)
+        .where(Job.project_id == project.id, Job.kind == "generation", Job.status.in_(("queued", "running")))
+    )
+    if running:
+        raise GenerationRunning()
     check_budget(session, principal.org_id)
     context = context_text(session, project)
     samples = _style_samples(session, project, policy)
     job = job_service.create_job(session, principal, project.id, "generation")
     org_id, project_id, requested = principal.org_id, project.id, sum(wanted.values())
 
+    def outcome(added: dict[str, int]) -> dict:
+        return {
+            "added": sum(added.values()),
+            "requested": requested,
+            "per_bucket": {k: {"added": added[k], "requested": n} for k, n in wanted.items()},
+            "short": {k: n - added[k] for k, n in wanted.items() if added[k] < n},
+        }
+
     async def work(ctx: JobContext) -> dict:
-        own_project = ctx.session.get(Project, project_id)
-        added = 0
-        ctx.result = {"added": 0, "requested": requested}
+        added = dict.fromkeys(wanted, 0)
+        ctx.result = outcome(added)
+
+        def own_project() -> Project:
+            project = ctx.session.get(Project, project_id)
+            if project is None:
+                raise _ProjectGone
+            return project
 
         def before_batch() -> None:
+            own_project()
             check_budget(ctx.session, org_id)
 
-        def on_batch(batch: list[GeneratedExample], tokens: int) -> None:
-            nonlocal added
-            rows = [NewExample(g.input, g.label, "generated", g.how_sure) for g in batch]
-            added += dataset_service.add_examples(ctx.session, own_project, rows)
+        def on_batch(batch: list[GeneratedExample], tokens: int) -> int:
             record_usage(ctx.session, org_id, tokens)
-            ctx.result = {"added": added, "requested": requested}
+            if not batch:
+                return 0
+            rows = [NewExample(g.input, g.label, "generated", g.how_sure) for g in batch]
+            saved = dataset_service.add_examples(ctx.session, own_project(), rows)
+            added[batch[0].label] += saved
+            ctx.result = outcome(added)
+            return saved
 
-        await providers.generator.generate(
-            policy,
-            context,
-            samples,
-            wanted,
-            lambda p: ctx.progress(p, "writing"),
-            before_batch=before_batch,
-            on_batch=on_batch,
-        )
-        return {"added": added, "requested": requested}
+        try:
+            await providers.generator.generate(
+                policy,
+                context,
+                samples,
+                wanted,
+                lambda p: ctx.progress(p, "writing"),
+                before_batch=before_batch,
+                on_batch=on_batch,
+            )
+        except _ProjectGone:
+            return ctx.result
+        result = outcome(added)
+        if result["short"]:
+            ctx.message = f"Wrote {result['added']} of {requested}. Some buckets came up short."
+        return result
 
     job_service.start_job(job_service.session_factory_for(session), job.id, work)
     return job.id
 
 
 async def _confirm_generation(ctx: AgentContext, action: PendingAction) -> dict:
-    job_id = start_generation(
-        ctx.session, ctx.providers, ctx.settings, ctx.principal, ctx.project, action.params_json.get("targets")
-    )
+    # Older cards carry only a count ("Generate 40 examples"); newer ones carry per-bucket targets.
+    params = action.params_json
+    targets = params.get("targets")
+    if targets is None and "count" in params:
+        targets = targets_for_count(ctx.session, ctx.project, int(params["count"]))
+    job_id = start_generation(ctx.session, ctx.providers, ctx.settings, ctx.principal, ctx.project, targets)
     return {"job_id": job_id}
 
 

@@ -23,6 +23,7 @@ from system1.gateway.router_public import router as public_router
 from system1.generation.router import router as generation_router
 from system1.ingest.router import router as ingest_router
 from system1.jobs.router import router as jobs_router
+from system1.jobs.service import fail_unfinished_jobs
 from system1.projects.router import router as projects_router
 from system1.providers import Providers, build_providers, get_providers
 
@@ -42,6 +43,7 @@ def create_app(
     @asynccontextmanager
     async def lifespan(app: FastAPI) -> AsyncIterator[None]:
         init_db(app.state.engine)
+        fail_unfinished_jobs(app.state.engine)
         if app.state.providers is None:
             app.state.providers = build_providers(settings)
         yield
