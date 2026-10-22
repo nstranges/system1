@@ -38,66 +38,199 @@ def make_project(client) -> str:
     return client.post("/api/projects", json={"name": "P", "template_id": FLAGSHIP}).json()["id"]
 
 
-def test_agent_set_rules_updates_policy_and_emits_canvas(client_for):
+BUCKETS = [
+    {
+        "key": "billing",
+        "name": "Billing",
+        "use_when": ["an invoice looks wrong"],
+        "example": "Why was I charged twice?",
+    },
+    {"key": "bug", "name": "Bug", "use_when": ["something is broken"]},
+]
+
+
+def blank_project(client) -> str:
+    return client.post("/api/projects", json={"name": "P"}).json()["id"]
+
+
+def add_example(client, project_id: str, text: str, label: str) -> None:
+    from system1.datasets.service import NewExample, add_examples
+    from system1.projects.models import Project
+
+    with Session(client.app.state.engine) as session:
+        add_examples(session, session.get(Project, project_id), [NewExample(text, label, "uploaded")])
+
+
+def test_set_buckets_saves_and_emits_canvas(client_for):
     client = client_for("org_a", llm_script=[])
-    project_id = make_project(client)
-    rules = client.get(f"/api/projects/{project_id}/policy").json()["policy"]["rules"]
-    rules[0]["text"] = "Reworded by the agent."
+    project_id = blank_project(client)
     client.app.state.providers.llm._script.extend(
-        [tool_turn("set_rules", {"rules": rules}), text_turn("Updated the first rule.")]
+        [
+            tool_turn("set_buckets", {"buckets": BUCKETS, "decision_question": "Where does it go?"}),
+            text_turn("Drafted."),
+        ]
     )
 
-    events = send(client, project_id, "reword the first rule")
+    events = send(client, project_id, "we triage tickets")
 
     canvas = [e for e in events if e["type"] == "canvas"]
-    assert len(canvas) == 1 and canvas[0]["version"] == 2 and canvas[0]["changed"] == ["rules"]
-    assert canvas[0]["policy"]["rules"][0]["text"] == "Reworded by the agent."
+    assert len(canvas) == 1 and canvas[0]["version"] == 2 and canvas[0]["changed"] == ["buckets"]
+    assert [o["key"] for o in canvas[0]["policy"]["options"]] == ["billing", "bug"]
     assert any(e["type"] == "text" for e in events) and events[-1]["type"] == "done"
     saved = client.get(f"/api/projects/{project_id}/policy").json()
-    assert saved["version"] == 2 and saved["policy"]["rules"][0]["text"] == "Reworded by the agent."
+    assert saved["version"] == 2 and saved["policy"]["decision_question"] == "Where does it go?"
+    assert saved["policy"]["options"][0]["covers"] == ["an invoice looks wrong"]
 
     # The canvas is re-sent after the tool changed it, and history replays for the UI.
     second_call = client.app.state.providers.llm.calls[1]["messages"]
     assert second_call[-1]["role"] == "user"
     assert "version 2" in second_call[-1]["content"][-1]["text"]
     history = client.get(f"/api/projects/{project_id}/agent/history").json()
-    assert history[0] == {"type": "user", "text": "reword the first rule"}
+    assert history[0] == {"type": "user", "text": "we triage tickets"}
     assert any(e["type"] == "canvas" for e in history)
 
 
-def test_agent_invalid_rules_returns_tool_error_and_keeps_policy(client_for):
-    client = client_for("org_a")
-    project_id = make_project(client)
-    rules = client.get(f"/api/projects/{project_id}/policy").json()["policy"]["rules"]
-    rules[0]["label"] = "no_such_option"
-    client.app.state.providers.llm._script.extend(
-        [tool_turn("set_rules", {"rules": rules}), text_turn("That label doesn't exist.")]
+def test_set_buckets_keeps_excludes_and_refuses_to_drop_a_bucket_with_examples(client_for):
+    client = client_for("org_a", llm_script=[])
+    project_id = blank_project(client)
+    with_excludes = [{**BUCKETS[0]}, BUCKETS[1]]
+    llm = client.app.state.providers.llm
+    llm._script.extend([tool_turn("set_buckets", {"buckets": with_excludes}), text_turn("ok")])
+    send(client, project_id)
+    policy = client.get(f"/api/projects/{project_id}/policy").json()["policy"]
+    policy["options"][0]["excludes"] = ["refund requests"]
+    client.put(f"/api/projects/{project_id}/policy", json={"policy": policy})
+    add_example(client, project_id, "why was I charged twice", "billing")
+    llm._script.extend(
+        [
+            tool_turn("set_buckets", {"buckets": [BUCKETS[1], {"key": "other", "name": "Other", "use_when": []}]}),
+            text_turn("no"),
+        ]
     )
 
     events = send(client, project_id)
 
+    assert any(e["type"] == "tool" and e["status"] == "error" for e in events)
+    assert not any(e["type"] == "canvas" for e in events)
+    renamed = [{**BUCKETS[0], "name": "Billing and invoices"}, BUCKETS[1]]
+    llm._script.extend([tool_turn("set_buckets", {"buckets": renamed}), text_turn("yes")])
+    send(client, project_id)
+    kept = client.get(f"/api/projects/{project_id}/policy").json()["policy"]
+    assert (
+        [o["key"] for o in kept["options"]] == ["billing", "bug"]
+        and kept["options"][0]["name"] == "Billing and invoices"
+        and kept["options"][0]["excludes"] == ["refund requests"]
+    )
+
+
+def test_set_guidelines_saves_and_invalid_guidelines_keep_policy(client_for):
+    client = client_for("org_a")
+    project_id = make_project(client)
+    llm = client.app.state.providers.llm
+    llm._script.extend([tool_turn("set_guidelines", {"guidelines": ["Refunds go to billing."]}), text_turn("Added.")])
+    events = send(client, project_id)
+    assert [e["changed"] for e in events if e["type"] == "canvas"] == [["guidelines"]]
+    assert client.get(f"/api/projects/{project_id}/policy").json()["policy"]["guidelines"] == ["Refunds go to billing."]
+
+    llm._script.extend([tool_turn("set_guidelines", {"guidelines": ["x" * 301]}), text_turn("Too long.")])
+    events = send(client, project_id)
     assert not any(e["type"] == "canvas" for e in events)
     assert any(e["type"] == "tool" and e["status"] == "error" for e in events)
-    assert client.get(f"/api/projects/{project_id}/policy").json()["version"] == 1
-    result = client.app.state.providers.llm.calls[1]["messages"][-1]["content"][0]
-    assert result["type"] == "tool_result" and result["is_error"] is True
-    assert "no_such_option" in result["content"]
+    assert client.get(f"/api/projects/{project_id}/policy").json()["version"] == 2
+    result = llm.calls[-1]["messages"][-1]["content"][0]
+    assert result["is_error"] is True
 
 
-def test_request_dataset_creates_pending_action_not_job(client_for):
+def test_draft_from_examples_proposes_without_saving(client_for):
+    from system1.drafting.service import DraftBucket, DraftSpec
+
+    client = client_for("org_a")
+    project_id = blank_project(client)
+    client.put(
+        f"/api/projects/{project_id}/policy",
+        json={
+            "policy": {
+                "decision_question": "Where?",
+                "options": [{"key": "billing", "name": "Billing"}, {"key": "bug", "name": "Bug"}],
+            }
+        },
+    )
+    add_example(client, project_id, "my invoice is wrong", "billing")
+    llm = client.app.state.providers.llm
+    spec = DraftSpec(
+        buckets=[
+            DraftBucket(key="billing", name="Billing", use_when=["invoice issues"]),
+            DraftBucket(key="bug", name="Bug"),
+        ]
+    )
+    llm._script.extend([tool_turn("draft_from_examples", {}), (spec, 100), text_turn("Here is a draft.")])
+
+    events = send(client, project_id)
+
+    proposal = next(e for e in events if e["type"] == "canvas_proposal")
+    assert [o["key"] for o in proposal["policy"]["options"]] == ["billing", "bug"]
+    assert "issues" in proposal and "notes" in proposal
+    assert (
+        client.get(f"/api/projects/{project_id}/policy").json()["version"] == 2
+    )  # only the setup save; the draft saved nothing
+
+
+def test_quick_check_runs_only_the_jev_lanes(client_for):
     client = client_for("org_a")
     project_id = make_project(client)
     client.app.state.providers.llm._script.extend(
-        [tool_turn("request_dataset", {"count": 40}), text_turn("Please confirm.")]
+        [tool_turn("quick_check", {"input": "refund please"}), text_turn("Looks right.")]
+    )
+
+    events = send(client, project_id)
+
+    result = next(e for e in events if e["type"] == "try_result")
+    assert sorted(r["lane"] for r in result["result"]["results"]) == ["jev", "jev_labels"]
+
+
+def test_set_rules_is_gone_and_old_stages_are_refused(client_for):
+    client = client_for("org_a")
+    project_id = make_project(client)
+    llm = client.app.state.providers.llm
+    llm._script.extend([tool_turn("set_rules", {"rules": []}), text_turn("x")])
+    assert any(e["type"] == "tool" and e["status"] == "error" for e in send(client, project_id))
+    llm._script.extend([tool_turn("go_to_stage", {"stage": "rules"}), text_turn("x")])
+    assert any(e["type"] == "tool" and e["status"] == "error" for e in send(client, project_id))
+    llm._script.extend([tool_turn("go_to_stage", {"stage": "review"}), text_turn("x")])
+    assert next(e for e in send(client, project_id) if e["type"] == "stage")["stage"] == "review"
+
+
+def test_canvas_block_carries_the_step_buckets_and_health(client_for):
+    client = client_for("org_a")
+    project_id = make_project(client)
+    client.app.state.providers.llm._script.append(text_turn("Hello."))
+
+    res = client.post(f"/api/projects/{project_id}/agent/messages", json={"text": "hi", "stage": "data"})
+    assert res.status_code == 200
+    canvas = client.app.state.providers.llm.calls[0]["messages"][0]["content"][-1]["text"]
+    assert "step: data" in canvas and "<data>" in canvas and "Review queue" in canvas
+    assert "Data:" in canvas and len(canvas) < 6000
+
+    ignored = client.post(f"/api/projects/{project_id}/agent/messages", json={"text": "hi", "stage": "nonsense"})
+    assert ignored.status_code == 200
+
+
+def test_request_generation_creates_pending_action_not_job(client_for):
+    client = client_for("org_a")
+    project_id = make_project(client)
+    client.app.state.providers.llm._script.extend(
+        [tool_turn("request_generation", {"count": 40}), text_turn("Please confirm.")]
     )
 
     events = send(client, project_id)
 
     confirm = next(e for e in events if e["type"] == "confirm")
-    assert confirm["kind"] == "dataset" and confirm["est_cost_usd"] == 40 * get_settings().est_cost_per_example_usd
+    assert confirm["kind"] == "generation" and confirm["examples"] == 40
+    assert confirm["est_cost_usd"] == round(40 * get_settings().est_cost_per_example_usd, 2)
     with Session(client.app.state.engine) as session:
         actions = session.scalars(select(PendingAction)).all()
-        assert [(a.kind, a.status) for a in actions] == [("dataset", "pending")]
+        assert [(a.kind, a.status) for a in actions] == [("generation", "pending")]
+        assert sum(actions[0].params_json["targets"].values()) == 40
 
     with Session(client.app.state.engine) as session:
         assert session.scalar(select(func.count()).select_from(Job)) == 0  # proposing starts nothing
@@ -105,6 +238,42 @@ def test_request_dataset_creates_pending_action_not_job(client_for):
     with Session(client.app.state.engine) as session:
         assert session.scalars(select(PendingAction.status)).one() == "cancelled"
         assert session.scalars(select(AgentTurn)).all()
+
+
+def test_start_over_clears_history(client_for):
+    client = client_for("org_a")
+    project_id = make_project(client)
+    client.app.state.providers.llm._script.extend(
+        [tool_turn("request_generation", {"count": 10}), text_turn("Please confirm.")]
+    )
+    send(client, project_id)
+    assert client.get(f"/api/projects/{project_id}/agent/history").json()
+
+    other = client_for("org_b", engine=client.app.state.engine)
+    assert other.delete(f"/api/projects/{project_id}/agent/history").status_code == 404
+
+    assert client.delete(f"/api/projects/{project_id}/agent/history").status_code == 204
+    assert client.get(f"/api/projects/{project_id}/agent/history").json() == []
+    with Session(client.app.state.engine) as session:
+        assert session.scalar(select(func.count()).select_from(AgentTurn)) == 0
+        assert session.scalar(select(func.count()).select_from(PendingAction)) == 0
+    client.app.state.providers.llm._script.append(text_turn("Fresh start."))
+    assert send(client, project_id)[-1]["type"] == "done"
+
+
+def test_history_skips_rows_it_cannot_read(client_for):
+    client = client_for("org_a")
+    project_id = make_project(client)
+    client.app.state.providers.llm._script.append(text_turn("Hello."))
+    send(client, project_id)
+    with Session(client.app.state.engine) as session:
+        turn = session.scalars(select(AgentTurn).order_by(AgentTurn.seq.desc())).first()
+        turn.ui_events_json = [{"type": "gone_from_the_app", "x": 1}, *turn.ui_events_json]
+        session.commit()
+
+    history = client.get(f"/api/projects/{project_id}/agent/history").json()
+
+    assert [e["type"] for e in history] == ["user", "text"]
 
 
 def test_budget_exceeded_emits_error_event(client_for, monkeypatch):

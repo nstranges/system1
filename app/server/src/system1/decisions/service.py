@@ -67,16 +67,42 @@ def record_feedback(
     return row
 
 
-def inbox(session: Session, project: Project) -> list[Decision]:
-    """Decisions worth a human look. Jev's answers never decide what shows up or what the label is."""
+# Margins are computed in Python from stored probabilities, so only the newest answers are considered.
+INBOX_SCAN = 1000
+INBOX_LIMIT = 100
+
+
+def margin(decision: Decision) -> float:
+    """Top probability minus the runner-up, from the stored probabilities. 1.0 when there are fewer than two."""
+    for answer in decision.answers_json.values():
+        probs = sorted((answer.get("probabilities") or {}).values(), reverse=True)
+        if len(probs) >= 2:
+            return probs[0] - probs[1]
+        break
+    return 1.0
+
+
+def inbox(session: Session, project: Project) -> list[tuple[Decision, float | None]]:
+    """Decisions worth a human look, each with its "how sure" (None for flagged ones).
+
+    First the model's own answers nobody has judged, least sure first. Then anything flagged for review, newest
+    first. Jev's answers are never ranked or chosen by what Jev said: a flagged Jev answer is there because the
+    model was unsure, and sits in the recency group.
+    """
     judged = select(Feedback.decision_id).where(Feedback.project_id == project.id)
-    stmt = (
-        select(Decision)
-        .where(Decision.project_id == project.id, Decision.needs_review.is_(True), Decision.id.not_in(judged))
+    base = select(Decision).where(Decision.project_id == project.id, Decision.id.not_in(judged))
+    sys1 = session.scalars(
+        base.where(Decision.lane == "sys1", Decision.source != "eval")
         .order_by(Decision.created_at.desc())
-        .limit(100)
+        .limit(INBOX_SCAN)
     )
-    return list(session.scalars(stmt))
+    ranked = sorted(((d, margin(d)) for d in sys1), key=lambda pair: pair[1])
+    flagged = session.scalars(
+        base.where(Decision.needs_review.is_(True)).order_by(Decision.created_at.desc()).limit(INBOX_LIMIT)
+    )
+    seen = {d.id for d, _ in ranked}
+    out: list[tuple[Decision, float | None]] = [*ranked, *((d, None) for d in flagged if d.id not in seen)]
+    return out[:INBOX_LIMIT]
 
 
 def training_pool_count(session: Session, project: Project) -> int:

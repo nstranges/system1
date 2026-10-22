@@ -1400,6 +1400,9 @@
                         "$ref": "#/components/schemas/CanvasEvent"
                       },
                       {
+                        "$ref": "#/components/schemas/CanvasProposalEvent"
+                      },
+                      {
                         "$ref": "#/components/schemas/TryResultEvent"
                       },
                       {
@@ -1424,6 +1427,7 @@
                         "choices": "#/components/schemas/ChoicesEvent",
                         "fit": "#/components/schemas/FitEvent",
                         "canvas": "#/components/schemas/CanvasEvent",
+                        "canvas_proposal": "#/components/schemas/CanvasProposalEvent",
                         "try_result": "#/components/schemas/TryResultEvent",
                         "confirm": "#/components/schemas/ConfirmEvent",
                         "stage": "#/components/schemas/StageEvent",
@@ -1436,6 +1440,36 @@
                 }
               }
             }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "summary": "Start Over",
+        "operationId": "start_over_api_projects__project_id__agent_history_delete",
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Project Id"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
           },
           "422": {
             "description": "Validation Error",
@@ -2104,6 +2138,41 @@
         ],
         "title": "CanvasEvent"
       },
+      "CanvasProposalEvent": {
+        "properties": {
+          "type": {
+            "type": "string",
+            "const": "canvas_proposal",
+            "title": "Type",
+            "default": "canvas_proposal"
+          },
+          "policy": {
+            "$ref": "#/components/schemas/Policy-Output"
+          },
+          "notes": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Notes"
+          },
+          "issues": {
+            "items": {
+              "$ref": "#/components/schemas/PolicyIssue"
+            },
+            "type": "array",
+            "title": "Issues"
+          }
+        },
+        "type": "object",
+        "required": [
+          "policy",
+          "notes",
+          "issues"
+        ],
+        "title": "CanvasProposalEvent",
+        "description": "A draft the person can apply or ignore; nothing is saved until they do."
+      },
       "ChoiceAnswer": {
         "properties": {
           "type": {
@@ -2200,6 +2269,7 @@
             "type": "string",
             "enum": [
               "dataset",
+              "generation",
               "training"
             ],
             "title": "Kind"
@@ -2219,6 +2289,17 @@
           "est_cost_usd": {
             "type": "number",
             "title": "Est Cost Usd"
+          },
+          "examples": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Examples"
           }
         },
         "type": "object",
@@ -2862,6 +2943,17 @@
             "type": "string",
             "format": "date-time",
             "title": "Created At"
+          },
+          "how_sure": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "How Sure"
           }
         },
         "type": "object",
@@ -3261,6 +3353,17 @@
           "text": {
             "type": "string",
             "title": "Text"
+          },
+          "stage": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Stage"
           }
         },
         "type": "object",

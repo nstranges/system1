@@ -2,7 +2,7 @@ from typing import Annotated, Literal
 
 from pydantic import BaseModel, Field
 
-from system1.domain.policy import Policy
+from system1.domain.policy import Policy, PolicyIssue
 from system1.gateway.service import TryResult
 
 
@@ -43,6 +43,15 @@ class CanvasEvent(BaseModel):
     changed: list[str]
 
 
+class CanvasProposalEvent(BaseModel):
+    """A draft the person can apply or ignore; nothing is saved until they do."""
+
+    type: Literal["canvas_proposal"] = "canvas_proposal"
+    policy: Policy
+    notes: list[str]
+    issues: list[PolicyIssue]
+
+
 class TryResultEvent(BaseModel):
     type: Literal["try_result"] = "try_result"
     input: str
@@ -52,11 +61,13 @@ class TryResultEvent(BaseModel):
 class ConfirmEvent(BaseModel):
     type: Literal["confirm"] = "confirm"
     action_id: str
-    kind: Literal["dataset", "training"]
+    # "dataset" is only on cards saved before generation had per-bucket targets.
+    kind: Literal["dataset", "generation", "training"]
     title: str
     detail: str
     est_minutes: float
     est_cost_usd: float
+    examples: int | None = None
 
 
 class StageEvent(BaseModel):
@@ -80,6 +91,7 @@ AgentEvent = Annotated[
     | ChoicesEvent
     | FitEvent
     | CanvasEvent
+    | CanvasProposalEvent
     | TryResultEvent
     | ConfirmEvent
     | StageEvent

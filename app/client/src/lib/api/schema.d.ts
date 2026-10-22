@@ -463,7 +463,8 @@ export interface paths {
         get: operations["history_api_projects__project_id__agent_history_get"];
         put?: never;
         post?: never;
-        delete?: never;
+        /** Start Over */
+        delete: operations["start_over_api_projects__project_id__agent_history_delete"];
         options?: never;
         head?: never;
         patch?: never;
@@ -686,6 +687,22 @@ export interface components {
             /** Changed */
             changed: string[];
         };
+        /**
+         * CanvasProposalEvent
+         * @description A draft the person can apply or ignore; nothing is saved until they do.
+         */
+        CanvasProposalEvent: {
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            type: "canvas_proposal";
+            policy: components["schemas"]["Policy-Output"];
+            /** Notes */
+            notes: string[];
+            /** Issues */
+            issues: components["schemas"]["PolicyIssue"][];
+        };
         /** ChoiceAnswer */
         ChoiceAnswer: {
             /**
@@ -732,7 +749,7 @@ export interface components {
              * Kind
              * @enum {string}
              */
-            kind: "dataset" | "training";
+            kind: "dataset" | "generation" | "training";
             /** Title */
             title: string;
             /** Detail */
@@ -741,6 +758,8 @@ export interface components {
             est_minutes: number;
             /** Est Cost Usd */
             est_cost_usd: number;
+            /** Examples */
+            examples?: number | null;
         };
         /** ConfirmOut */
         ConfirmOut: {
@@ -993,6 +1012,8 @@ export interface components {
              * Format: date-time
              */
             created_at: string;
+            /** How Sure */
+            how_sure?: number | null;
         };
         /** InboxOut */
         InboxOut: {
@@ -1142,6 +1163,8 @@ export interface components {
         MessageIn: {
             /** Text */
             text: string;
+            /** Stage */
+            stage?: string | null;
         };
         /** NotOf */
         "NotOf-Input": {
@@ -2612,8 +2635,37 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": (components["schemas"]["UserEvent"] | components["schemas"]["TextEvent"] | components["schemas"]["ToolEvent"] | components["schemas"]["ChoicesEvent"] | components["schemas"]["FitEvent"] | components["schemas"]["CanvasEvent"] | components["schemas"]["TryResultEvent"] | components["schemas"]["ConfirmEvent"] | components["schemas"]["StageEvent"] | components["schemas"]["ErrorEvent"] | components["schemas"]["DoneEvent"])[];
+                    "application/json": (components["schemas"]["UserEvent"] | components["schemas"]["TextEvent"] | components["schemas"]["ToolEvent"] | components["schemas"]["ChoicesEvent"] | components["schemas"]["FitEvent"] | components["schemas"]["CanvasEvent"] | components["schemas"]["CanvasProposalEvent"] | components["schemas"]["TryResultEvent"] | components["schemas"]["ConfirmEvent"] | components["schemas"]["StageEvent"] | components["schemas"]["ErrorEvent"] | components["schemas"]["DoneEvent"])[];
                 };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    start_over_api_projects__project_id__agent_history_delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
             /** @description Validation Error */
             422: {

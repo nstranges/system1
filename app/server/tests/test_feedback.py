@@ -1,8 +1,9 @@
+import pytest
 from sqlalchemy import create_engine, inspect, text
 from sqlalchemy.orm import Session
 
 from system1.db import init_db
-from system1.decisions.models import Feedback
+from system1.decisions.models import Decision, Feedback
 
 FLAGSHIP = "tallyfern-triage"
 
@@ -93,3 +94,49 @@ def test_latest_verdict_replaces_the_earlier_one(client_for):
         row = session.query(Feedback).one()
         assert row.kind == "correction" and row.correct_label == other and row.training_eligible
     assert _pool(client, project_id) == 1
+
+
+def _decision(project_id: str, lane: str, probs: dict[str, float], **extra) -> Decision:
+    top = max(probs, key=probs.get) if probs else None
+    return Decision(
+        org_id="org_a",
+        project_id=project_id,
+        source=extra.pop("source", "api"),
+        lane=lane,
+        model_reported=f"{lane}-fake",
+        state_json="hello",
+        answers_json={"decision": {"type": "choice", "choice": top, "probabilities": probs}} if probs else {},
+        top_label=top,
+        top_prob=probs.get(top) if top else None,
+        latency_ms=1.0,
+        policy_version=1,
+        not_for_training=lane.startswith("jev"),
+        **extra,
+    )
+
+
+def test_inbox_ranks_sys1_by_margin_and_never_jev(client_for):
+    client = client_for("org_a")
+    project_id, label = _setup(client)
+    sure = _decision(project_id, "sys1", {"a": 0.9, "b": 0.1})
+    unsure = _decision(project_id, "sys1", {"a": 0.5, "b": 0.45, "c": 0.05})
+    middle = _decision(project_id, "sys1", {"a": 0.7, "b": 0.3})
+    lone = _decision(project_id, "sys1", {})  # nothing stored: counts as sure
+    jev_unsure = _decision(project_id, "jev", {"a": 0.51, "b": 0.49})  # a very close Jev call must not surface
+    judged = _decision(project_id, "sys1", {"a": 0.5, "b": 0.5})
+    scoring = _decision(project_id, "sys1", {"a": 0.5, "b": 0.5}, source="eval")
+    flagged = _decision(project_id, "jev", {"a": 0.6, "b": 0.4}, needs_review=True)
+    with Session(client.app.state.engine) as session:
+        session.add_all([sure, unsure, middle, lone, jev_unsure, judged, scoring, flagged])
+        session.commit()
+        named = {"sure": sure, "unsure": unsure, "middle": middle, "lone": lone, "judged": judged}
+        named |= {"flagged": flagged, "jev": jev_unsure}
+        ids = {name: d.id for name, d in named.items()}
+    client.post(f"/api/decisions/{ids['judged']}/feedback", json={"kind": "correction", "correct_label": label})
+
+    items = client.get(f"/api/projects/{project_id}/inbox").json()["items"]
+
+    assert [i["decision_id"] for i in items] == [ids["unsure"], ids["middle"], ids["sure"], ids["lone"], ids["flagged"]]
+    assert [i["how_sure"] for i in items[:3]] == [pytest.approx(0.05), pytest.approx(0.4), pytest.approx(0.8)]
+    assert items[3]["how_sure"] == 1.0 and items[4]["how_sure"] is None
+    assert ids["jev"] not in {i["decision_id"] for i in items}

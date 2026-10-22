@@ -139,7 +139,9 @@ async def try_input(
     project: Project,
     text_or_state: State | None = None,
     sample_id: str | None = None,
+    only: tuple[Lane, ...] | None = None,
 ) -> TryResult:
+    """`only` limits the lanes that run (the assistant's quick check leaves your own model out)."""
     row: DatasetRow | None = None
     if sample_id is not None:
         row = next((r for r in flagship_rows(project) if r.id == sample_id), None)
@@ -153,7 +155,7 @@ async def try_input(
     check_length(state)
 
     policy_and_version = latest_policy(session, project)
-    lanes: list[Lane] = ["jev_labels", "jev"] + (["sys1"] if providers.sys1 else [])
+    lanes: list[Lane] = list(only) if only else ["jev_labels", "jev"] + (["sys1"] if providers.sys1 else [])
     # Lanes share one session but never await between touching it, so gather is safe on a single thread.
     results = await asyncio.gather(
         *(

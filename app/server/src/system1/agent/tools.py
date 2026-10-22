@@ -1,5 +1,4 @@
-import math
-from typing import Literal
+from typing import Annotated, Literal
 
 from pydantic import BaseModel, Field, ValidationError
 
@@ -7,6 +6,7 @@ from system1.agent.context import AgentContext
 from system1.agent.events import (
     AgentEvent,
     CanvasEvent,
+    CanvasProposalEvent,
     ChoicesEvent,
     ConfirmEvent,
     FitEvent,
@@ -15,15 +15,20 @@ from system1.agent.events import (
     TryResultEvent,
 )
 from system1.agent.models import PendingAction
-from system1.domain.policy import InputField, Option, Policy, Rule, validate_policy
+from system1.datasets.constants import GENERATION_CAP, MAX_GUIDELINE_CHARS, MAX_GUIDELINES
+from system1.domain.policy import Option, Policy, validate_policy
+from system1.drafting import service as drafting
 from system1.errors import ApiError, NotFound
 from system1.gateway.service import try_input
+from system1.generation import service as generation
 from system1.projects.service import latest_policy, save_policy
 from system1.templates.catalog import load_templates
+from system1.usage import check_budget, record_usage
 
-STAGES = ("usecase", "rules", "try", "examples", "train", "use", "improve")
-MAX_DATASET_EXAMPLES = 50
+STAGES = ("define", "data", "review", "train", "use", "improve")
+Stage = Literal["define", "data", "review", "train", "use", "improve"]
 TRAINING_ESTIMATE_MINUTES = 15.0
+MAX_USE_WHEN = 5
 
 
 class ShowChoices(BaseModel):
@@ -46,37 +51,49 @@ class SearchUseCases(BaseModel):
     query: str
 
 
-class SetInputs(BaseModel):
-    """Replace the list of facts the decision looks at."""
+class BucketIn(BaseModel):
+    key: str = Field(description="Short snake_case name, for example billing.")
+    name: str
+    use_when: list[str] = Field(
+        default_factory=list, max_length=MAX_USE_WHEN, description="Short 'use this when...' lines."
+    )
+    example: str | None = Field(default=None, description="One sample input that belongs here.")
 
-    inputs: list[InputField]
 
+class SetBuckets(BaseModel):
+    """Replace the whole list of buckets (the possible answers). Send every bucket you want to keep, in order. A bucket that has examples can't be removed."""
 
-class SetOptions(BaseModel):
-    """Replace the list of possible outcomes. Option keys are snake_case."""
-
-    options: list[Option]
+    buckets: list[BucketIn]
     decision_question: str | None = Field(
         default=None, description="The question the decision answers, if changing it."
     )
 
 
-class SetRules(BaseModel):
-    """Replace the routing rules. Every rule's label must be an option key and every field an input key."""
+class SetGuidelines(BaseModel):
+    """Replace the whole list of guidelines: plain sentences that say how to decide. Send every guideline you want to keep."""
 
-    rules: list[Rule]
+    guidelines: list[Annotated[str, Field(max_length=MAX_GUIDELINE_CHARS)]] = Field(max_length=MAX_GUIDELINES)
 
 
-class TryDecision(BaseModel):
-    """Run one example through the decision so the user can see the result."""
+class DraftFromExamples(BaseModel):
+    """Draft buckets and guidelines from the examples the person added. This only shows a proposal they can apply; nothing is saved."""
+
+
+class DraftFromContext(BaseModel):
+    """Draft buckets and guidelines from the context files the person added. This only shows a proposal they can apply; nothing is saved."""
+
+
+class QuickCheck(BaseModel):
+    """Run one input through Jev, a general model, as a sanity test of the buckets and guidelines. It does not test the person's own model."""
 
     input: str
 
 
-class RequestDataset(BaseModel):
-    """Ask the user to confirm generating practice examples. This only shows a confirmation card."""
+class RequestGeneration(BaseModel):
+    """Ask the person to confirm writing practice examples. This only shows a confirmation card. Give per-bucket targets or a total count; with neither, every bucket is filled up to the default."""
 
-    count: int = Field(ge=1, le=MAX_DATASET_EXAMPLES)
+    targets: dict[str, int] | None = Field(default=None, description="Examples to write per bucket key.")
+    count: int | None = Field(default=None, ge=1, le=GENERATION_CAP, description="A total, spread over the buckets.")
 
 
 class RequestTraining(BaseModel):
@@ -86,18 +103,19 @@ class RequestTraining(BaseModel):
 class GoToStage(BaseModel):
     """Move the workspace to another stage."""
 
-    stage: Literal["usecase", "rules", "try", "examples", "train", "use", "improve"]
+    stage: Stage
 
 
 _TOOLS: dict[str, type[BaseModel]] = {
     "show_choices": ShowChoices,
     "show_fit": ShowFit,
     "search_use_cases": SearchUseCases,
-    "set_inputs": SetInputs,
-    "set_options": SetOptions,
-    "set_rules": SetRules,
-    "try_decision": TryDecision,
-    "request_dataset": RequestDataset,
+    "set_buckets": SetBuckets,
+    "set_guidelines": SetGuidelines,
+    "draft_from_examples": DraftFromExamples,
+    "draft_from_context": DraftFromContext,
+    "quick_check": QuickCheck,
+    "request_generation": RequestGeneration,
     "request_training": RequestTraining,
     "go_to_stage": GoToStage,
 }
@@ -161,33 +179,70 @@ async def _run(name: str, args: BaseModel, ctx: AgentContext) -> tuple[str, list
             t for t in load_templates() if any(w in f"{t.name} {t.summary}".lower() for w in words)
         ] or load_templates()
         return "\n".join(f"- {t.id}: {t.name} (fit: {t.fit}). {t.summary}" for t in found), []
-    if isinstance(args, SetInputs):
+    if isinstance(args, SetBuckets):
         policy, _ = _policy(ctx)
-        return _save(ctx, policy.model_copy(update={"inputs": args.inputs}), ["inputs"])
-    if isinstance(args, SetOptions):
-        policy, _ = _policy(ctx)
-        update: dict = {"options": args.options}
+        before = {o.key: o for o in policy.options}
+        options = [
+            Option(
+                key=b.key,
+                name=b.name,
+                covers=b.use_when,
+                excludes=before[b.key].excludes if b.key in before else [],
+                example=b.example if b.example is not None else (before[b.key].example if b.key in before else ""),
+            )
+            for b in args.buckets
+        ]
+        update: dict = {"options": options}
         if args.decision_question is not None:
             update["decision_question"] = args.decision_question
-        return _save(ctx, policy.model_copy(update=update), ["options"])
-    if isinstance(args, SetRules):
+        return _save(ctx, policy.model_copy(update=update), ["buckets"])
+    if isinstance(args, SetGuidelines):
         policy, _ = _policy(ctx)
-        return _save(ctx, policy.model_copy(update={"rules": args.rules}), ["rules"])
-    if isinstance(args, TryDecision):
-        result = await try_input(ctx.session, ctx.providers, ctx.project, args.input)
+        return _save(ctx, policy.model_copy(update={"guidelines": args.guidelines}), ["guidelines"])
+    if isinstance(args, DraftFromExamples | DraftFromContext):
+        source = "examples" if isinstance(args, DraftFromExamples) else "context"
+        drafting.require_source(ctx.session, ctx.project, source)
+        check_budget(ctx.session, ctx.principal.org_id)
+        make = drafting.draft_from_examples if source == "examples" else drafting.draft_from_context
+        draft = await make(ctx.session, ctx.providers.llm, ctx.project)
+        record_usage(ctx.session, ctx.principal.org_id, draft.tokens)
+        issues = validate_policy(draft.policy)
+        event = CanvasProposalEvent(policy=draft.policy, notes=draft.notes, issues=issues)
+        text = (
+            f"Shown to the user as a proposal with {len(draft.policy.options)} buckets and "
+            f"{len(draft.policy.guidelines)} guidelines. Nothing is saved until they apply it. "
+            "Wait for them, then work from the latest canvas."
+        )
+        if issues:
+            text += " Problems with the draft: " + "; ".join(f"{i.path}: {i.message}" for i in issues)
+        return text, [event]
+    if isinstance(args, QuickCheck):
+        policy, _ = _policy(ctx)
+        if validate_policy(policy):
+            raise ToolError("Finish the buckets first (at least two) so there is something to check.")
+        # Only Jev's two lanes: the person's own model isn't part of a sanity check of the buckets.
+        result = await try_input(ctx.session, ctx.providers, ctx.project, args.input, only=("jev_labels", "jev"))
         lines = [f"- {r.lane}: {r.label or r.error}" for r in result.results]
-        return "Results:\n" + "\n".join(lines), [TryResultEvent(input=args.input, result=result)]
-    if isinstance(args, RequestDataset):
-        minutes = max(1.0, math.ceil(args.count / 10))
-        cost = args.count * ctx.settings.est_cost_per_example_usd
-        action = _pending(ctx, "dataset", {"count": args.count})
+        return "Results (a general model, not the person's own):\n" + "\n".join(lines), [
+            TryResultEvent(input=args.input, result=result)
+        ]
+    if isinstance(args, RequestGeneration):
+        if args.targets is not None and args.count is not None:
+            raise ToolError("Send either targets or count, not both.")
+        targets = args.targets
+        if args.count is not None:
+            targets = generation.targets_for_count(ctx.session, ctx.project, args.count)
+        _, wanted = generation.resolve_targets(ctx.session, ctx.project, targets)
+        estimate = generation.estimate(ctx.settings, wanted)
+        action = _pending(ctx, "generation", {"targets": wanted})
         event = ConfirmEvent(
             action_id=action.id,
-            kind="dataset",
-            title=f"Generate {args.count} practice examples",
-            detail="Examples are written by an AI from your rules, so you can check them before training.",
-            est_minutes=minutes,
-            est_cost_usd=cost,
+            kind="generation",
+            title=f"Write {estimate.examples} practice examples",
+            detail="An AI writes them from your buckets and guidelines, and checks how sure it is of each one, so you can review them before training.",
+            est_minutes=estimate.est_minutes,
+            est_cost_usd=estimate.est_cost_usd,
+            examples=estimate.examples,
         )
         return "A confirmation card was shown. Nothing has started. Wait for the user.", [event]
     if isinstance(args, RequestTraining):

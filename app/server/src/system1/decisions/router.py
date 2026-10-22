@@ -34,6 +34,8 @@ class InboxItem(BaseModel):
     answer: str | None
     lane: str
     created_at: datetime
+    # The gap between the top two answers; lowest is least sure. None for items flagged for review.
+    how_sure: float | None = None
 
 
 class InboxOut(BaseModel):
@@ -58,8 +60,15 @@ def get_inbox(project_id: str, principal: PrincipalDep, session: SessionDep) -> 
     project = get_project(session, principal, project_id)
     return InboxOut(
         items=[
-            InboxItem(decision_id=d.id, state=d.state_json, answer=d.top_label, lane=d.lane, created_at=d.created_at)
-            for d in service.inbox(session, project)
+            InboxItem(
+                decision_id=d.id,
+                state=d.state_json,
+                answer=d.top_label,
+                lane=d.lane,
+                created_at=d.created_at,
+                how_sure=how_sure,
+            )
+            for d, how_sure in service.inbox(session, project)
         ]
     )
 

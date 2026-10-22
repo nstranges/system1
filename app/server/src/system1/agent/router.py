@@ -1,11 +1,12 @@
+import logging
 from collections.abc import AsyncIterator
 from contextlib import aclosing
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, Request
+from fastapi import APIRouter, Depends, Request, Response
 from fastapi.responses import StreamingResponse
-from pydantic import BaseModel, TypeAdapter
-from sqlalchemy import select, update
+from pydantic import BaseModel, TypeAdapter, ValidationError
+from sqlalchemy import delete, select, update
 from sqlalchemy.orm import Session
 
 from system1.agent.context import AgentContext, get_action_handler
@@ -19,6 +20,8 @@ from system1.db import get_session
 from system1.errors import ApiError, NotFound
 from system1.projects.service import get_project
 from system1.providers import Providers, get_providers
+
+log = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/projects", dependencies=[Depends(get_principal)])
 
@@ -43,6 +46,8 @@ class AlreadyResolved(ApiError):
 
 class MessageIn(BaseModel):
     text: str
+    # The step the person is looking at. A value that isn't one of the six steps is ignored.
+    stage: str | None = None
 
 
 class ConfirmOut(BaseModel):
@@ -70,7 +75,7 @@ async def send_message(
         with Session(request.app.state.engine) as own:
             ctx = AgentContext(own, principal, providers, get_settings(), get_project(own, principal, project_id))
             # aclosing so a client disconnect finalises the turn (history repair) while this session is open.
-            async with aclosing(run_agent_turn(ctx, body.text)) as events:
+            async with aclosing(run_agent_turn(ctx, body.text, body.stage)) as events:
                 async for event in events:
                     yield _sse(event)
 
@@ -81,7 +86,24 @@ async def send_message(
 def history(project_id: str, principal: PrincipalDep, session: SessionDep) -> list[AgentEvent]:
     project = get_project(session, principal, project_id)
     turns = session.scalars(select(AgentTurn).where(AgentTurn.project_id == project.id).order_by(AgentTurn.seq))
-    return [_event_adapter.validate_python(e) for t in turns for e in t.ui_events_json]
+    events: list[AgentEvent] = []
+    for turn in turns:
+        for raw in turn.ui_events_json:
+            try:
+                events.append(_event_adapter.validate_python(raw))
+            except ValidationError:
+                # Saved by an older version of the app; one unreadable event shouldn't hide the whole thread.
+                log.warning("skipping unreadable agent event %r in project %s", raw.get("type"), project.id)
+    return events
+
+
+@router.delete("/{project_id}/agent/history", status_code=204)
+def start_over(project_id: str, principal: PrincipalDep, session: SessionDep) -> Response:
+    project = get_project(session, principal, project_id)
+    session.execute(delete(AgentTurn).where(AgentTurn.project_id == project.id))
+    session.execute(delete(PendingAction).where(PendingAction.project_id == project.id))
+    session.commit()
+    return Response(status_code=204)
 
 
 def _action(session: Session, principal: Principal, project_id: str, action_id: str) -> PendingAction:

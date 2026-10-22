@@ -16,11 +16,14 @@ from system1.agent.events import (
 )
 from system1.agent.models import AgentTurn
 from system1.agent.prompts import canvas_message, system_blocks
-from system1.agent.tools import execute_tool, tool_definitions
+from system1.agent.tools import STAGES, execute_tool, tool_definitions
+from system1.context.service import list_docs
 from system1.contracts.decisions import ProviderError
 from system1.contracts.llm import TextDelta, TurnComplete
+from system1.datasets import service as dataset_service
 from system1.errors import NotFound
 from system1.projects.service import latest_policy
+from system1.report.models import ReportCard
 from system1.usage import BudgetExceeded, check_budget, record_usage
 
 log = logging.getLogger(__name__)
@@ -48,16 +51,38 @@ def load_messages(ctx: AgentContext) -> list[dict]:
     return [{"role": t.role, "content": t.api_content_json} for t in turns]
 
 
+def _report_line(ctx: AgentContext) -> str | None:
+    card = ctx.session.scalars(
+        select(ReportCard).where(ReportCard.project_id == ctx.project.id).order_by(ReportCard.created_at.desc())
+    ).first()
+    if card is None:
+        return None
+    sentence = card.verdict_json.get("sentence", "")
+    return f"{'preview only, not from a trained model. ' if card.is_preview else ''}{sentence}".strip()
+
+
 def _canvas_block(ctx: AgentContext) -> dict:
     try:
         policy, version = latest_policy(ctx.session, ctx.project)
     except NotFound:
         policy, version = None, None
-    return canvas_message(policy, version, ctx.project.stage)
+    step = ctx.project.stage if ctx.project.stage in STAGES else None  # older projects hold a retired stage name
+    return canvas_message(
+        policy,
+        version,
+        step,
+        context_files=[d.name for d in list_docs(ctx.session, ctx.principal, ctx.project)],
+        health=dataset_service.health(ctx.session, ctx.project) if policy is not None else None,
+        review_queue=len(dataset_service.review_queue(ctx.session, ctx.project)),
+        report_line=_report_line(ctx),
+    )
 
 
-async def _run(ctx: AgentContext, user_text: str) -> AsyncIterator[AgentEvent]:
+async def _run(ctx: AgentContext, user_text: str, stage: str | None) -> AsyncIterator[AgentEvent]:
     check_budget(ctx.session, ctx.principal.org_id)
+    if stage in STAGES and ctx.project.stage != stage:
+        ctx.project.stage = stage  # the step the person is looking at; an unknown value is ignored
+        ctx.session.commit()
     # The canvas rides in the user message, so history only ever alternates user/assistant.
     _append(ctx, "user", [{"type": "text", "text": user_text}, _canvas_block(ctx)], [UserEvent(text=user_text)])
     tools = tool_definitions()
@@ -121,10 +146,10 @@ def _repair(ctx: AgentContext) -> None:
             _append(ctx, "assistant", [{"type": "text", "text": "(That reply didn't go through.)"}])
 
 
-async def run_agent_turn(ctx: AgentContext, user_text: str) -> AsyncIterator[AgentEvent]:
+async def run_agent_turn(ctx: AgentContext, user_text: str, stage: str | None = None) -> AsyncIterator[AgentEvent]:
     try:
         try:
-            async for event in _run(ctx, user_text):
+            async for event in _run(ctx, user_text, stage):
                 yield event
         except BudgetExceeded as exc:
             yield ErrorEvent(message=exc.message)
