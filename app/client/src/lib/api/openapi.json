@@ -1,0 +1,2711 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "system1",
+    "version": "0.1.0"
+  },
+  "paths": {
+    "/api/health": {
+      "get": {
+        "summary": "Health",
+        "operationId": "health_api_health_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": {
+                    "type": "string"
+                  },
+                  "type": "object",
+                  "title": "Response Health Api Health Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/me": {
+      "get": {
+        "summary": "Me",
+        "operationId": "me_api_me_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Principal"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/config": {
+      "get": {
+        "summary": "Config",
+        "operationId": "config_api_config_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConfigOut"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/templates": {
+      "get": {
+        "summary": "Templates",
+        "operationId": "templates_api_templates_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/TemplateOut"
+                  },
+                  "type": "array",
+                  "title": "Response Templates Api Templates Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/projects": {
+      "get": {
+        "summary": "List Projects",
+        "operationId": "list_projects_api_projects_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/ProjectOut"
+                  },
+                  "type": "array",
+                  "title": "Response List Projects Api Projects Get"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Create Project",
+        "operationId": "create_project_api_projects_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProjectCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProjectOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/projects/{project_id}": {
+      "get": {
+        "summary": "Get Project",
+        "operationId": "get_project_api_projects__project_id__get",
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Project Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProjectOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "summary": "Patch Project",
+        "operationId": "patch_project_api_projects__project_id__patch",
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Project Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProjectPatch"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProjectOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "summary": "Delete Project",
+        "operationId": "delete_project_api_projects__project_id__delete",
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Project Id"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/projects/{project_id}/policy": {
+      "get": {
+        "summary": "Get Policy",
+        "operationId": "get_policy_api_projects__project_id__policy_get",
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Project Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PolicyOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "summary": "Put Policy",
+        "operationId": "put_policy_api_projects__project_id__policy_put",
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Project Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PolicyIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PolicyOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/projects/{project_id}/samples": {
+      "get": {
+        "summary": "Samples",
+        "operationId": "samples_api_projects__project_id__samples_get",
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Project Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/SampleOut"
+                  },
+                  "title": "Response Samples Api Projects  Project Id  Samples Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/projects/{project_id}/try": {
+      "post": {
+        "summary": "Try It",
+        "operationId": "try_it_api_projects__project_id__try_post",
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Project Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TryIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TryResult"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/projects/{project_id}/keys": {
+      "get": {
+        "summary": "List Keys",
+        "operationId": "list_keys_api_projects__project_id__keys_get",
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Project Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/KeyOut"
+                  },
+                  "title": "Response List Keys Api Projects  Project Id  Keys Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Create Key",
+        "operationId": "create_key_api_projects__project_id__keys_post",
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Project Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/KeyCreated"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/projects/{project_id}/keys/{key_id}": {
+      "delete": {
+        "summary": "Revoke Key",
+        "operationId": "revoke_key_api_projects__project_id__keys__key_id__delete",
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Project Id"
+            }
+          },
+          {
+            "name": "key_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Key Id"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/decisions/{decision_id}/feedback": {
+      "post": {
+        "summary": "Post Feedback",
+        "operationId": "post_feedback_api_decisions__decision_id__feedback_post",
+        "parameters": [
+          {
+            "name": "decision_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Decision Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/system1__decisions__router__FeedbackIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FeedbackOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/projects/{project_id}/inbox": {
+      "get": {
+        "summary": "Get Inbox",
+        "operationId": "get_inbox_api_projects__project_id__inbox_get",
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Project Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InboxOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/projects/{project_id}/training-pool": {
+      "get": {
+        "summary": "Get Training Pool",
+        "operationId": "get_training_pool_api_projects__project_id__training_pool_get",
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Project Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PoolOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/projects/{project_id}/agent/messages": {
+      "post": {
+        "summary": "Send Message",
+        "operationId": "send_message_api_projects__project_id__agent_messages_post",
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Project Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MessageIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/projects/{project_id}/agent/history": {
+      "get": {
+        "summary": "History",
+        "operationId": "history_api_projects__project_id__agent_history_get",
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Project Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "oneOf": [
+                      {
+                        "$ref": "#/components/schemas/UserEvent"
+                      },
+                      {
+                        "$ref": "#/components/schemas/TextEvent"
+                      },
+                      {
+                        "$ref": "#/components/schemas/ToolEvent"
+                      },
+                      {
+                        "$ref": "#/components/schemas/ChoicesEvent"
+                      },
+                      {
+                        "$ref": "#/components/schemas/FitEvent"
+                      },
+                      {
+                        "$ref": "#/components/schemas/CanvasEvent"
+                      },
+                      {
+                        "$ref": "#/components/schemas/TryResultEvent"
+                      },
+                      {
+                        "$ref": "#/components/schemas/ConfirmEvent"
+                      },
+                      {
+                        "$ref": "#/components/schemas/StageEvent"
+                      },
+                      {
+                        "$ref": "#/components/schemas/ErrorEvent"
+                      },
+                      {
+                        "$ref": "#/components/schemas/DoneEvent"
+                      }
+                    ],
+                    "discriminator": {
+                      "propertyName": "type",
+                      "mapping": {
+                        "user": "#/components/schemas/UserEvent",
+                        "text": "#/components/schemas/TextEvent",
+                        "tool": "#/components/schemas/ToolEvent",
+                        "choices": "#/components/schemas/ChoicesEvent",
+                        "fit": "#/components/schemas/FitEvent",
+                        "canvas": "#/components/schemas/CanvasEvent",
+                        "try_result": "#/components/schemas/TryResultEvent",
+                        "confirm": "#/components/schemas/ConfirmEvent",
+                        "stage": "#/components/schemas/StageEvent",
+                        "error": "#/components/schemas/ErrorEvent",
+                        "done": "#/components/schemas/DoneEvent"
+                      }
+                    }
+                  },
+                  "title": "Response History Api Projects  Project Id  Agent History Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/projects/{project_id}/actions/{action_id}/confirm": {
+      "post": {
+        "summary": "Confirm",
+        "operationId": "confirm_api_projects__project_id__actions__action_id__confirm_post",
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Project Id"
+            }
+          },
+          {
+            "name": "action_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Action Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConfirmOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/projects/{project_id}/actions/{action_id}/cancel": {
+      "post": {
+        "summary": "Cancel",
+        "operationId": "cancel_api_projects__project_id__actions__action_id__cancel_post",
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Project Id"
+            }
+          },
+          {
+            "name": "action_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Action Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConfirmOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/systemone": {
+      "post": {
+        "summary": "Decide",
+        "operationId": "decide_v1_systemone_post",
+        "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DecideIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DecideOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/feedback": {
+      "post": {
+        "summary": "Feedback",
+        "operationId": "feedback_v1_feedback_post",
+        "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/system1__gateway__router_public__FeedbackIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FeedbackOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "AllOf-Input": {
+        "properties": {
+          "all": {
+            "items": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/Leaf"
+                },
+                {
+                  "$ref": "#/components/schemas/AllOf-Input"
+                },
+                {
+                  "$ref": "#/components/schemas/AnyOf-Input"
+                },
+                {
+                  "$ref": "#/components/schemas/NotOf-Input"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "All"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "all"
+        ],
+        "title": "AllOf"
+      },
+      "AllOf-Output": {
+        "properties": {
+          "all": {
+            "items": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/Leaf"
+                },
+                {
+                  "$ref": "#/components/schemas/AllOf-Output"
+                },
+                {
+                  "$ref": "#/components/schemas/AnyOf-Output"
+                },
+                {
+                  "$ref": "#/components/schemas/NotOf-Output"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "All"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "all"
+        ],
+        "title": "AllOf"
+      },
+      "AnyOf-Input": {
+        "properties": {
+          "any": {
+            "items": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/Leaf"
+                },
+                {
+                  "$ref": "#/components/schemas/AllOf-Input"
+                },
+                {
+                  "$ref": "#/components/schemas/AnyOf-Input"
+                },
+                {
+                  "$ref": "#/components/schemas/NotOf-Input"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Any"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "any"
+        ],
+        "title": "AnyOf"
+      },
+      "AnyOf-Output": {
+        "properties": {
+          "any": {
+            "items": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/Leaf"
+                },
+                {
+                  "$ref": "#/components/schemas/AllOf-Output"
+                },
+                {
+                  "$ref": "#/components/schemas/AnyOf-Output"
+                },
+                {
+                  "$ref": "#/components/schemas/NotOf-Output"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Any"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "any"
+        ],
+        "title": "AnyOf"
+      },
+      "CanvasEvent": {
+        "properties": {
+          "type": {
+            "type": "string",
+            "const": "canvas",
+            "title": "Type",
+            "default": "canvas"
+          },
+          "policy": {
+            "$ref": "#/components/schemas/Policy-Output"
+          },
+          "version": {
+            "type": "integer",
+            "title": "Version"
+          },
+          "changed": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Changed"
+          }
+        },
+        "type": "object",
+        "required": [
+          "policy",
+          "version",
+          "changed"
+        ],
+        "title": "CanvasEvent"
+      },
+      "ChoiceAnswer": {
+        "properties": {
+          "type": {
+            "type": "string",
+            "const": "choice",
+            "title": "Type"
+          },
+          "choice": {
+            "type": "string",
+            "title": "Choice"
+          },
+          "confidence": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Confidence"
+          },
+          "probabilities": {
+            "additionalProperties": {
+              "type": "number"
+            },
+            "type": "object",
+            "title": "Probabilities"
+          }
+        },
+        "type": "object",
+        "required": [
+          "type",
+          "choice",
+          "probabilities"
+        ],
+        "title": "ChoiceAnswer"
+      },
+      "ChoicesEvent": {
+        "properties": {
+          "type": {
+            "type": "string",
+            "const": "choices",
+            "title": "Type",
+            "default": "choices"
+          },
+          "question": {
+            "type": "string",
+            "title": "Question"
+          },
+          "options": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "maxItems": 4,
+            "minItems": 2,
+            "title": "Options"
+          }
+        },
+        "type": "object",
+        "required": [
+          "question",
+          "options"
+        ],
+        "title": "ChoicesEvent"
+      },
+      "ConfigOut": {
+        "properties": {
+          "sys1_available": {
+            "type": "boolean",
+            "title": "Sys1 Available"
+          }
+        },
+        "type": "object",
+        "required": [
+          "sys1_available"
+        ],
+        "title": "ConfigOut"
+      },
+      "ConfirmEvent": {
+        "properties": {
+          "type": {
+            "type": "string",
+            "const": "confirm",
+            "title": "Type",
+            "default": "confirm"
+          },
+          "action_id": {
+            "type": "string",
+            "title": "Action Id"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "dataset",
+              "training"
+            ],
+            "title": "Kind"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "detail": {
+            "type": "string",
+            "title": "Detail"
+          },
+          "est_minutes": {
+            "type": "number",
+            "title": "Est Minutes"
+          },
+          "est_cost_usd": {
+            "type": "number",
+            "title": "Est Cost Usd"
+          }
+        },
+        "type": "object",
+        "required": [
+          "action_id",
+          "kind",
+          "title",
+          "detail",
+          "est_minutes",
+          "est_cost_usd"
+        ],
+        "title": "ConfirmEvent"
+      },
+      "ConfirmOut": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "result": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Result"
+          }
+        },
+        "type": "object",
+        "required": [
+          "status",
+          "result"
+        ],
+        "title": "ConfirmOut"
+      },
+      "DecideIn": {
+        "properties": {
+          "model": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Model"
+          },
+          "state": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "items": {},
+                "type": "array"
+              }
+            ],
+            "title": "State"
+          },
+          "questions": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Questions"
+          }
+        },
+        "type": "object",
+        "required": [
+          "state"
+        ],
+        "title": "DecideIn"
+      },
+      "DecideOut": {
+        "properties": {
+          "model": {
+            "type": "string",
+            "title": "Model"
+          },
+          "answers": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/ChoiceAnswer"
+            },
+            "type": "object",
+            "title": "Answers"
+          },
+          "usage": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Usage"
+          },
+          "system1": {
+            "$ref": "#/components/schemas/Sys1Block"
+          }
+        },
+        "type": "object",
+        "required": [
+          "model",
+          "answers",
+          "system1"
+        ],
+        "title": "DecideOut"
+      },
+      "DoneEvent": {
+        "properties": {
+          "type": {
+            "type": "string",
+            "const": "done",
+            "title": "Type",
+            "default": "done"
+          }
+        },
+        "type": "object",
+        "title": "DoneEvent"
+      },
+      "ErrorEvent": {
+        "properties": {
+          "type": {
+            "type": "string",
+            "const": "error",
+            "title": "Type",
+            "default": "error"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message"
+          }
+        },
+        "type": "object",
+        "required": [
+          "message"
+        ],
+        "title": "ErrorEvent"
+      },
+      "FeedbackOut": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "title": "Status",
+            "default": "recorded"
+          }
+        },
+        "type": "object",
+        "title": "FeedbackOut"
+      },
+      "FitEvent": {
+        "properties": {
+          "type": {
+            "type": "string",
+            "const": "fit",
+            "title": "Type",
+            "default": "fit"
+          },
+          "rating": {
+            "type": "string",
+            "enum": [
+              "good",
+              "workable",
+              "poor"
+            ],
+            "title": "Rating"
+          },
+          "reasons": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Reasons"
+          }
+        },
+        "type": "object",
+        "required": [
+          "rating",
+          "reasons"
+        ],
+        "title": "FitEvent"
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "type": "array",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "title": "HTTPValidationError"
+      },
+      "InboxItem": {
+        "properties": {
+          "decision_id": {
+            "type": "string",
+            "title": "Decision Id"
+          },
+          "state": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "items": {},
+                "type": "array"
+              }
+            ],
+            "title": "State"
+          },
+          "answer": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Answer"
+          },
+          "lane": {
+            "type": "string",
+            "title": "Lane"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "decision_id",
+          "state",
+          "answer",
+          "lane",
+          "created_at"
+        ],
+        "title": "InboxItem"
+      },
+      "InboxOut": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/InboxItem"
+            },
+            "type": "array",
+            "title": "Items"
+          }
+        },
+        "type": "object",
+        "required": [
+          "items"
+        ],
+        "title": "InboxOut"
+      },
+      "InputField": {
+        "properties": {
+          "key": {
+            "type": "string",
+            "title": "Key"
+          },
+          "label": {
+            "type": "string",
+            "title": "Label"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "enum",
+              "int",
+              "float",
+              "bool",
+              "text"
+            ],
+            "title": "Type"
+          },
+          "values": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Values"
+          },
+          "nullable": {
+            "type": "boolean",
+            "title": "Nullable",
+            "default": true
+          },
+          "description": {
+            "type": "string",
+            "title": "Description",
+            "default": ""
+          }
+        },
+        "type": "object",
+        "required": [
+          "key",
+          "label",
+          "type"
+        ],
+        "title": "InputField"
+      },
+      "KeyCreated": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "prefix": {
+            "type": "string",
+            "title": "Prefix"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "key": {
+            "type": "string",
+            "title": "Key"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "prefix",
+          "created_at",
+          "key"
+        ],
+        "title": "KeyCreated"
+      },
+      "KeyOut": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "prefix": {
+            "type": "string",
+            "title": "Prefix"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "prefix",
+          "created_at"
+        ],
+        "title": "KeyOut"
+      },
+      "LaneResult": {
+        "properties": {
+          "lane": {
+            "type": "string",
+            "enum": [
+              "jev",
+              "jev_labels",
+              "sys1"
+            ],
+            "title": "Lane"
+          },
+          "label": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Label"
+          },
+          "probabilities": {
+            "additionalProperties": {
+              "type": "number"
+            },
+            "type": "object",
+            "title": "Probabilities",
+            "default": {}
+          },
+          "model": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Model"
+          },
+          "latency_ms": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Latency Ms"
+          },
+          "decision_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Decision Id"
+          },
+          "error": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error"
+          },
+          "retryable": {
+            "type": "boolean",
+            "title": "Retryable",
+            "default": false
+          }
+        },
+        "type": "object",
+        "required": [
+          "lane"
+        ],
+        "title": "LaneResult"
+      },
+      "Leaf": {
+        "properties": {
+          "field": {
+            "type": "string",
+            "title": "Field"
+          },
+          "op": {
+            "type": "string",
+            "enum": [
+              "eq",
+              "ne",
+              "gt",
+              "gte",
+              "lt",
+              "lte",
+              "in",
+              "is_null"
+            ],
+            "title": "Op"
+          },
+          "value": {
+            "title": "Value"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "field",
+          "op"
+        ],
+        "title": "Leaf"
+      },
+      "MessageIn": {
+        "properties": {
+          "text": {
+            "type": "string",
+            "title": "Text"
+          }
+        },
+        "type": "object",
+        "required": [
+          "text"
+        ],
+        "title": "MessageIn"
+      },
+      "NotOf-Input": {
+        "properties": {
+          "not": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Leaf"
+              },
+              {
+                "$ref": "#/components/schemas/AllOf-Input"
+              },
+              {
+                "$ref": "#/components/schemas/AnyOf-Input"
+              },
+              {
+                "$ref": "#/components/schemas/NotOf-Input"
+              }
+            ],
+            "title": "Not"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "not"
+        ],
+        "title": "NotOf"
+      },
+      "NotOf-Output": {
+        "properties": {
+          "not": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Leaf"
+              },
+              {
+                "$ref": "#/components/schemas/AllOf-Output"
+              },
+              {
+                "$ref": "#/components/schemas/AnyOf-Output"
+              },
+              {
+                "$ref": "#/components/schemas/NotOf-Output"
+              }
+            ],
+            "title": "Not"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "not"
+        ],
+        "title": "NotOf"
+      },
+      "Option": {
+        "properties": {
+          "key": {
+            "type": "string",
+            "title": "Key"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "covers": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Covers"
+          },
+          "excludes": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Excludes"
+          },
+          "example": {
+            "type": "string",
+            "title": "Example",
+            "default": ""
+          }
+        },
+        "type": "object",
+        "required": [
+          "key",
+          "name"
+        ],
+        "title": "Option"
+      },
+      "Policy-Input": {
+        "properties": {
+          "decision_question": {
+            "type": "string",
+            "title": "Decision Question"
+          },
+          "question_key": {
+            "type": "string",
+            "title": "Question Key",
+            "default": "decision"
+          },
+          "inputs": {
+            "items": {
+              "$ref": "#/components/schemas/InputField"
+            },
+            "type": "array",
+            "title": "Inputs"
+          },
+          "options": {
+            "items": {
+              "$ref": "#/components/schemas/Option"
+            },
+            "type": "array",
+            "title": "Options"
+          },
+          "rules": {
+            "items": {
+              "$ref": "#/components/schemas/Rule-Input"
+            },
+            "type": "array",
+            "title": "Rules"
+          }
+        },
+        "type": "object",
+        "required": [
+          "decision_question",
+          "options"
+        ],
+        "title": "Policy"
+      },
+      "Policy-Output": {
+        "properties": {
+          "decision_question": {
+            "type": "string",
+            "title": "Decision Question"
+          },
+          "question_key": {
+            "type": "string",
+            "title": "Question Key",
+            "default": "decision"
+          },
+          "inputs": {
+            "items": {
+              "$ref": "#/components/schemas/InputField"
+            },
+            "type": "array",
+            "title": "Inputs"
+          },
+          "options": {
+            "items": {
+              "$ref": "#/components/schemas/Option"
+            },
+            "type": "array",
+            "title": "Options"
+          },
+          "rules": {
+            "items": {
+              "$ref": "#/components/schemas/Rule-Output"
+            },
+            "type": "array",
+            "title": "Rules"
+          }
+        },
+        "type": "object",
+        "required": [
+          "decision_question",
+          "options"
+        ],
+        "title": "Policy"
+      },
+      "PolicyIn": {
+        "properties": {
+          "policy": {
+            "$ref": "#/components/schemas/Policy-Input"
+          }
+        },
+        "type": "object",
+        "required": [
+          "policy"
+        ],
+        "title": "PolicyIn"
+      },
+      "PolicyIssue": {
+        "properties": {
+          "path": {
+            "type": "string",
+            "title": "Path"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message"
+          }
+        },
+        "type": "object",
+        "required": [
+          "path",
+          "message"
+        ],
+        "title": "PolicyIssue"
+      },
+      "PolicyOut": {
+        "properties": {
+          "policy": {
+            "$ref": "#/components/schemas/Policy-Output"
+          },
+          "version": {
+            "type": "integer",
+            "title": "Version"
+          },
+          "issues": {
+            "items": {
+              "$ref": "#/components/schemas/PolicyIssue"
+            },
+            "type": "array",
+            "title": "Issues"
+          }
+        },
+        "type": "object",
+        "required": [
+          "policy",
+          "version",
+          "issues"
+        ],
+        "title": "PolicyOut"
+      },
+      "PoolOut": {
+        "properties": {
+          "count": {
+            "type": "integer",
+            "title": "Count"
+          }
+        },
+        "type": "object",
+        "required": [
+          "count"
+        ],
+        "title": "PoolOut"
+      },
+      "Principal": {
+        "properties": {
+          "user_id": {
+            "type": "string",
+            "title": "User Id"
+          },
+          "org_id": {
+            "type": "string",
+            "title": "Org Id"
+          },
+          "org_role": {
+            "type": "string",
+            "title": "Org Role"
+          },
+          "org_slug": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Org Slug"
+          }
+        },
+        "type": "object",
+        "required": [
+          "user_id",
+          "org_id",
+          "org_role",
+          "org_slug"
+        ],
+        "title": "Principal"
+      },
+      "ProjectCreate": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "template_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Template Id"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name"
+        ],
+        "title": "ProjectCreate"
+      },
+      "ProjectOut": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "template_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Template Id"
+          },
+          "stage": {
+            "type": "string",
+            "title": "Stage"
+          },
+          "default_lane": {
+            "type": "string",
+            "title": "Default Lane"
+          },
+          "live_model_label": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Live Model Label"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "description",
+          "template_id",
+          "stage",
+          "default_lane",
+          "live_model_label",
+          "created_at"
+        ],
+        "title": "ProjectOut"
+      },
+      "ProjectPatch": {
+        "properties": {
+          "name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "default_lane": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "jev",
+                  "sys1",
+                  "auto"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Default Lane"
+          }
+        },
+        "type": "object",
+        "title": "ProjectPatch"
+      },
+      "Rule-Input": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "text": {
+            "type": "string",
+            "title": "Text"
+          },
+          "label": {
+            "type": "string",
+            "title": "Label"
+          },
+          "when": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Leaf"
+              },
+              {
+                "$ref": "#/components/schemas/AllOf-Input"
+              },
+              {
+                "$ref": "#/components/schemas/AnyOf-Input"
+              },
+              {
+                "$ref": "#/components/schemas/NotOf-Input"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "When"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "text",
+          "label"
+        ],
+        "title": "Rule"
+      },
+      "Rule-Output": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "text": {
+            "type": "string",
+            "title": "Text"
+          },
+          "label": {
+            "type": "string",
+            "title": "Label"
+          },
+          "when": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Leaf"
+              },
+              {
+                "$ref": "#/components/schemas/AllOf-Output"
+              },
+              {
+                "$ref": "#/components/schemas/AnyOf-Output"
+              },
+              {
+                "$ref": "#/components/schemas/NotOf-Output"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "When"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "text",
+          "label"
+        ],
+        "title": "Rule"
+      },
+      "SampleOut": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "state": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "items": {},
+                "type": "array"
+              }
+            ],
+            "title": "State"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "state"
+        ],
+        "title": "SampleOut"
+      },
+      "StageEvent": {
+        "properties": {
+          "type": {
+            "type": "string",
+            "const": "stage",
+            "title": "Type",
+            "default": "stage"
+          },
+          "stage": {
+            "type": "string",
+            "title": "Stage"
+          }
+        },
+        "type": "object",
+        "required": [
+          "stage"
+        ],
+        "title": "StageEvent"
+      },
+      "Sys1Block": {
+        "properties": {
+          "decision_id": {
+            "type": "string",
+            "title": "Decision Id"
+          },
+          "routed_to": {
+            "type": "string",
+            "title": "Routed To"
+          },
+          "policy_version": {
+            "type": "integer",
+            "title": "Policy Version"
+          },
+          "latency_ms": {
+            "type": "number",
+            "title": "Latency Ms"
+          }
+        },
+        "type": "object",
+        "required": [
+          "decision_id",
+          "routed_to",
+          "policy_version",
+          "latency_ms"
+        ],
+        "title": "Sys1Block"
+      },
+      "TemplateOut": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "summary": {
+            "type": "string",
+            "title": "Summary"
+          },
+          "fit": {
+            "type": "string",
+            "title": "Fit"
+          },
+          "fit_reasons": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Fit Reasons"
+          },
+          "sample_inputs": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Sample Inputs"
+          },
+          "flagship": {
+            "type": "boolean",
+            "title": "Flagship"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "summary",
+          "fit",
+          "fit_reasons",
+          "sample_inputs",
+          "flagship"
+        ],
+        "title": "TemplateOut"
+      },
+      "TextEvent": {
+        "properties": {
+          "type": {
+            "type": "string",
+            "const": "text",
+            "title": "Type",
+            "default": "text"
+          },
+          "delta": {
+            "type": "string",
+            "title": "Delta"
+          }
+        },
+        "type": "object",
+        "required": [
+          "delta"
+        ],
+        "title": "TextEvent"
+      },
+      "ToolEvent": {
+        "properties": {
+          "type": {
+            "type": "string",
+            "const": "tool",
+            "title": "Type",
+            "default": "tool"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "started",
+              "done",
+              "error"
+            ],
+            "title": "Status"
+          },
+          "summary": {
+            "type": "string",
+            "title": "Summary",
+            "default": ""
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "status"
+        ],
+        "title": "ToolEvent"
+      },
+      "TryIn": {
+        "properties": {
+          "text": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Text"
+          },
+          "sample_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sample Id"
+          }
+        },
+        "type": "object",
+        "title": "TryIn"
+      },
+      "TryResult": {
+        "properties": {
+          "results": {
+            "items": {
+              "$ref": "#/components/schemas/LaneResult"
+            },
+            "type": "array",
+            "title": "Results"
+          },
+          "gold": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Gold"
+          },
+          "rule_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rule Id"
+          },
+          "recorded": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "type": "object",
+            "title": "Recorded",
+            "default": {}
+          },
+          "recorded_is_fixture": {
+            "type": "boolean",
+            "title": "Recorded Is Fixture",
+            "default": false
+          }
+        },
+        "type": "object",
+        "required": [
+          "results"
+        ],
+        "title": "TryResult"
+      },
+      "TryResultEvent": {
+        "properties": {
+          "type": {
+            "type": "string",
+            "const": "try_result",
+            "title": "Type",
+            "default": "try_result"
+          },
+          "input": {
+            "type": "string",
+            "title": "Input"
+          },
+          "result": {
+            "$ref": "#/components/schemas/TryResult"
+          }
+        },
+        "type": "object",
+        "required": [
+          "input",
+          "result"
+        ],
+        "title": "TryResultEvent"
+      },
+      "UserEvent": {
+        "properties": {
+          "type": {
+            "type": "string",
+            "const": "user",
+            "title": "Type",
+            "default": "user"
+          },
+          "text": {
+            "type": "string",
+            "title": "Text"
+          }
+        },
+        "type": "object",
+        "required": [
+          "text"
+        ],
+        "title": "UserEvent"
+      },
+      "ValidationError": {
+        "properties": {
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Location"
+          },
+          "msg": {
+            "type": "string",
+            "title": "Message"
+          },
+          "type": {
+            "type": "string",
+            "title": "Error Type"
+          },
+          "input": {
+            "title": "Input"
+          },
+          "ctx": {
+            "type": "object",
+            "title": "Context"
+          }
+        },
+        "type": "object",
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError"
+      },
+      "system1__decisions__router__FeedbackIn": {
+        "properties": {
+          "kind": {
+            "type": "string",
+            "enum": [
+              "confirm",
+              "correction"
+            ],
+            "title": "Kind"
+          },
+          "correct_label": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Correct Label"
+          }
+        },
+        "type": "object",
+        "required": [
+          "kind"
+        ],
+        "title": "FeedbackIn"
+      },
+      "system1__gateway__router_public__FeedbackIn": {
+        "properties": {
+          "decision_id": {
+            "type": "string",
+            "title": "Decision Id"
+          },
+          "correct": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "type": "object",
+            "title": "Correct"
+          }
+        },
+        "type": "object",
+        "required": [
+          "decision_id",
+          "correct"
+        ],
+        "title": "FeedbackIn"
+      }
+    }
+  }
+}

@@ -69,9 +69,40 @@ The phase plan, with phase 1 in detail, is in [docs/superpowers/specs/2026-10-20
 - Proposed ownership: Nicholas leads the engine (training, calibration, scoring), and Thomas leads the app, the loop, the endpoint and the video. Coordinate before restructuring `train.py`.
 - Disclose on Devpost the Modal/Unsloth experiments from before the build week, any templates used, and the AI tools used (including Claude Code).
 
+## Engineering rules (product build)
+
+These apply to the product code in `app/`. The phase 1 scripts at the repo root keep their current setup.
+
+- **Before changing code:** read the relevant code and docs first, follow existing patterns, and stay in scope, with no speculative cleanup. When a request can be read more than one way and the choice is costly to reverse, ask. Otherwise, state the interpretation you chose.
+- **Library behaviour:** when unsure how a library works (Clerk, FastAPI, the Anthropic SDK, Unsloth), check the installed version's source, types or docs rather than relying on memory.
+- **Naming:** the code is split into `app/server/` (FastAPI) and `app/client/` (React). Say "client" and "server", never "frontend" and "backend".
+- **Toolchain:**
+  - Server: `uv` (`uv add`, `uv sync`, `uv run`) with a `pyproject.toml` in `app/server/`, and `ruff check` / `ruff format`.
+  - Client: `bun` (`bun add`, `bun run`) with Prettier.
+  - Don't substitute pip, npm, yarn or pnpm.
+- **Checks:**
+  - `make format`, `make check` and `make test`.
+  - `make docs` regenerates the OpenAPI schema and the client's types after any API change.
+  - `make verify` runs everything before a gate.
+  - During work, run the smallest relevant tests. Before calling something done, run the full checks for every part you changed. Agent edits don't trigger format-on-save.
+- **Failures:**
+  - Never claim a check passed unless it ran in the current work.
+  - Fix the cause. Don't delete or skip tests, weaken assertions, or catch broad exceptions.
+  - Suppress a lint or type error (`noqa`, `type: ignore`, `eslint-disable`) only for a verified false positive, with a comment explaining why.
+  - After three failed attempts at the same failure, stop and report what you tried, the evidence and your leading guess.
+- **Comments and docs:** comments explain intent, constraints and trade-offs, not what the code obviously does, and never reference tickets or plan steps. Don't hand-edit generated files. Update living docs when a change makes them wrong.
+- **Side effects:**
+  - Real calls to Anthropic, TypeSafe or Modal happen only in the tagged smoke test, under its spending cap.
+  - Ask before deploying, changing Clerk or Modal settings, or sending anything outside the repo.
+- **Git:**
+  - Commit freely on `product-design`, never on `main`.
+  - Use `type(scope): description` messages: an imperative, lowercase subject of 72 characters or less, with the why in the body.
+  - Add no Claude attribution lines.
+  - Never force-push, discard uncommitted work or rewrite history without asking.
+
 ## Environment and commands
 
-- **Commands:** run `make help` for the list (setup, `check-env`, `jev-check`, `train`, `eval-laya`, `eval-lora`, `eval-jev`). The evals take `LIMIT=50` for smoke tests.
+- **Commands:** run `make help` for the list (setup, `check-env`, `jev-check`, `train`, `eval-laya`, `eval-lora`, `eval-jev`). The evals take `LIMIT=50` for smoke tests. Product commands (delegating to `app/Makefile`): `dev` (server and client), `format`, `check`, `docs` (OpenAPI schema and client types), `verify` (check, test, client build). `test` runs the phase 1 tests and then the server tests.
 - **Environment:** a local `.venv` created with `uv`. Override the location with `VENV=...`. Training and the Laya evals run remotely on Modal. `eval_jev.py` runs locally.
 - **Secrets:** stored in `.env`, which is gitignored. The template is `.env.example`, and `make env` copies it. Never print or commit `.env`.
 - **Agent prompts:** prompts for separate agent sessions live in `agent-prompts/`, which is gitignored and local only. `readback-check.md` is the blind read-back check, which Thomas runs in a fresh session.

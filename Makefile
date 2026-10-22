@@ -18,7 +18,7 @@ LIMIT_ARG := $(if $(LIMIT),--limit $(LIMIT),)
 LOAD_ENV := set -a; [ -f .env ] && . ./.env; set +a;
 
 .DEFAULT_GOAL := help
-.PHONY: help env venv install test modal-setup check-env jev-check train eval-laya eval-lora eval-jev eval-all grid tickets-check blind readback dataset dataset-provisional clean
+.PHONY: help env venv install test dev format check docs verify modal-setup check-env jev-check train eval-laya eval-lora eval-jev eval-all grid tickets-check blind readback dataset dataset-provisional clean
 
 help: ## List available commands
 	@grep -E '^[a-zA-Z_-]+:.*?## ' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-12s\033[0m %s\n", $$1, $$2}'
@@ -36,8 +36,26 @@ venv: ## Create the virtualenv with uv, if it doesn't exist yet
 install: venv ## Install local dependencies (modal, eval_jev.py deps, data pipeline and tests)
 	uv pip install --python $(PYTHON) modal requests datasets pytest pandas pyarrow matplotlib
 
-test: ## Run the unit tests
-	$(PYTHON) -m pytest -q
+test: ## Run the phase 1 tests and the product server tests
+	$(PYTHON) -m pytest -q tests
+	$(MAKE) -C app test
+
+# --- Product (app/) ---------------------------------------------------------
+
+dev: ## Run the product server and client together
+	$(MAKE) -C app dev
+
+format: ## Format the product code (ruff, Prettier)
+	$(MAKE) -C app format
+
+check: ## Lint and typecheck the product code
+	$(MAKE) -C app check
+
+docs: ## Regenerate the OpenAPI schema and the client's types
+	$(MAKE) -C app docs
+
+verify: ## Run check, test and the client build for the product
+	$(MAKE) -C app verify
 
 modal-setup: ## Authenticate the Modal CLI (opens a browser)
 	$(MODAL) setup

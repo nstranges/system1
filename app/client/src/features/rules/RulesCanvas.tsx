@@ -1,0 +1,161 @@
+import { useState } from "react"
+import { toast } from "sonner"
+import { Button } from "@/components/ui/button"
+import { useApi } from "@/lib/api/client"
+import {
+  readProblem,
+  type PolicyInput,
+  type PolicyIssue,
+  type PolicyOut,
+  type Project,
+} from "@/lib/api/types"
+import { describeIssue, describeOptionCount } from "./issueText"
+import { unmark } from "./newRow"
+import { InputsPanel } from "./InputsPanel"
+import { OptionsPanel } from "./OptionsPanel"
+import { RulesPanel } from "./RulesPanel"
+
+// Blank lines in "covers" textareas are for typing; drop them before saving.
+function tidy(policy: PolicyInput): PolicyInput {
+  const clean = (xs?: string[]) =>
+    (xs ?? []).map((x) => x.trim()).filter(Boolean)
+  return {
+    ...policy,
+    inputs: policy.inputs?.map(unmark),
+    options: policy.options.map((o) => ({
+      ...unmark(o),
+      covers: clean(o.covers),
+      excludes: clean(o.excludes),
+    })),
+  }
+}
+
+export function IssueList({
+  issues,
+  policy,
+  title = "Fix these before you save or try it out",
+}: {
+  issues: PolicyIssue[]
+  policy: PolicyInput
+  title?: string
+}) {
+  if (issues.length === 0) return null
+  return (
+    <div
+      role="alert"
+      className="rounded-lg border border-destructive/40 bg-destructive/5 p-3 text-sm"
+    >
+      <p className="font-medium text-destructive">{title}</p>
+      <ul className="mt-1 list-disc space-y-0.5 pl-5">
+        {issues.map((issue, n) => {
+          const view = describeIssue(issue, policy)
+          const text = describeOptionCount(issue) ?? view.text
+          return (
+            <li key={n}>
+              {view.target ? (
+                <button
+                  type="button"
+                  className="text-left underline-offset-2 hover:underline"
+                  onClick={() => {
+                    const el = document.getElementById(view.target!)
+                    el?.scrollIntoView({ behavior: "smooth", block: "center" })
+                    el?.classList.add("ring-2", "ring-destructive")
+                    setTimeout(
+                      () => el?.classList.remove("ring-2", "ring-destructive"),
+                      2000,
+                    )
+                  }}
+                >
+                  {text}
+                </button>
+              ) : (
+                text
+              )}
+            </li>
+          )
+        })}
+      </ul>
+    </div>
+  )
+}
+
+export function RulesCanvas({
+  project,
+  policy,
+  draft: unsaved,
+  onDraft,
+  onPolicy,
+}: {
+  project: Project
+  policy: PolicyOut
+  // Unsaved edits live in the workspace so they survive switching stages.
+  draft: PolicyInput | null
+  onDraft: (d: PolicyInput | null) => void
+  onPolicy: (p: PolicyOut) => void
+}) {
+  const api = useApi()
+  const draft: PolicyInput = unsaved ?? policy.policy
+  const dirty = unsaved !== null
+  const [saving, setSaving] = useState(false)
+  // Issues come from the policy; a failed save overrides them only until the
+  // policy object changes (a save, an agent edit, a refetch).
+  const [override, setOverride] = useState<{
+    base: PolicyOut
+    issues: PolicyIssue[]
+  } | null>(null)
+  const issues = override?.base === policy ? override.issues : policy.issues
+
+  const change = (next: PolicyInput) => onDraft(next)
+
+  async function save() {
+    setSaving(true)
+    const { data, error } = await api.PUT("/api/projects/{project_id}/policy", {
+      params: { path: { project_id: project.id } },
+      body: { policy: tidy(draft) },
+    })
+    setSaving(false)
+    if (data) {
+      onDraft(null)
+      setOverride(null)
+      onPolicy(data)
+      toast.success("Rules saved")
+      return
+    }
+    // The draft stays as typed so nothing is lost while fixing the problems.
+    const problem = readProblem(error)
+    setOverride({ base: policy, issues: problem.issues })
+    toast.error(problem.message)
+  }
+
+  return (
+    <div className="space-y-8">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <div>
+          <h2 className="text-xl font-semibold tracking-tight">Rules</h2>
+          <p className="text-sm text-muted-foreground">
+            {draft.decision_question}
+          </p>
+        </div>
+        <div className="flex gap-2">
+          <Button
+            variant="ghost"
+            disabled={!dirty || saving}
+            onClick={() => {
+              onDraft(null)
+              setOverride(null)
+            }}
+          >
+            Discard changes
+          </Button>
+          <Button disabled={!dirty || saving} onClick={() => void save()}>
+            Save rules
+          </Button>
+        </div>
+      </div>
+      <IssueList issues={issues} policy={draft} />
+      <InputsPanel policy={draft} onChange={change} />
+      <OptionsPanel policy={draft} onChange={change} />
+      <RulesPanel policy={draft} onChange={change} />
+    </div>
+  )
+}

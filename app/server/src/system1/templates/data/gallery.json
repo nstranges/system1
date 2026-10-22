@@ -1,0 +1,1118 @@
+[
+  {
+    "id": "refund-approval",
+    "name": "Refund approval",
+    "summary": "Decide whether a refund request is approved, escalated, denied or sent to fraud review.",
+    "fit": "good",
+    "fit_reasons": [
+      "Decided hundreds of times a month",
+      "Four clear outcomes",
+      "Amount and timing thresholds are where general models slip",
+      "A manager reviews escalations, so mistakes are catchable"
+    ],
+    "sample_inputs": [
+      "Customer wants $45 back on a duplicate charge from two days ago, standard plan.",
+      "An enterprise customer asks for $1,200 back on an annual plan bought last week.",
+      "Someone says they never made a $89 purchase made 3 days ago and their card was stolen."
+    ],
+    "policy": {
+      "decision_question": "What should we do with this refund request?",
+      "question_key": "decision",
+      "inputs": [
+        {
+          "key": "amount",
+          "label": "Amount (USD)",
+          "type": "float",
+          "description": "Refund amount requested."
+        },
+        {
+          "key": "days_since_purchase",
+          "label": "Days since purchase",
+          "type": "int",
+          "description": ""
+        },
+        {
+          "key": "plan",
+          "label": "Plan",
+          "type": "enum",
+          "description": "",
+          "values": [
+            "free",
+            "standard",
+            "enterprise"
+          ]
+        },
+        {
+          "key": "fraud_signals",
+          "label": "Fraud signals mentioned",
+          "type": "bool",
+          "description": "Chargeback threats, stolen card or account takeover language."
+        },
+        {
+          "key": "reason",
+          "label": "Reason given",
+          "type": "text",
+          "description": ""
+        }
+      ],
+      "options": [
+        {
+          "key": "approve",
+          "name": "Approve",
+          "covers": [
+            "$500 or less",
+            "Within 30 days of purchase"
+          ],
+          "excludes": [
+            "Anything mentioning fraud"
+          ],
+          "example": "A $40 refund for a duplicate charge two days ago."
+        },
+        {
+          "key": "escalate",
+          "name": "Escalate to a manager",
+          "covers": [
+            "Over $500",
+            "Enterprise customers asking for more than $200"
+          ],
+          "excludes": [
+            "Fraud claims"
+          ],
+          "example": "A $900 annual plan refund."
+        },
+        {
+          "key": "deny",
+          "name": "Deny",
+          "covers": [
+            "More than 30 days after purchase on non-enterprise plans"
+          ],
+          "excludes": [
+            "Duplicate charges, which are always refunded"
+          ],
+          "example": "A refund asked for 80 days after buying."
+        },
+        {
+          "key": "fraud_review",
+          "name": "Fraud review",
+          "covers": [
+            "Any sign of stolen card, chargeback threat or account takeover"
+          ],
+          "excludes": [],
+          "example": "I did not make this purchase."
+        }
+      ],
+      "rules": [
+        {
+          "id": "R1",
+          "text": "Any sign of fraud goes to fraud review.",
+          "label": "fraud_review",
+          "when": {
+            "field": "fraud_signals",
+            "op": "eq",
+            "value": true
+          }
+        },
+        {
+          "id": "R2",
+          "text": "Refunds over $500 are escalated to a manager.",
+          "label": "escalate",
+          "when": {
+            "field": "amount",
+            "op": "gt",
+            "value": 500
+          }
+        },
+        {
+          "id": "R3",
+          "text": "Refunds requested more than 30 days after purchase are denied.",
+          "label": "deny",
+          "when": {
+            "field": "days_since_purchase",
+            "op": "gt",
+            "value": 30
+          }
+        }
+      ]
+    }
+  },
+  {
+    "id": "tallyfern-triage",
+    "name": "Support ticket triage (Tallyfern)",
+    "summary": "Route each support ticket to one of 13 queues. The flagship example, with a trained sys1 model.",
+    "fit": "good",
+    "fit_reasons": [
+      "Thousands of tickets a month",
+      "13 fixed queues",
+      "Thresholds, time windows and precedence rules are where fine-tuning helps",
+      "Every ticket is reviewed by a queue owner"
+    ],
+    "sample_inputs": [
+      "We were charged $640 for the annual upgrade last week and want it refunded.",
+      "Our payout of $2,300 due Friday never arrived.",
+      "None of our team can load the dashboard since 9am and checkout pages show an error."
+    ],
+    "flagship": {
+      "folder": "tallyfern",
+      "eval_models": {
+        "sys1": "sys1",
+        "jev_policy": "jev_policy",
+        "jev_labels": "jev_labels",
+        "base": "base"
+      },
+      "model_label": "sys1 (Tallyfern triage)"
+    }
+  },
+  {
+    "id": "lead-routing",
+    "name": "Inbound lead routing",
+    "summary": "Send each new lead to the right sales team, nurture it or disqualify it.",
+    "fit": "good",
+    "fit_reasons": [
+      "Many leads a day",
+      "Few clear outcomes",
+      "Company size and region rules are easy to state",
+      "A bad route is cheap to fix"
+    ],
+    "sample_inputs": [
+      "VP of Ops at a 2,400-person logistics company asks for a demo.",
+      "A graduate student wants a free account for a thesis project.",
+      "The owner of a 12-person design studio downloaded the pricing guide."
+    ],
+    "policy": {
+      "decision_question": "Where should this lead go?",
+      "question_key": "decision",
+      "inputs": [
+        {
+          "key": "employees",
+          "label": "Company size (employees)",
+          "type": "int",
+          "description": ""
+        },
+        {
+          "key": "region",
+          "label": "Region",
+          "type": "enum",
+          "description": "",
+          "values": [
+            "na",
+            "emea",
+            "apac",
+            "other"
+          ]
+        },
+        {
+          "key": "is_student",
+          "label": "Student or hobbyist",
+          "type": "bool",
+          "description": ""
+        },
+        {
+          "key": "budget_stated",
+          "label": "Budget stated",
+          "type": "bool",
+          "description": ""
+        }
+      ],
+      "options": [
+        {
+          "key": "enterprise_team",
+          "name": "Enterprise sales",
+          "covers": [
+            "1,000 or more employees"
+          ],
+          "excludes": [
+            "Students"
+          ],
+          "example": ""
+        },
+        {
+          "key": "mid_market_team",
+          "name": "Mid-market sales",
+          "covers": [
+            "100 to 999 employees"
+          ],
+          "excludes": [],
+          "example": ""
+        },
+        {
+          "key": "nurture",
+          "name": "Nurture",
+          "covers": [
+            "Under 100 employees with interest"
+          ],
+          "excludes": [],
+          "example": ""
+        },
+        {
+          "key": "disqualify",
+          "name": "Disqualify",
+          "covers": [
+            "Students, hobbyists, competitors"
+          ],
+          "excludes": [],
+          "example": ""
+        }
+      ],
+      "rules": [
+        {
+          "id": "R1",
+          "text": "Students and hobbyists are disqualified.",
+          "label": "disqualify",
+          "when": {
+            "field": "is_student",
+            "op": "eq",
+            "value": true
+          }
+        },
+        {
+          "id": "R2",
+          "text": "1,000 or more employees go to Enterprise sales.",
+          "label": "enterprise_team",
+          "when": {
+            "field": "employees",
+            "op": "gte",
+            "value": 1000
+          }
+        },
+        {
+          "id": "R3",
+          "text": "100 to 999 employees go to Mid-market sales.",
+          "label": "mid_market_team",
+          "when": {
+            "field": "employees",
+            "op": "gte",
+            "value": 100
+          }
+        }
+      ]
+    }
+  },
+  {
+    "id": "inbox-routing",
+    "name": "Shared-inbox email routing",
+    "summary": "Sort messages sent to a shared inbox to sales, support, billing, partnerships or spam.",
+    "fit": "good",
+    "fit_reasons": [
+      "High volume",
+      "Five clear outcomes",
+      "Short inputs",
+      "Misroutes are forwarded by a person"
+    ],
+    "sample_inputs": [
+      "Hi, can you send me last quarter's invoice? We lost the PDF.",
+      "We build a reporting tool and would like to explore an integration with you.",
+      "Congratulations! You have been selected for a free prize, click here."
+    ],
+    "policy": {
+      "decision_question": "Which team should get this email?",
+      "question_key": "decision",
+      "inputs": [
+        {
+          "key": "subject",
+          "label": "Subject",
+          "type": "text",
+          "description": ""
+        },
+        {
+          "key": "body",
+          "label": "Body",
+          "type": "text",
+          "description": ""
+        },
+        {
+          "key": "known_customer",
+          "label": "Sender is a known customer",
+          "type": "bool",
+          "description": ""
+        }
+      ],
+      "options": [
+        {
+          "key": "sales",
+          "name": "Sales",
+          "covers": [
+            "Pricing and demo requests from new companies"
+          ],
+          "excludes": [],
+          "example": ""
+        },
+        {
+          "key": "support",
+          "name": "Support",
+          "covers": [
+            "Product problems from customers"
+          ],
+          "excludes": [],
+          "example": ""
+        },
+        {
+          "key": "billing",
+          "name": "Billing",
+          "covers": [
+            "Invoices, payments, receipts"
+          ],
+          "excludes": [],
+          "example": ""
+        },
+        {
+          "key": "partnerships",
+          "name": "Partnerships",
+          "covers": [
+            "Reseller, integration and co-marketing offers"
+          ],
+          "excludes": [],
+          "example": ""
+        },
+        {
+          "key": "spam",
+          "name": "Spam",
+          "covers": [
+            "Unsolicited offers and phishing"
+          ],
+          "excludes": [],
+          "example": ""
+        }
+      ],
+      "rules": [
+        {
+          "id": "R1",
+          "text": "Unsolicited offers and phishing are spam.",
+          "label": "spam",
+          "when": null
+        },
+        {
+          "id": "R2",
+          "text": "Known customers with a problem go to support.",
+          "label": "support",
+          "when": {
+            "field": "known_customer",
+            "op": "eq",
+            "value": true
+          }
+        },
+        {
+          "id": "R3",
+          "text": "Invoice and payment questions go to billing.",
+          "label": "billing",
+          "when": null
+        }
+      ]
+    }
+  },
+  {
+    "id": "expense-check",
+    "name": "Expense report check",
+    "summary": "Approve an expense line, ask for a receipt, flag a policy violation or escalate.",
+    "fit": "good",
+    "fit_reasons": [
+      "Many lines a month",
+      "Four outcomes",
+      "Dollar thresholds and receipt rules",
+      "Finance reviews flagged lines"
+    ],
+    "sample_inputs": [
+      "A $48 team lunch with a receipt attached.",
+      "A $230 gift basket for a client, no receipt.",
+      "A $3,400 conference ticket, pre-approved by the VP."
+    ],
+    "policy": {
+      "decision_question": "What should happen to this expense?",
+      "question_key": "decision",
+      "inputs": [
+        {
+          "key": "amount",
+          "label": "Amount (USD)",
+          "type": "float",
+          "description": ""
+        },
+        {
+          "key": "has_receipt",
+          "label": "Receipt attached",
+          "type": "bool",
+          "description": ""
+        },
+        {
+          "key": "category",
+          "label": "Category",
+          "type": "enum",
+          "description": "",
+          "values": [
+            "meals",
+            "travel",
+            "software",
+            "gifts",
+            "other"
+          ]
+        },
+        {
+          "key": "preapproved",
+          "label": "Pre-approved",
+          "type": "bool",
+          "description": ""
+        }
+      ],
+      "options": [
+        {
+          "key": "approve",
+          "name": "Approve",
+          "covers": [
+            "Under $75 with a receipt",
+            "Pre-approved items"
+          ],
+          "excludes": [],
+          "example": ""
+        },
+        {
+          "key": "needs_receipt",
+          "name": "Needs receipt",
+          "covers": [
+            "$25 or more with no receipt"
+          ],
+          "excludes": [],
+          "example": ""
+        },
+        {
+          "key": "policy_violation",
+          "name": "Policy violation",
+          "covers": [
+            "Gifts over $100",
+            "Alcohol-only meals"
+          ],
+          "excludes": [],
+          "example": ""
+        },
+        {
+          "key": "escalate",
+          "name": "Escalate to finance",
+          "covers": [
+            "Anything over $1,000"
+          ],
+          "excludes": [],
+          "example": ""
+        }
+      ],
+      "rules": [
+        {
+          "id": "R1",
+          "text": "Anything over $1,000 goes to finance.",
+          "label": "escalate",
+          "when": {
+            "field": "amount",
+            "op": "gt",
+            "value": 1000
+          }
+        },
+        {
+          "id": "R2",
+          "text": "No receipt on $25 or more needs a receipt.",
+          "label": "needs_receipt",
+          "when": {
+            "all": [
+              {
+                "field": "has_receipt",
+                "op": "eq",
+                "value": false
+              },
+              {
+                "field": "amount",
+                "op": "gte",
+                "value": 25
+              }
+            ]
+          }
+        },
+        {
+          "id": "R3",
+          "text": "Gifts over $100 are a policy violation.",
+          "label": "policy_violation",
+          "when": {
+            "all": [
+              {
+                "field": "category",
+                "op": "eq",
+                "value": "gifts"
+              },
+              {
+                "field": "amount",
+                "op": "gt",
+                "value": 100
+              }
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "id": "content-moderation",
+    "name": "Community content moderation",
+    "summary": "Allow, warn, remove or send a post to a human moderator.",
+    "fit": "workable",
+    "fit_reasons": [
+      "High volume with a short input",
+      "Four outcomes",
+      "Many cases need judgment, so rules only cover the clear ones",
+      "A human moderator reviews removals"
+    ],
+    "sample_inputs": [
+      "Great tutorial, thanks for sharing!",
+      "Buy cheap watches at my store, link in bio.",
+      "You people are idiots and should leave this forum."
+    ],
+    "policy": {
+      "decision_question": "What should we do with this post?",
+      "question_key": "decision",
+      "inputs": [
+        {
+          "key": "post",
+          "label": "Post text",
+          "type": "text",
+          "description": ""
+        },
+        {
+          "key": "prior_warnings",
+          "label": "Prior warnings for the author",
+          "type": "int",
+          "description": ""
+        },
+        {
+          "key": "reported_count",
+          "label": "Times reported",
+          "type": "int",
+          "description": ""
+        }
+      ],
+      "options": [
+        {
+          "key": "allow",
+          "name": "Allow",
+          "covers": [
+            "Normal discussion"
+          ],
+          "excludes": [],
+          "example": ""
+        },
+        {
+          "key": "warn",
+          "name": "Warn the author",
+          "covers": [
+            "Mild rule breaks, first offense"
+          ],
+          "excludes": [],
+          "example": ""
+        },
+        {
+          "key": "remove",
+          "name": "Remove",
+          "covers": [
+            "Spam, slurs, threats"
+          ],
+          "excludes": [],
+          "example": ""
+        },
+        {
+          "key": "review",
+          "name": "Human review",
+          "covers": [
+            "Borderline or heavily reported posts"
+          ],
+          "excludes": [],
+          "example": ""
+        }
+      ],
+      "rules": [
+        {
+          "id": "R1",
+          "text": "Posts reported five or more times go to human review.",
+          "label": "review",
+          "when": {
+            "field": "reported_count",
+            "op": "gte",
+            "value": 5
+          }
+        },
+        {
+          "id": "R2",
+          "text": "Authors with three or more prior warnings have the post removed when it breaks a rule.",
+          "label": "remove",
+          "when": {
+            "field": "prior_warnings",
+            "op": "gte",
+            "value": 3
+          }
+        },
+        {
+          "id": "R3",
+          "text": "The post is aggressive but not threatening, so warn the author.",
+          "label": "warn",
+          "when": null
+        }
+      ]
+    }
+  },
+  {
+    "id": "bug-triage",
+    "name": "Bug report triage",
+    "summary": "Assign a bug report to a component and severity bucket.",
+    "fit": "workable",
+    "fit_reasons": [
+      "Plenty of reports",
+      "Fixed set of buckets",
+      "Severity depends on how many users are affected, which may not be stated",
+      "Engineers re-check the assignment"
+    ],
+    "sample_inputs": [
+      "Exports silently drop the last 50 rows of every file.",
+      "The settings page button label is misspelled.",
+      "Search returns nothing for 300 users, no workaround known."
+    ],
+    "policy": {
+      "decision_question": "Which bucket does this bug belong to?",
+      "question_key": "decision",
+      "inputs": [
+        {
+          "key": "report",
+          "label": "Report text",
+          "type": "text",
+          "description": ""
+        },
+        {
+          "key": "users_affected",
+          "label": "Users affected",
+          "type": "int",
+          "description": ""
+        },
+        {
+          "key": "data_loss",
+          "label": "Data loss reported",
+          "type": "bool",
+          "description": ""
+        },
+        {
+          "key": "has_workaround",
+          "label": "Workaround exists",
+          "type": "bool",
+          "description": ""
+        }
+      ],
+      "options": [
+        {
+          "key": "critical",
+          "name": "Critical",
+          "covers": [
+            "Data loss",
+            "Outage for many users"
+          ],
+          "excludes": [],
+          "example": ""
+        },
+        {
+          "key": "high",
+          "name": "High",
+          "covers": [
+            "Core feature broken, no workaround"
+          ],
+          "excludes": [],
+          "example": ""
+        },
+        {
+          "key": "normal",
+          "name": "Normal",
+          "covers": [
+            "Broken feature with a workaround"
+          ],
+          "excludes": [],
+          "example": ""
+        },
+        {
+          "key": "low",
+          "name": "Low",
+          "covers": [
+            "Cosmetic issues, typos"
+          ],
+          "excludes": [],
+          "example": ""
+        }
+      ],
+      "rules": [
+        {
+          "id": "R1",
+          "text": "Any data loss is critical.",
+          "label": "critical",
+          "when": {
+            "field": "data_loss",
+            "op": "eq",
+            "value": true
+          }
+        },
+        {
+          "id": "R2",
+          "text": "More than 100 users affected with no workaround is high.",
+          "label": "high",
+          "when": {
+            "all": [
+              {
+                "field": "users_affected",
+                "op": "gt",
+                "value": 100
+              },
+              {
+                "field": "has_workaround",
+                "op": "eq",
+                "value": false
+              }
+            ]
+          }
+        },
+        {
+          "id": "R3",
+          "text": "Anything with a workaround is normal.",
+          "label": "normal",
+          "when": {
+            "field": "has_workaround",
+            "op": "eq",
+            "value": true
+          }
+        }
+      ]
+    }
+  },
+  {
+    "id": "order-exceptions",
+    "name": "Order exception handling",
+    "summary": "Choose between reship, refund, contacting the carrier or fraud review for a problem order.",
+    "fit": "good",
+    "fit_reasons": [
+      "Daily volume",
+      "Four outcomes",
+      "Value and delay thresholds",
+      "Ops reviews each exception"
+    ],
+    "sample_inputs": [
+      "The tracking says delivered yesterday but nothing arrived.",
+      "A $60 parcel is 20 days late.",
+      "First-time buyer ordered $1,800 of electronics shipped to a different address."
+    ],
+    "policy": {
+      "decision_question": "How should we handle this order problem?",
+      "question_key": "decision",
+      "inputs": [
+        {
+          "key": "order_value",
+          "label": "Order value (USD)",
+          "type": "float",
+          "description": ""
+        },
+        {
+          "key": "days_late",
+          "label": "Days late",
+          "type": "int",
+          "description": ""
+        },
+        {
+          "key": "tracking_shows_delivered",
+          "label": "Tracking shows delivered",
+          "type": "bool",
+          "description": ""
+        },
+        {
+          "key": "new_customer_high_value",
+          "label": "New customer with a high-value order",
+          "type": "bool",
+          "description": ""
+        }
+      ],
+      "options": [
+        {
+          "key": "reship",
+          "name": "Reship",
+          "covers": [
+            "Lost in transit",
+            "Damaged on arrival"
+          ],
+          "excludes": [],
+          "example": ""
+        },
+        {
+          "key": "refund",
+          "name": "Refund",
+          "covers": [
+            "Order more than 14 days late"
+          ],
+          "excludes": [],
+          "example": ""
+        },
+        {
+          "key": "contact_carrier",
+          "name": "Contact carrier",
+          "covers": [
+            "Tracking shows delivered but customer says no"
+          ],
+          "excludes": [],
+          "example": ""
+        },
+        {
+          "key": "fraud_review",
+          "name": "Fraud review",
+          "covers": [
+            "New customer, high value, address mismatch"
+          ],
+          "excludes": [],
+          "example": ""
+        }
+      ],
+      "rules": [
+        {
+          "id": "R1",
+          "text": "New customers with high-value orders go to fraud review.",
+          "label": "fraud_review",
+          "when": {
+            "field": "new_customer_high_value",
+            "op": "eq",
+            "value": true
+          }
+        },
+        {
+          "id": "R2",
+          "text": "Marked delivered but not received: contact the carrier.",
+          "label": "contact_carrier",
+          "when": {
+            "field": "tracking_shows_delivered",
+            "op": "eq",
+            "value": true
+          }
+        },
+        {
+          "id": "R3",
+          "text": "More than 14 days late: refund.",
+          "label": "refund",
+          "when": {
+            "field": "days_late",
+            "op": "gt",
+            "value": 14
+          }
+        }
+      ]
+    }
+  },
+  {
+    "id": "transaction-categorization",
+    "name": "Transaction categorization",
+    "summary": "Put each bank transaction into one of the bookkeeping categories.",
+    "fit": "good",
+    "fit_reasons": [
+      "Thousands per month",
+      "A fixed list of categories",
+      "Very short input",
+      "Bookkeepers review the month"
+    ],
+    "sample_inputs": [
+      "Delta Air Lines, $412.80",
+      "Notion Labs, $96.00 charged monthly",
+      "Corner Cafe, $14.25"
+    ],
+    "policy": {
+      "decision_question": "Which category does this transaction belong to?",
+      "question_key": "decision",
+      "inputs": [
+        {
+          "key": "merchant",
+          "label": "Merchant",
+          "type": "text",
+          "description": ""
+        },
+        {
+          "key": "amount",
+          "label": "Amount (USD)",
+          "type": "float",
+          "description": ""
+        },
+        {
+          "key": "recurring",
+          "label": "Recurring monthly",
+          "type": "bool",
+          "description": ""
+        }
+      ],
+      "options": [
+        {
+          "key": "software",
+          "name": "Software",
+          "covers": [
+            "Subscriptions to tools"
+          ],
+          "excludes": [],
+          "example": ""
+        },
+        {
+          "key": "travel",
+          "name": "Travel",
+          "covers": [
+            "Flights, hotels, rideshare"
+          ],
+          "excludes": [],
+          "example": ""
+        },
+        {
+          "key": "meals",
+          "name": "Meals",
+          "covers": [
+            "Restaurants and coffee"
+          ],
+          "excludes": [],
+          "example": ""
+        },
+        {
+          "key": "office",
+          "name": "Office supplies",
+          "covers": [
+            "Equipment and stationery"
+          ],
+          "excludes": [],
+          "example": ""
+        },
+        {
+          "key": "other",
+          "name": "Other",
+          "covers": [
+            "Anything else"
+          ],
+          "excludes": [],
+          "example": ""
+        }
+      ],
+      "rules": [
+        {
+          "id": "R1",
+          "text": "Recurring charges from software vendors are software.",
+          "label": "software",
+          "when": {
+            "field": "recurring",
+            "op": "eq",
+            "value": true
+          }
+        },
+        {
+          "id": "R2",
+          "text": "Airlines, hotels and rideshares are travel.",
+          "label": "travel",
+          "when": null
+        },
+        {
+          "id": "R3",
+          "text": "Everything unclear is other.",
+          "label": "other",
+          "when": null
+        }
+      ]
+    }
+  },
+  {
+    "id": "it-helpdesk",
+    "name": "IT helpdesk routing",
+    "summary": "Route a helpdesk request to hardware, access, software or security.",
+    "fit": "good",
+    "fit_reasons": [
+      "Steady volume",
+      "Four teams",
+      "Short inputs",
+      "Misroutes are reassigned in the queue"
+    ],
+    "sample_inputs": [
+      "I left my work laptop in a taxi last night.",
+      "I need edit rights on the finance shared drive.",
+      "My monitor flickers whenever I plug in the dock."
+    ],
+    "policy": {
+      "decision_question": "Which IT team should take this request?",
+      "question_key": "decision",
+      "inputs": [
+        {
+          "key": "request",
+          "label": "Request text",
+          "type": "text",
+          "description": ""
+        },
+        {
+          "key": "security_keywords",
+          "label": "Mentions lost device or suspicious activity",
+          "type": "bool",
+          "description": ""
+        },
+        {
+          "key": "device_type",
+          "label": "Device",
+          "type": "enum",
+          "description": "",
+          "values": [
+            "laptop",
+            "phone",
+            "other"
+          ]
+        }
+      ],
+      "options": [
+        {
+          "key": "security",
+          "name": "Security",
+          "covers": [
+            "Lost devices, phishing, suspicious logins"
+          ],
+          "excludes": [],
+          "example": ""
+        },
+        {
+          "key": "access",
+          "name": "Access",
+          "covers": [
+            "Passwords, permissions, new accounts"
+          ],
+          "excludes": [],
+          "example": ""
+        },
+        {
+          "key": "hardware",
+          "name": "Hardware",
+          "covers": [
+            "Broken or missing equipment"
+          ],
+          "excludes": [],
+          "example": ""
+        },
+        {
+          "key": "software",
+          "name": "Software",
+          "covers": [
+            "Installs and application errors"
+          ],
+          "excludes": [],
+          "example": ""
+        }
+      ],
+      "rules": [
+        {
+          "id": "R1",
+          "text": "Anything suspicious or any lost device goes to security.",
+          "label": "security",
+          "when": {
+            "field": "security_keywords",
+            "op": "eq",
+            "value": true
+          }
+        },
+        {
+          "id": "R2",
+          "text": "Password and permission problems go to access.",
+          "label": "access",
+          "when": null
+        },
+        {
+          "id": "R3",
+          "text": "Broken equipment goes to hardware.",
+          "label": "hardware",
+          "when": null
+        }
+      ]
+    }
+  }
+]

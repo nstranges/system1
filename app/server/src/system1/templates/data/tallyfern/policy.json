@@ -1,0 +1,492 @@
+{
+  "decision_question": "Which Tallyfern support queue should handle this ticket?",
+  "question_key": "queue",
+  "inputs": [
+    {
+      "key": "plan_tier",
+      "label": "Plan",
+      "nullable": false,
+      "description": "From the CRM.",
+      "type": "enum",
+      "values": [
+        "free",
+        "starter",
+        "pro",
+        "enterprise"
+      ]
+    },
+    {
+      "key": "region",
+      "label": "Region",
+      "nullable": false,
+      "description": "From the CRM.",
+      "type": "enum",
+      "values": [
+        "us",
+        "ca",
+        "eu",
+        "uk",
+        "apac"
+      ]
+    },
+    {
+      "key": "seats",
+      "label": "Seats",
+      "nullable": false,
+      "description": "From the CRM.",
+      "type": "int"
+    },
+    {
+      "key": "sso_enabled",
+      "label": "SSO enabled",
+      "nullable": false,
+      "description": "From the CRM. Only enterprise accounts can enable SSO.",
+      "type": "bool"
+    },
+    {
+      "key": "issue_type",
+      "label": "Main request",
+      "nullable": false,
+      "description": "What the customer mainly wants, read from the message.",
+      "type": "enum",
+      "values": [
+        "refund_request",
+        "chargeback_dispute",
+        "billing_question",
+        "failed_payout",
+        "login_problem",
+        "api_error",
+        "data_request",
+        "outage_report",
+        "security_concern",
+        "plan_change",
+        "how_to"
+      ]
+    },
+    {
+      "key": "secondary_issue",
+      "label": "Secondary issue mentioned",
+      "nullable": true,
+      "description": "Another issue raised anywhere in the message, if any.",
+      "type": "enum",
+      "values": [
+        "refund_request",
+        "chargeback_dispute",
+        "billing_question",
+        "failed_payout",
+        "login_problem",
+        "api_error",
+        "data_request",
+        "outage_report",
+        "security_concern",
+        "plan_change",
+        "how_to"
+      ]
+    },
+    {
+      "key": "amount_usd",
+      "label": "Amount (USD)",
+      "nullable": true,
+      "description": "Stated in the message. Unknown means not met.",
+      "type": "float"
+    },
+    {
+      "key": "days_since_charge",
+      "label": "Days since charge",
+      "nullable": true,
+      "description": "Stated in the message. Unknown means not met.",
+      "type": "int"
+    },
+    {
+      "key": "api_version",
+      "label": "API version",
+      "nullable": true,
+      "description": "Stated in the message. Unknown means not met.",
+      "type": "enum",
+      "values": [
+        "v1",
+        "v2"
+      ]
+    }
+  ],
+  "options": [
+    {
+      "key": "trust_safety",
+      "name": "Trust & Safety",
+      "covers": [
+        "Suspected or confirmed account compromise: someone else logged in, password or 2FA changed without the customer",
+        "Payout bank details changed without the customer's knowledge",
+        "Invoices or payments the customer did not create",
+        "Phishing emails or sites imitating Tallyfern"
+      ],
+      "excludes": [
+        "Ordinary sign-in problems with no sign of unauthorized activity (account_access or enterprise_identity)"
+      ]
+    },
+    {
+      "key": "incident_response",
+      "name": "Incident Response",
+      "covers": [
+        "Tallyfern itself down or broadly failing: dashboard not loading, checkout or payments failing across the board, every API request erroring",
+        "Applies even when the outage is mentioned alongside another request"
+      ],
+      "excludes": [
+        "A single failed invoice, payment or API call (route by the main request)",
+        "Anything with signs of account compromise (trust_safety)"
+      ]
+    },
+    {
+      "key": "billing_disputes",
+      "name": "Billing Disputes",
+      "covers": [
+        "A chargeback or dispute filed with a bank or card issuer, by the customer against a Tallyfern charge or by one of their payers",
+        "Applies even when the main request is a refund"
+      ],
+      "excludes": [
+        "Refund requests with no chargeback or dispute filed (billing_refunds or finance_review)"
+      ]
+    },
+    {
+      "key": "finance_review",
+      "name": "Finance Review",
+      "covers": [
+        "Refund of a Tallyfern charge where the amount is more than $500",
+        "Refund of a Tallyfern charge made more than 30 days before the ticket"
+      ],
+      "excludes": [
+        "Refunds of $500 or less charged 30 days ago or less (billing_refunds)",
+        "Refunds where amount and timing are not stated (billing_refunds)",
+        "Any refund that also mentions a chargeback or bank dispute (billing_disputes)"
+      ]
+    },
+    {
+      "key": "billing_refunds",
+      "name": "Billing Refunds",
+      "covers": [
+        "Refunds of $500 or less, charged 30 days ago or less (exactly $500 and exactly 30 days count as standard)",
+        "Refund requests that do not state the amount or the timing"
+      ],
+      "excludes": [
+        "Refunds over $500 or charged more than 30 days ago (finance_review)",
+        "Any refund that also mentions a chargeback or bank dispute (billing_disputes)"
+      ]
+    },
+    {
+      "key": "payments_ops",
+      "name": "Payments Operations",
+      "covers": [
+        "The customer's own payout to their bank account failed, is late, or arrived short"
+      ],
+      "excludes": [
+        "Payout bank details changed without the customer's knowledge (trust_safety)",
+        "Refunds of Tallyfern charges (billing_refunds or finance_review)"
+      ]
+    },
+    {
+      "key": "legacy_api",
+      "name": "Legacy API",
+      "covers": [
+        "API errors from an integration that uses the v1 API"
+      ],
+      "excludes": [
+        "API errors on v2, or where the version is not stated (api_support)",
+        "Every request failing because Tallyfern is down (incident_response)"
+      ]
+    },
+    {
+      "key": "api_support",
+      "name": "API Support",
+      "covers": [
+        "API errors on the v2 API",
+        "API errors where the version is not stated"
+      ],
+      "excludes": [
+        "API errors on the v1 API (legacy_api)",
+        "Every request failing because Tallyfern is down (incident_response)"
+      ]
+    },
+    {
+      "key": "enterprise_identity",
+      "name": "Enterprise Identity",
+      "covers": [
+        "Sign-in problems on accounts with plan enterprise and sso_enabled true"
+      ],
+      "excludes": [
+        "Sign-in problems on any other account, including enterprise accounts without SSO (account_access)",
+        "Sign-in problems with signs of unauthorized activity (trust_safety)"
+      ]
+    },
+    {
+      "key": "account_access",
+      "name": "Account Access",
+      "covers": [
+        "Forgotten passwords, 2FA codes not arriving, locked accounts",
+        "Sign-in problems on any account that is not enterprise with SSO enabled"
+      ],
+      "excludes": [
+        "Enterprise accounts with sso_enabled true (enterprise_identity)",
+        "Sign-in problems with signs of unauthorized activity (trust_safety)"
+      ]
+    },
+    {
+      "key": "privacy_legal",
+      "name": "Privacy & Legal",
+      "covers": [
+        "Requests for a copy of the customer's data, or for deletion, when the account region is eu or uk"
+      ],
+      "excludes": [
+        "The same requests from any other region (general_support)"
+      ]
+    },
+    {
+      "key": "sales",
+      "name": "Sales",
+      "covers": [
+        "Plan or seat changes when the account has 50 or more seats",
+        "Plan or seat changes on enterprise accounts"
+      ],
+      "excludes": [
+        "Plan or seat changes on non-enterprise accounts with fewer than 50 seats (general_support)"
+      ]
+    },
+    {
+      "key": "general_support",
+      "name": "General Support",
+      "covers": [
+        "Billing questions: how an invoice was calculated, updating a card, tax fields",
+        "How-to questions about using Tallyfern",
+        "Data access or deletion requests outside the EU and UK",
+        "Plan or seat changes on non-enterprise accounts with fewer than 50 seats"
+      ],
+      "excludes": [
+        "Anything a more specific queue covers"
+      ]
+    }
+  ],
+  "rules": [
+    {
+      "id": "R01",
+      "text": "Account security: the customer reports or strongly suspects account compromise, fraud or unauthorized activity anywhere in the ticket.",
+      "label": "trust_safety",
+      "when": {
+        "any": [
+          {
+            "field": "issue_type",
+            "op": "eq",
+            "value": "security_concern"
+          },
+          {
+            "field": "secondary_issue",
+            "op": "eq",
+            "value": "security_concern"
+          }
+        ]
+      }
+    },
+    {
+      "id": "R02",
+      "text": "Service outage: the customer reports Tallyfern itself is down or broadly failing, anywhere in the ticket.",
+      "label": "incident_response",
+      "when": {
+        "any": [
+          {
+            "field": "issue_type",
+            "op": "eq",
+            "value": "outage_report"
+          },
+          {
+            "field": "secondary_issue",
+            "op": "eq",
+            "value": "outage_report"
+          }
+        ]
+      }
+    },
+    {
+      "id": "R03",
+      "text": "Chargeback or bank dispute: a chargeback or card/bank dispute has been filed, anywhere in the ticket, even if the main request is a refund.",
+      "label": "billing_disputes",
+      "when": {
+        "any": [
+          {
+            "field": "issue_type",
+            "op": "eq",
+            "value": "chargeback_dispute"
+          },
+          {
+            "field": "secondary_issue",
+            "op": "eq",
+            "value": "chargeback_dispute"
+          }
+        ]
+      }
+    },
+    {
+      "id": "R04",
+      "text": "Large or late refund: the main request is a refund and the amount is more than $500 or the charge was more than 30 days ago.",
+      "label": "finance_review",
+      "when": {
+        "all": [
+          {
+            "field": "issue_type",
+            "op": "eq",
+            "value": "refund_request"
+          },
+          {
+            "any": [
+              {
+                "field": "amount_usd",
+                "op": "gt",
+                "value": 500
+              },
+              {
+                "field": "days_since_charge",
+                "op": "gt",
+                "value": 30
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "R05",
+      "text": "Standard refund: any other refund request ($500 or less, 30 days or less, or amount or timing not given).",
+      "label": "billing_refunds",
+      "when": {
+        "field": "issue_type",
+        "op": "eq",
+        "value": "refund_request"
+      }
+    },
+    {
+      "id": "R06",
+      "text": "Failed or missing payout: the customer's own payout failed, is late or arrived short.",
+      "label": "payments_ops",
+      "when": {
+        "field": "issue_type",
+        "op": "eq",
+        "value": "failed_payout"
+      }
+    },
+    {
+      "id": "R07",
+      "text": "Legacy API error: an API error on the v1 API.",
+      "label": "legacy_api",
+      "when": {
+        "all": [
+          {
+            "field": "issue_type",
+            "op": "eq",
+            "value": "api_error"
+          },
+          {
+            "field": "api_version",
+            "op": "eq",
+            "value": "v1"
+          }
+        ]
+      }
+    },
+    {
+      "id": "R08",
+      "text": "API error: any other API error (v2, or version not given).",
+      "label": "api_support",
+      "when": {
+        "field": "issue_type",
+        "op": "eq",
+        "value": "api_error"
+      }
+    },
+    {
+      "id": "R09",
+      "text": "Enterprise SSO sign-in: the customer can't sign in and the account is enterprise with SSO enabled.",
+      "label": "enterprise_identity",
+      "when": {
+        "all": [
+          {
+            "field": "issue_type",
+            "op": "eq",
+            "value": "login_problem"
+          },
+          {
+            "field": "plan_tier",
+            "op": "eq",
+            "value": "enterprise"
+          },
+          {
+            "field": "sso_enabled",
+            "op": "eq",
+            "value": true
+          }
+        ]
+      }
+    },
+    {
+      "id": "R10",
+      "text": "Sign-in problem: any other sign-in problem, including enterprise accounts without SSO.",
+      "label": "account_access",
+      "when": {
+        "field": "issue_type",
+        "op": "eq",
+        "value": "login_problem"
+      }
+    },
+    {
+      "id": "R11",
+      "text": "EU/UK data request: the customer asks for a copy or deletion of their data and the account region is eu or uk.",
+      "label": "privacy_legal",
+      "when": {
+        "all": [
+          {
+            "field": "issue_type",
+            "op": "eq",
+            "value": "data_request"
+          },
+          {
+            "field": "region",
+            "op": "in",
+            "value": [
+              "eu",
+              "uk"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "R12",
+      "text": "Larger plan change: the customer wants to change plan or seats and the account has 50 or more seats or is on enterprise.",
+      "label": "sales",
+      "when": {
+        "all": [
+          {
+            "field": "issue_type",
+            "op": "eq",
+            "value": "plan_change"
+          },
+          {
+            "any": [
+              {
+                "field": "seats",
+                "op": "gte",
+                "value": 50
+              },
+              {
+                "field": "plan_tier",
+                "op": "eq",
+                "value": "enterprise"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "R13",
+      "text": "Everything else: billing questions, how-to questions, other data requests and smaller plan changes.",
+      "label": "general_support",
+      "when": null
+    }
+  ]
+}

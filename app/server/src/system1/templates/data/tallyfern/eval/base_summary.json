@@ -1,0 +1,18 @@
+{
+  "model": "base Laya (sample numbers)",
+  "fixture": true,
+  "overall": {
+    "n": 60,
+    "accuracy": 0.2833333333333333,
+    "ece": 0.21666666666666667,
+    "nll": 2.4739969462413454
+  },
+  "per_question": {
+    "queue": {
+      "n": 60,
+      "accuracy": 0.2833333333333333,
+      "ece": 0.21666666666666667,
+      "nll": 2.4739969462413454
+    }
+  }
+}

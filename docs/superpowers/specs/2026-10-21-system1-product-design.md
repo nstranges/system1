@@ -467,9 +467,9 @@ POST /v1/feedback  {"decision_id": "...", "correct": {"queue": "finance_review"}
 ## Architecture
 
 ```
-Browser: React (Vite, TypeScript, Tailwind) with Clerk sign-in
+Client: React (Vite, TypeScript, Tailwind) with Clerk sign-in, in the browser
    │ REST + server-sent events (agent stream)
-FastAPI backend (one Modal app, web endpoint; verifies Clerk sessions)
+Server: FastAPI (one Modal app, web endpoint; verifies Clerk sessions)
    ├─ Agent ─────────── Anthropic API (claude-opus-5-5)
    ├─ Pipeline ──────── rules engine · facts sampler · example writer + read-back (Anthropic API) · dataset builder
    ├─ Jobs ──────────── Modal functions: train (L4), eval
@@ -491,8 +491,8 @@ FastAPI backend (one Modal app, web endpoint; verifies Clerk sessions)
   - `feedback`
   - `api_keys` (hashed)
   - `agent_messages`
-- **Sign-in:** Clerk on both the frontend and the backend. API calls to the gateway use project keys instead.
-- **Repo layout:** `app/backend/`, `app/frontend/` and `.claude/skills/system1-onboard/`. The phase 1 scripts stay where they are. Coordinate with Nicholas before touching `train.py`.
+- **Sign-in:** Clerk on both the client and the server. API calls to the gateway use project keys instead.
+- **Repo layout:** `app/server/`, `app/client/` and `.claude/skills/system1-onboard/`. We always say "client" and "server", never "frontend" and "backend". The phase 1 scripts stay where they are. Coordinate with Nicholas before touching `train.py`.
 
 ## Contracts and modularity
 
@@ -509,7 +509,7 @@ Nicholas may not be reachable this week, and the training approach will probably
 - **sys1 by URL.** The default sys1 adapter calls any Jev-compatible endpoint, set by a base URL and a model id. If Nicholas's server ends up with a different shape, we add one adapter class that maps it.
 - **If Nicholas can't serve sys1 in time,** Block C serves it with `laya-serve` or Unsloth Studio on Modal, behind the same adapter. It reuses the adapter-loading code in `eval_lora.py`. `train.py` stays untouched unless Nicholas agrees.
 - **Engineering basics:**
-  - typed models at every boundary: Pydantic in the backend, and TypeScript types generated from the backend's OpenAPI schema
+  - typed models at every boundary: Pydantic on the server, and TypeScript types for the client generated from the server's OpenAPI schema
   - small modules with one job each
   - configuration from environment variables
   - linting and formatting
@@ -591,7 +591,7 @@ Claude builds in blocks on the `product-design` branch, in the main checkout (no
 
 **What lets it run without Thomas:**
 - **Stand-ins for every outside service** (Claude, Jev, Modal, sys1, Clerk), so tests are free and deterministic. Real calls happen only in one tagged smoke test with a spending cap.
-- **One `make verify`.** It runs the unit tests, the frontend build, an automated browser click-through and screenshots. A block isn't done until it passes, and its output is the gate report.
+- **One `make verify`.** It runs the unit tests, the client build, an automated browser click-through and screenshots. A block isn't done until it passes, and its output is the gate report.
 - **A fake sys1 provider** that speaks the decision-provider contract, so the app never waits on the real server. Swapping in the real one is a configuration change, or one adapter class if its shape differs.
 - **A progress note at the end of each block** in the progress ledger, so Thomas can catch up in two minutes.
 
@@ -659,7 +659,7 @@ Thomas decided to start the app on Thursday, before the decision gate, and to bu
 | The rules format can't express real policies | The Tallyfern port is the acceptance test |
 | Anthropic spend runs away | Per-session caps. Live generation in small batches only |
 | Prompt injection through pasted inputs | Money-spending tools need a user click. No model-written code runs on the server |
-| Clerk integration eats time | Use Clerk's prebuilt React components and backend session verification. No custom auth UI |
+| Clerk integration eats time | Use Clerk's prebuilt React components and server-side session verification. No custom auth UI |
 | Scope creep (Era, SurrealDB, MCP, CSV) | Roadmap items wait until every Must is done. Could items wait until every Should is done |
 | Nobody can attend Demo Day in Toronto | Confirm who goes before submitting |
 
@@ -677,7 +677,7 @@ Thomas decided to start the app on Thursday, before the decision gate, and to bu
 
 **Decided by Thomas:**
 
-- A website (FastAPI back end, React front end) as the main product, rather than MCP first.
+- A website (FastAPI server, React client) as the main product, rather than MCP first.
 - An onboarding agent in the website with plenty of clickable controls, plus a Claude Skill.
 - A use-case library and agent-led brainstorming.
 - Offering Jev access through system1, with setup help for both larger tasks and quick one-offs.
@@ -715,7 +715,7 @@ Thomas decided to start the app on Thursday, before the decision gate, and to bu
 - The component library and styling. A clean, light UI is the default, and any template used must be disclosed.
 - File layout inside `app/`.
 - Server-sent events or websockets.
-- Frontend state management.
+- Client state management.
 - Exact tool schemas and prompt wording.
 - Polling or callbacks for Modal jobs.
 - The chart library.
