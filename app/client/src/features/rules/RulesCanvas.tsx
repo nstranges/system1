@@ -54,22 +54,28 @@ export function IssueList({ issues }: { issues: PolicyIssue[] }) {
 export function RulesCanvas({
   project,
   policy,
+  draft: unsaved,
+  onDraft,
   onPolicy,
 }: {
   project: Project
   policy: PolicyOut
+  // Unsaved edits live in the workspace so they survive switching stages.
+  draft: PolicyInput | null
+  onDraft: (d: PolicyInput | null) => void
   onPolicy: (p: PolicyOut) => void
 }) {
   const api = useApi()
-  const [draft, setDraft] = useState<PolicyInput>(policy.policy)
-  const [dirty, setDirty] = useState(false)
+  const draft: PolicyInput = unsaved ?? policy.policy
+  const dirty = unsaved !== null
+  const savedKeys = new Set([
+    ...policy.policy.options.map((o) => o.key),
+    ...(policy.policy.inputs ?? []).map((f) => f.key),
+  ])
   const [saving, setSaving] = useState(false)
   const [issues, setIssues] = useState<PolicyIssue[]>(policy.issues)
 
-  const change = (next: PolicyInput) => {
-    setDraft(next)
-    setDirty(true)
-  }
+  const change = (next: PolicyInput) => onDraft(next)
 
   async function save() {
     setSaving(true)
@@ -79,8 +85,7 @@ export function RulesCanvas({
     })
     setSaving(false)
     if (data) {
-      setDraft(data.policy)
-      setDirty(false)
+      onDraft(null)
       setIssues([])
       onPolicy(data)
       toast.success("Rules saved")
@@ -106,9 +111,8 @@ export function RulesCanvas({
             variant="ghost"
             disabled={!dirty || saving}
             onClick={() => {
-              setDraft(policy.policy)
+              onDraft(null)
               setIssues(policy.issues)
-              setDirty(false)
             }}
           >
             Discard changes
@@ -119,8 +123,8 @@ export function RulesCanvas({
         </div>
       </div>
       <IssueList issues={issues} />
-      <InputsPanel policy={draft} onChange={change} />
-      <OptionsPanel policy={draft} onChange={change} />
+      <InputsPanel policy={draft} savedKeys={savedKeys} onChange={change} />
+      <OptionsPanel policy={draft} savedKeys={savedKeys} onChange={change} />
       <RulesPanel policy={draft} onChange={change} />
     </div>
   )

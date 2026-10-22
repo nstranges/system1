@@ -11,7 +11,12 @@ import {
 } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
 import { useApi } from "@/lib/api/client"
-import { readProblem, type PolicyOut, type Project } from "@/lib/api/types"
+import {
+  readProblem,
+  type PolicyInput,
+  type PolicyOut,
+  type Project,
+} from "@/lib/api/types"
 import { RulesCanvas } from "@/features/rules/RulesCanvas"
 import { TryCanvas } from "@/features/playground/TryCanvas"
 import { UseCaseCanvas } from "@/features/usecase/UseCaseCanvas"
@@ -44,11 +49,18 @@ function ComingSoon({ stage }: { stage: StageId }) {
   )
 }
 
+// Keyed on the project so nothing from the previous one leaks across.
 export function WorkspacePage() {
+  const { projectId } = useParams()
+  return <Workspace key={projectId} />
+}
+
+function Workspace() {
   const { projectId, stage } = useParams()
   const api = useApi()
   const [project, setProject] = useState<Project | null>(null)
   const [policy, setPolicy] = useState<PolicyOut | null>(null)
+  const [rulesDraft, setRulesDraft] = useState<PolicyInput | null>(null)
   const [missing, setMissing] = useState(false)
   const [panel, setPanel] = useState<"assistant" | "canvas">("canvas")
 
@@ -76,6 +88,14 @@ export function WorkspacePage() {
   useEffect(() => {
     void load()
   }, [load])
+
+  // Unsaved rule edits survive switching stages; leaving the page asks first.
+  useEffect(() => {
+    if (!rulesDraft) return
+    const warn = (e: BeforeUnloadEvent) => e.preventDefault()
+    window.addEventListener("beforeunload", warn)
+    return () => window.removeEventListener("beforeunload", warn)
+  }, [rulesDraft])
 
   if (!isStage(stage)) {
     return <Navigate to={`/app/p/${projectId}/usecase`} replace />
@@ -110,7 +130,13 @@ export function WorkspacePage() {
         onPolicy={setPolicy}
       />
     ) : stage === "rules" ? (
-      <RulesCanvas project={project} policy={policy} onPolicy={setPolicy} />
+      <RulesCanvas
+        project={project}
+        policy={policy}
+        draft={rulesDraft}
+        onDraft={setRulesDraft}
+        onPolicy={setPolicy}
+      />
     ) : stage === "try" ? (
       <TryCanvas project={project} policy={policy} />
     ) : (

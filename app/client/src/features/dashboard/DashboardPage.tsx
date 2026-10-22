@@ -4,6 +4,7 @@ import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
 import {
   Card,
+  CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
@@ -23,15 +24,24 @@ export function DashboardPage() {
   const [busy, setBusy] = useState(false)
   const [dialog, setDialog] = useState<"describe" | "find" | null>(null)
 
+  const [loadError, setLoadError] = useState<string | null>(null)
+
   const load = useCallback(async () => {
-    const [p, t] = await Promise.all([
-      api.GET("/api/projects"),
-      api.GET("/api/templates"),
-    ])
-    if (p.data) setProjects(p.data)
-    else toast.error(readProblem(p.error).message)
-    if (t.data) setTemplates(t.data)
-    else toast.error(readProblem(t.error).message)
+    setLoadError(null)
+    try {
+      const [p, t] = await Promise.all([
+        api.GET("/api/projects"),
+        api.GET("/api/templates"),
+      ])
+      if (p.data && t.data) {
+        setProjects(p.data)
+        setTemplates(t.data)
+      } else {
+        setLoadError(readProblem(p.error ?? t.error).message)
+      }
+    } catch {
+      setLoadError("We couldn't reach the server.")
+    }
   }, [api])
 
   useEffect(() => {
@@ -50,6 +60,20 @@ export function DashboardPage() {
     }
     // A template arrives with rules to look at; a blank project starts at the use case.
     navigate(`/app/p/${data.id}/${templateId ? "rules" : "usecase"}`)
+  }
+
+  if (loadError) {
+    return (
+      <Card className="mx-auto max-w-md">
+        <CardHeader>
+          <CardTitle>We couldn't load your projects</CardTitle>
+          <CardDescription>{loadError}</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Button onClick={() => void load()}>Retry</Button>
+        </CardContent>
+      </Card>
+    )
   }
 
   return (

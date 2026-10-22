@@ -21,9 +21,12 @@ function slug(text: string) {
 
 export function InputsPanel({
   policy,
+  savedKeys,
   onChange,
 }: {
   policy: PolicyInput
+  // Keys already saved. They never change, because rules refer to them.
+  savedKeys: Set<string>
   onChange: (next: PolicyInput) => void
 }) {
   const inputs = policy.inputs ?? []
@@ -75,10 +78,10 @@ export function InputsPanel({
                   onChange={(e) =>
                     set(i, {
                       label: e.target.value,
-                      // New facts get their short name from the label until it has been saved.
-                      ...(f.key === "" || f.key === slug(f.label)
-                        ? { key: slug(e.target.value) }
-                        : {}),
+                      // Only facts that were never saved take their short name from the label.
+                      ...(savedKeys.has(f.key)
+                        ? {}
+                        : { key: slug(e.target.value) }),
                     })
                   }
                 />

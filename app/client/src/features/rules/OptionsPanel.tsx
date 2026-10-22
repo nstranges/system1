@@ -1,4 +1,5 @@
 import { Plus, X } from "lucide-react"
+import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
@@ -14,9 +15,12 @@ const slug = (text: string) =>
 
 export function OptionsPanel({
   policy,
+  savedKeys,
   onChange,
 }: {
   policy: PolicyInput
+  // Keys already saved. They never change, because rules refer to them.
+  savedKeys: Set<string>
   onChange: (next: PolicyInput) => void
 }) {
   const options = policy.options
@@ -38,6 +42,8 @@ export function OptionsPanel({
         <Button
           size="sm"
           variant="outline"
+          disabled={options.length >= 15}
+          title={options.length >= 15 ? "15 options is the most" : undefined}
           onClick={() =>
             onChange({
               ...policy,
@@ -59,9 +65,9 @@ export function OptionsPanel({
                   onChange={(e) =>
                     set(i, {
                       name: e.target.value,
-                      ...(o.key === "" || o.key === slug(o.name)
-                        ? { key: slug(e.target.value) }
-                        : {}),
+                      ...(savedKeys.has(o.key)
+                        ? {}
+                        : { key: slug(e.target.value) }),
                     })
                   }
                 />
@@ -70,24 +76,35 @@ export function OptionsPanel({
                 size="icon"
                 variant="ghost"
                 aria-label={`Remove ${o.name || "option"}`}
-                onClick={() =>
+                disabled={options.length <= 2}
+                title={
+                  options.length <= 2
+                    ? "You need at least 2 options"
+                    : undefined
+                }
+                onClick={() => {
+                  const users = (policy.rules ?? []).filter(
+                    (r) => r.label === o.key,
+                  )
+                  if (o.key && users.length > 0) {
+                    toast.error(
+                      `${users.map((r) => r.id).join(", ")} still ${users.length === 1 ? "points" : "point"} to "${o.name || o.key}". Change ${users.length === 1 ? "that rule" : "those rules"} first.`,
+                    )
+                    return
+                  }
                   onChange({
                     ...policy,
                     options: options.filter((_, j) => j !== i),
                   })
-                }
+                }}
               >
                 <X />
               </Button>
             </div>
-            <div>
-              <FieldLabel>Short name (used in answers)</FieldLabel>
-              <Input
-                className="font-mono text-xs"
-                value={o.key}
-                onChange={(e) => set(i, { key: e.target.value })}
-              />
-            </div>
+            <p className="text-xs text-muted-foreground">
+              Short name in answers:{" "}
+              <span className="font-mono">{o.key || "(from the name)"}</span>
+            </p>
             <div>
               <FieldLabel>Covers, one per line</FieldLabel>
               <Textarea

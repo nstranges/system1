@@ -130,6 +130,7 @@ export function TryCanvas({
         placeholder="Paste a ticket, request or message here"
         onChange={(e) => {
           setText(e.target.value)
+          setResult(null)
           // Editing a sample turns it into your own text.
           if (sampleId) setSampleId("")
         }}
@@ -155,7 +156,7 @@ export function TryCanvas({
 
       {result && (
         <div className="space-y-3">
-          {sys1Recorded !== undefined && (
+          {result.recorded_is_fixture && (
             <p className="rounded-lg bg-jev/20 px-3 py-2 text-sm text-jev-foreground">
               Sample numbers. The real benchmark isn't in yet.
             </p>
