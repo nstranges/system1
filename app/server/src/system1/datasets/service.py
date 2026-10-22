@@ -126,8 +126,9 @@ def _bucket_keys(session: Session, project: Project) -> list[str]:
     return [o.key for o in policy.options]
 
 
-def add_examples(session: Session, project: Project, rows: list[NewExample]) -> int:
-    """Callers must already have checked the project belongs to their org."""
+def add_examples(session: Session, project: Project, rows: list[NewExample], commit: bool = True) -> int:
+    """Callers must already have checked the project belongs to their org. With commit=False the caller
+    owns the transaction, so the examples can land together with other changes or not at all."""
     known = set(_bucket_keys(session, project))
     unknown = list(dict.fromkeys(r.label for r in rows if r.label not in known))
     if unknown:
@@ -166,7 +167,8 @@ def add_examples(session: Session, project: Project, rows: list[NewExample]) -> 
         _rebalance(session, project, {r.label for r in new})
     else:
         _place_after_freeze(session, project, new)
-    session.commit()
+    if commit:
+        session.commit()
     return len(new)
 
 

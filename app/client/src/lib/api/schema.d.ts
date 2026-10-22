@@ -264,6 +264,57 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/projects/{project_id}/uploads": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Upload Examples */
+        post: operations["upload_examples_api_projects__project_id__uploads_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/projects/{project_id}/uploads/{upload_id}/labels": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Upload Labels */
+        get: operations["upload_labels_api_projects__project_id__uploads__upload_id__labels_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/projects/{project_id}/uploads/{upload_id}/import": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Import Examples */
+        post: operations["import_examples_api_projects__project_id__uploads__upload_id__import_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/projects/{project_id}/samples": {
         parameters: {
             query?: never;
@@ -515,6 +566,11 @@ export interface components {
             /** File */
             file: string;
         };
+        /** Body_upload_examples_api_projects__project_id__uploads_post */
+        Body_upload_examples_api_projects__project_id__uploads_post: {
+            /** File */
+            file: string;
+        };
         /** CanvasEvent */
         CanvasEvent: {
             /**
@@ -748,6 +804,35 @@ export interface components {
             /** Dataset Version */
             dataset_version: number;
         };
+        /** ImportMapping */
+        ImportMapping: {
+            /** Input Columns */
+            input_columns: string[];
+            /** Label Column */
+            label_column: string;
+            /** Label Map */
+            label_map?: {
+                [key: string]: string | null;
+            };
+            /**
+             * Create Buckets
+             * @default false
+             */
+            create_buckets: boolean;
+        };
+        /** ImportResult */
+        ImportResult: {
+            /** Added */
+            added: number;
+            /** Skipped Duplicates */
+            skipped_duplicates: number;
+            /** Dropped Rows */
+            dropped_rows: number;
+            /** Too Long */
+            too_long: number;
+            /** Created Buckets */
+            created_buckets: string[];
+        };
         /** InboxItem */
         InboxItem: {
             /** Decision Id */
@@ -820,6 +905,20 @@ export interface components {
              * Format: date-time
              */
             created_at: string;
+        };
+        /** LabelCount */
+        LabelCount: {
+            /** Value */
+            value: string;
+            /** Count */
+            count: number;
+        };
+        /** LabelCounts */
+        LabelCounts: {
+            /** Column */
+            column: string;
+            /** Values */
+            values: components["schemas"]["LabelCount"][];
         };
         /** LaneResult */
         LaneResult: {
@@ -1069,6 +1168,23 @@ export interface components {
             type: "stage";
             /** Stage */
             stage: string;
+        };
+        /** Staged */
+        Staged: {
+            /** Upload Id */
+            upload_id: string;
+            /** Columns */
+            columns: string[];
+            /** Preview */
+            preview: {
+                [key: string]: string;
+            }[];
+            /** Row Count */
+            row_count: number;
+            /** Label Values */
+            label_values?: {
+                [key: string]: number;
+            };
         };
         /** Sys1Block */
         Sys1Block: {
@@ -1800,6 +1916,111 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["DeleteBucketResult"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    upload_examples_api_projects__project_id__uploads_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": components["schemas"]["Body_upload_examples_api_projects__project_id__uploads_post"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Staged"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    upload_labels_api_projects__project_id__uploads__upload_id__labels_get: {
+        parameters: {
+            query: {
+                column: string;
+            };
+            header?: never;
+            path: {
+                project_id: string;
+                upload_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LabelCounts"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    import_examples_api_projects__project_id__uploads__upload_id__import_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: string;
+                upload_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ImportMapping"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ImportResult"];
                 };
             };
             /** @description Validation Error */
