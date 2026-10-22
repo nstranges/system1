@@ -2,6 +2,7 @@ import { Plus, X } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import type { InputField, PolicyInput } from "@/lib/api/types"
+import { isNew, markNew } from "./newRow"
 import { FieldLabel, NativeSelect } from "./fields"
 
 const TYPES: { value: InputField["type"]; label: string }[] = [
@@ -21,12 +22,9 @@ function slug(text: string) {
 
 export function InputsPanel({
   policy,
-  savedKeys,
   onChange,
 }: {
   policy: PolicyInput
-  // Keys already saved. They never change, because rules refer to them.
-  savedKeys: Set<string>
   onChange: (next: PolicyInput) => void
 }) {
   const inputs = policy.inputs ?? []
@@ -53,13 +51,13 @@ export function InputsPanel({
               ...policy,
               inputs: [
                 ...inputs,
-                {
+                markNew({
                   key: "",
                   label: "",
                   type: "text",
                   nullable: true,
                   description: "",
-                },
+                }),
               ],
             })
           }
@@ -79,9 +77,7 @@ export function InputsPanel({
                     set(i, {
                       label: e.target.value,
                       // Only facts that were never saved take their short name from the label.
-                      ...(savedKeys.has(f.key)
-                        ? {}
-                        : { key: slug(e.target.value) }),
+                      ...(isNew(f) ? { key: slug(e.target.value) } : {}),
                     })
                   }
                 />

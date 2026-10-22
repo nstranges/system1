@@ -85,6 +85,21 @@ function Workspace() {
       toast.error(readProblem(pol.error).message)
   }, [api, projectId])
 
+  // A saved policy becomes the new base: unsaved rules edits stay, but the
+  // saved decision question wins so a later rules save can't revert it.
+  const rebase = useCallback((saved: PolicyOut) => {
+    setPolicy(saved)
+    setRulesDraft((d) =>
+      d
+        ? {
+            ...d,
+            decision_question: saved.policy.decision_question,
+            question_key: saved.policy.question_key,
+          }
+        : d,
+    )
+  }, [])
+
   useEffect(() => {
     void load()
   }, [load])
@@ -127,7 +142,7 @@ function Workspace() {
         project={project}
         policy={policy}
         onProject={setProject}
-        onPolicy={setPolicy}
+        onPolicy={rebase}
       />
     ) : stage === "rules" ? (
       <RulesCanvas
@@ -135,7 +150,7 @@ function Workspace() {
         policy={policy}
         draft={rulesDraft}
         onDraft={setRulesDraft}
-        onPolicy={setPolicy}
+        onPolicy={rebase}
       />
     ) : stage === "try" ? (
       <TryCanvas project={project} policy={policy} />

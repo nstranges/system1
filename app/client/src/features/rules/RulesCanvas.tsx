@@ -9,6 +9,7 @@ import {
   type PolicyOut,
   type Project,
 } from "@/lib/api/types"
+import { unmark } from "./newRow"
 import { InputsPanel } from "./InputsPanel"
 import { OptionsPanel } from "./OptionsPanel"
 import { RulesPanel } from "./RulesPanel"
@@ -19,8 +20,9 @@ function tidy(policy: PolicyInput): PolicyInput {
     (xs ?? []).map((x) => x.trim()).filter(Boolean)
   return {
     ...policy,
+    inputs: policy.inputs?.map(unmark),
     options: policy.options.map((o) => ({
-      ...o,
+      ...unmark(o),
       covers: clean(o.covers),
       excludes: clean(o.excludes),
     })),
@@ -68,10 +70,6 @@ export function RulesCanvas({
   const api = useApi()
   const draft: PolicyInput = unsaved ?? policy.policy
   const dirty = unsaved !== null
-  const savedKeys = new Set([
-    ...policy.policy.options.map((o) => o.key),
-    ...(policy.policy.inputs ?? []).map((f) => f.key),
-  ])
   const [saving, setSaving] = useState(false)
   const [issues, setIssues] = useState<PolicyIssue[]>(policy.issues)
 
@@ -123,8 +121,8 @@ export function RulesCanvas({
         </div>
       </div>
       <IssueList issues={issues} />
-      <InputsPanel policy={draft} savedKeys={savedKeys} onChange={change} />
-      <OptionsPanel policy={draft} savedKeys={savedKeys} onChange={change} />
+      <InputsPanel policy={draft} onChange={change} />
+      <OptionsPanel policy={draft} onChange={change} />
       <RulesPanel policy={draft} onChange={change} />
     </div>
   )

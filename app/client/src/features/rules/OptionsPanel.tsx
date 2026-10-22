@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import type { PolicyInput, PolicyOption } from "@/lib/api/types"
+import { isNew, markNew } from "./newRow"
 import { FieldLabel } from "./fields"
 
 const lines = (text: string) => text.split("\n")
@@ -15,12 +16,9 @@ const slug = (text: string) =>
 
 export function OptionsPanel({
   policy,
-  savedKeys,
   onChange,
 }: {
   policy: PolicyInput
-  // Keys already saved. They never change, because rules refer to them.
-  savedKeys: Set<string>
   onChange: (next: PolicyInput) => void
 }) {
   const options = policy.options
@@ -47,7 +45,10 @@ export function OptionsPanel({
           onClick={() =>
             onChange({
               ...policy,
-              options: [...options, { key: "", name: "", example: "" }],
+              options: [
+                ...options,
+                markNew({ key: "", name: "", example: "" }),
+              ],
             })
           }
         >
@@ -65,9 +66,7 @@ export function OptionsPanel({
                   onChange={(e) =>
                     set(i, {
                       name: e.target.value,
-                      ...(savedKeys.has(o.key)
-                        ? {}
-                        : { key: slug(e.target.value) }),
+                      ...(isNew(o) ? { key: slug(e.target.value) } : {}),
                     })
                   }
                 />
