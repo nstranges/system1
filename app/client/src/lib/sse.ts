@@ -5,12 +5,13 @@ export interface SseEvent {
 }
 
 export class SseError extends Error {
-  constructor(
-    readonly status: number,
-    // The server's own `{"detail": {"message"}}` text when it sent one.
-    readonly serverMessage: string | null,
-  ) {
+  status: number
+  // The server's own `{"detail": {"message"}}` text when it sent one.
+  serverMessage: string | null
+  constructor(status: number, serverMessage: string | null) {
     super(`stream failed: ${status}`)
+    this.status = status
+    this.serverMessage = serverMessage
   }
 }
 
