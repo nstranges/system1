@@ -1,8 +1,8 @@
 from sqlalchemy import func, select
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, defer
 
 from system1.auth.principal import Principal
-from system1.context.extract import EmptyText, clean_name, clean_text
+from system1.context.extract import EmptyText, TooMuchText, clean_name, clean_text
 from system1.context.models import ContextDoc
 from system1.datasets.constants import CONTEXT_MAX_FILE_BYTES, CONTEXT_MAX_FILES, CONTEXT_PROMPT_CHARS
 from system1.errors import ApiError, NotFound
@@ -28,7 +28,12 @@ def _owned(project: Project, principal: Principal) -> None:
 
 def list_docs(session: Session, principal: Principal, project: Project) -> list[ContextDoc]:
     _owned(project, principal)
-    stmt = select(ContextDoc).where(ContextDoc.project_id == project.id).order_by(ContextDoc.created_at, ContextDoc.id)
+    stmt = (
+        select(ContextDoc)
+        .where(ContextDoc.project_id == project.id)
+        .options(defer(ContextDoc.text))
+        .order_by(ContextDoc.created_at, ContextDoc.id)
+    )
     return list(session.scalars(stmt))
 
 
@@ -38,6 +43,8 @@ def add_doc(session: Session, project: Project, principal: Principal, name: str,
     text = clean_text(text)
     if not text:
         raise EmptyText("There's no text to add.")
+    if len(text) > CONTEXT_MAX_FILE_BYTES:
+        raise TooMuchText()
     count = session.scalar(select(func.count()).select_from(ContextDoc).where(ContextDoc.project_id == project.id))
     if (count or 0) >= CONTEXT_MAX_FILES:
         raise TooManyFiles()
