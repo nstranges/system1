@@ -1,4 +1,10 @@
-import { CreateOrganization, Show, useAuth } from "@clerk/react"
+import {
+  CreateOrganization,
+  RedirectToTasks,
+  Show,
+  useAuth,
+  useSession,
+} from "@clerk/react"
 import { Fragment, type ReactNode } from "react"
 import { Navigate } from "react-router"
 import {
@@ -35,9 +41,18 @@ function OrgGate({ children }: { children: ReactNode }) {
   return <Fragment key={orgId}>{children}</Fragment>
 }
 
+// A pending session is signed in but has an unfinished task (choosing an
+// organization). Clerk's `Show` counts it as signed out, so send it to the task.
+function SignedOutFallback() {
+  const { isLoaded, session } = useSession()
+  if (!isLoaded) return null
+  if (session?.status === "pending") return <RedirectToTasks />
+  return <Navigate to="/sign-in" replace />
+}
+
 export function RequireOrg({ children }: { children: ReactNode }) {
   return (
-    <Show when="signed-in" fallback={<Navigate to="/sign-in" replace />}>
+    <Show when="signed-in" fallback={<SignedOutFallback />}>
       <OrgGate>{children}</OrgGate>
     </Show>
   )

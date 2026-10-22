@@ -5,7 +5,8 @@ import { ChooseOrganizationPage } from "@/features/auth/ChooseOrganizationPage"
 import { SignInPage } from "@/features/auth/SignInPage"
 import { SignUpPage } from "@/features/auth/SignUpPage"
 import { LandingPage } from "@/features/landing/LandingPage"
-import { ProjectsPage } from "@/features/projects/ProjectsPage"
+import { DashboardPage } from "@/features/dashboard/DashboardPage"
+import { WorkspacePage } from "@/features/workspace/WorkspacePage"
 import { TeamPage } from "@/features/team/TeamPage"
 
 export function AppRoutes() {
@@ -26,7 +27,8 @@ export function AppRoutes() {
           </RequireOrg>
         }
       >
-        <Route index element={<ProjectsPage />} />
+        <Route index element={<DashboardPage />} />
+        <Route path="p/:projectId/:stage" element={<WorkspacePage />} />
         <Route path="team/*" element={<TeamPage />} />
       </Route>
     </Routes>
