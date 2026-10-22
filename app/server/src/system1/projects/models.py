@@ -26,6 +26,11 @@ class Project(Base):
     stage: Mapped[str] = mapped_column(default="usecase")
     default_lane: Mapped[str] = mapped_column(default="jev")  # jev | sys1 | auto
     live_model_label: Mapped[str | None] = mapped_column(default=None)
+    # Set at the first training job. Afterwards test examples never move.
+    frozen_at: Mapped[datetime | None] = mapped_column(default=None)
+    # Bumps when the test set changes, so report cards are only compared on the same test set.
+    test_set_version: Mapped[int] = mapped_column(default=1)
+    dataset_version: Mapped[int] = mapped_column(default=0)
     created_by: Mapped[str]
     created_at: Mapped[datetime] = mapped_column(default=now)
 

@@ -525,6 +525,292 @@
         }
       }
     },
+    "/api/projects/{project_id}/examples/health": {
+      "get": {
+        "summary": "Examples Health",
+        "operationId": "examples_health_api_projects__project_id__examples_health_get",
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Project Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Health"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/projects/{project_id}/examples": {
+      "get": {
+        "summary": "List Examples",
+        "operationId": "list_examples_api_projects__project_id__examples_get",
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Project Id"
+            }
+          },
+          {
+            "name": "split",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "train",
+                    "cal",
+                    "test"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Split"
+            }
+          },
+          {
+            "name": "source",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "uploaded",
+                    "generated",
+                    "corrected"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Source"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 200,
+              "minimum": 1,
+              "default": 50,
+              "title": "Limit"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ExampleOut"
+                  },
+                  "title": "Response List Examples Api Projects  Project Id  Examples Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/projects/{project_id}/review": {
+      "get": {
+        "summary": "Review Queue",
+        "operationId": "review_queue_api_projects__project_id__review_get",
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Project Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ExampleOut"
+                  },
+                  "title": "Response Review Queue Api Projects  Project Id  Review Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/examples/{example_id}/review": {
+      "post": {
+        "summary": "Review Example",
+        "operationId": "review_example_api_examples__example_id__review_post",
+        "parameters": [
+          {
+            "name": "example_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Example Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReviewIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExampleOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/projects/{project_id}/buckets/{key}/delete": {
+      "post": {
+        "summary": "Delete Bucket",
+        "operationId": "delete_bucket_api_projects__project_id__buckets__key__delete_post",
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Project Id"
+            }
+          },
+          {
+            "name": "key",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Key"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DeleteBucketIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeleteBucketResult"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/projects/{project_id}/samples": {
       "get": {
         "summary": "Samples",
@@ -1642,6 +1928,62 @@
         ],
         "title": "DecideOut"
       },
+      "DeleteBucketIn": {
+        "properties": {
+          "mode": {
+            "type": "string",
+            "enum": [
+              "drop",
+              "move"
+            ],
+            "title": "Mode"
+          },
+          "to": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "To"
+          },
+          "reset_test": {
+            "type": "boolean",
+            "title": "Reset Test",
+            "default": false
+          }
+        },
+        "type": "object",
+        "required": [
+          "mode"
+        ],
+        "title": "DeleteBucketIn"
+      },
+      "DeleteBucketResult": {
+        "properties": {
+          "policy_version": {
+            "type": "integer",
+            "title": "Policy Version"
+          },
+          "examples_affected": {
+            "type": "integer",
+            "title": "Examples Affected"
+          },
+          "test_set_version": {
+            "type": "integer",
+            "title": "Test Set Version"
+          }
+        },
+        "type": "object",
+        "required": [
+          "policy_version",
+          "examples_affected",
+          "test_set_version"
+        ],
+        "title": "DeleteBucketResult"
+      },
       "DoneEvent": {
         "properties": {
           "type": {
@@ -1672,6 +2014,71 @@
           "message"
         ],
         "title": "ErrorEvent"
+      },
+      "ExampleOut": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "input": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "additionalProperties": true,
+                "type": "object"
+              }
+            ],
+            "title": "Input"
+          },
+          "label": {
+            "type": "string",
+            "title": "Label"
+          },
+          "source": {
+            "type": "string",
+            "title": "Source"
+          },
+          "split": {
+            "type": "string",
+            "title": "Split"
+          },
+          "how_sure": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "How Sure"
+          },
+          "review": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Review"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "input",
+          "label",
+          "source",
+          "split",
+          "how_sure",
+          "review"
+        ],
+        "title": "ExampleOut"
       },
       "FeedbackOut": {
         "properties": {
@@ -1728,6 +2135,61 @@
         },
         "type": "object",
         "title": "HTTPValidationError"
+      },
+      "Health": {
+        "properties": {
+          "per_bucket": {
+            "additionalProperties": {
+              "additionalProperties": {
+                "type": "integer"
+              },
+              "type": "object"
+            },
+            "type": "object",
+            "title": "Per Bucket"
+          },
+          "sources": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "type": "object",
+            "title": "Sources"
+          },
+          "below_minimum": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Below Minimum"
+          },
+          "synthetic_test": {
+            "type": "boolean",
+            "title": "Synthetic Test"
+          },
+          "frozen": {
+            "type": "boolean",
+            "title": "Frozen"
+          },
+          "test_set_version": {
+            "type": "integer",
+            "title": "Test Set Version"
+          },
+          "dataset_version": {
+            "type": "integer",
+            "title": "Dataset Version"
+          }
+        },
+        "type": "object",
+        "required": [
+          "per_bucket",
+          "sources",
+          "below_minimum",
+          "synthetic_test",
+          "frozen",
+          "test_set_version",
+          "dataset_version"
+        ],
+        "title": "Health"
       },
       "InboxItem": {
         "properties": {
@@ -2505,6 +2967,34 @@
         },
         "type": "object",
         "title": "ProjectPatch"
+      },
+      "ReviewIn": {
+        "properties": {
+          "action": {
+            "type": "string",
+            "enum": [
+              "agree",
+              "move"
+            ],
+            "title": "Action"
+          },
+          "to": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "To"
+          }
+        },
+        "type": "object",
+        "required": [
+          "action"
+        ],
+        "title": "ReviewIn"
       },
       "Rule-Input": {
         "properties": {

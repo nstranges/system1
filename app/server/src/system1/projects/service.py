@@ -3,12 +3,19 @@ from sqlalchemy.orm import Session
 
 from system1.auth.principal import Principal
 from system1.context.models import ContextDoc
+from system1.datasets.models import Example
 from system1.decisions.models import Decision, Feedback
 from system1.domain.policy import Policy, validate_policy
-from system1.errors import NotFound, PolicyInvalid
+from system1.errors import ApiError, NotFound, PolicyInvalid
 from system1.gateway.keys import ApiKey
 from system1.projects.models import PolicyVersion, Project
 from system1.templates.catalog import get_template
+
+
+class BucketHasExamples(ApiError):
+    status_code = 409
+    code = "bucket_has_examples"
+    message = "Use 'Delete bucket' to choose what happens to its examples."
 
 
 def _add_version(session: Session, project_id: str, version: int, policy: Policy, user_id: str) -> None:
@@ -77,6 +84,7 @@ def delete_project(session: Session, principal: Principal, project_id: str) -> N
     session.execute(delete(ApiKey).where(ApiKey.project_id == project.id))
     session.execute(delete(Decision).where(Decision.project_id == project.id))
     session.execute(delete(ContextDoc).where(ContextDoc.project_id == project.id))
+    session.execute(delete(Example).where(Example.project_id == project.id))
     session.execute(delete(PolicyVersion).where(PolicyVersion.project_id == project.id))
     session.delete(project)
     session.commit()
@@ -105,6 +113,16 @@ def save_policy(session: Session, principal: Principal, project: Project, policy
     if issues:
         raise PolicyInvalid(issues)
     top = session.scalar(select(func.max(PolicyVersion.version)).where(PolicyVersion.project_id == project.id)) or 0
+    if top:
+        # Bucket keys are stable once examples exist: a key that disappears (removed or renamed) would orphan them.
+        previous, _ = latest_policy(session, project)
+        removed = {o.key for o in previous.options} - {o.key for o in policy.options}
+        if removed and session.scalar(
+            select(func.count())
+            .select_from(Example)
+            .where(Example.project_id == project.id, Example.label.in_(removed))
+        ):
+            raise BucketHasExamples()
     _add_version(session, project.id, top + 1, policy, principal.user_id)
     session.commit()
     return top + 1

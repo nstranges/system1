@@ -37,12 +37,14 @@ def init_db(engine: Engine) -> None:
     from system1 import usage  # noqa: F401
     from system1.agent import models as agent_models  # noqa: F401
     from system1.context import models as context_models  # noqa: F401
+    from system1.datasets import models as dataset_models  # noqa: F401
     from system1.decisions import models as decision_models  # noqa: F401
     from system1.gateway import keys  # noqa: F401
     from system1.projects import models as project_models  # noqa: F401
 
     Base.metadata.create_all(engine)
-    _add_missing_columns(engine, "feedback")
+    for table in ("feedback", "projects"):
+        _add_missing_columns(engine, table)
 
 
 def _add_missing_columns(engine: Engine, table: str) -> None:
@@ -56,7 +58,8 @@ def _add_missing_columns(engine: Engine, table: str) -> None:
             if col.name in have:
                 continue
             ddl = f"ALTER TABLE {table} ADD COLUMN {col.name} {col.type.compile(engine.dialect)}"
-            if col.default is not None and not col.nullable:
+            # Only constant defaults can be written into DDL; a callable default has no value to put there.
+            if col.default is not None and col.default.is_scalar and not col.nullable:
                 value = col.default.arg
                 ddl += f" NOT NULL DEFAULT {int(value) if isinstance(value, bool) else repr(value)}"
             conn.execute(text(ddl))

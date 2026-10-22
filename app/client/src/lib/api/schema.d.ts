@@ -179,6 +179,91 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/projects/{project_id}/examples/health": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Examples Health */
+        get: operations["examples_health_api_projects__project_id__examples_health_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/projects/{project_id}/examples": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Examples */
+        get: operations["list_examples_api_projects__project_id__examples_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/projects/{project_id}/review": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Review Queue */
+        get: operations["review_queue_api_projects__project_id__review_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/examples/{example_id}/review": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Review Example */
+        post: operations["review_example_api_examples__example_id__review_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/projects/{project_id}/buckets/{key}/delete": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Delete Bucket */
+        post: operations["delete_bucket_api_projects__project_id__buckets__key__delete_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/projects/{project_id}/samples": {
         parameters: {
             query?: never;
@@ -551,6 +636,30 @@ export interface components {
             } | null;
             system1: components["schemas"]["Sys1Block"];
         };
+        /** DeleteBucketIn */
+        DeleteBucketIn: {
+            /**
+             * Mode
+             * @enum {string}
+             */
+            mode: "drop" | "move";
+            /** To */
+            to?: string | null;
+            /**
+             * Reset Test
+             * @default false
+             */
+            reset_test: boolean;
+        };
+        /** DeleteBucketResult */
+        DeleteBucketResult: {
+            /** Policy Version */
+            policy_version: number;
+            /** Examples Affected */
+            examples_affected: number;
+            /** Test Set Version */
+            test_set_version: number;
+        };
         /** DoneEvent */
         DoneEvent: {
             /**
@@ -568,6 +677,25 @@ export interface components {
             type: "error";
             /** Message */
             message: string;
+        };
+        /** ExampleOut */
+        ExampleOut: {
+            /** Id */
+            id: string;
+            /** Input */
+            input: string | {
+                [key: string]: unknown;
+            };
+            /** Label */
+            label: string;
+            /** Source */
+            source: string;
+            /** Split */
+            split: string;
+            /** How Sure */
+            how_sure: number | null;
+            /** Review */
+            review: string | null;
         };
         /** FeedbackOut */
         FeedbackOut: {
@@ -596,6 +724,29 @@ export interface components {
         HTTPValidationError: {
             /** Detail */
             detail?: components["schemas"]["ValidationError"][];
+        };
+        /** Health */
+        Health: {
+            /** Per Bucket */
+            per_bucket: {
+                [key: string]: {
+                    [key: string]: number;
+                };
+            };
+            /** Sources */
+            sources: {
+                [key: string]: number;
+            };
+            /** Below Minimum */
+            below_minimum: string[];
+            /** Synthetic Test */
+            synthetic_test: boolean;
+            /** Frozen */
+            frozen: boolean;
+            /** Test Set Version */
+            test_set_version: number;
+            /** Dataset Version */
+            dataset_version: number;
         };
         /** InboxItem */
         InboxItem: {
@@ -867,6 +1018,16 @@ export interface components {
             description?: string | null;
             /** Default Lane */
             default_lane?: ("jev" | "sys1" | "auto") | null;
+        };
+        /** ReviewIn */
+        ReviewIn: {
+            /**
+             * Action
+             * @enum {string}
+             */
+            action: "agree" | "move";
+            /** To */
+            to?: string | null;
         };
         /** Rule */
         "Rule-Input": {
@@ -1472,6 +1633,174 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    examples_health_api_projects__project_id__examples_health_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Health"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_examples_api_projects__project_id__examples_get: {
+        parameters: {
+            query?: {
+                split?: ("train" | "cal" | "test") | null;
+                source?: ("uploaded" | "generated" | "corrected") | null;
+                limit?: number;
+            };
+            header?: never;
+            path: {
+                project_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ExampleOut"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    review_queue_api_projects__project_id__review_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ExampleOut"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    review_example_api_examples__example_id__review_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                example_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReviewIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ExampleOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_bucket_api_projects__project_id__buckets__key__delete_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: string;
+                key: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DeleteBucketIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DeleteBucketResult"];
+                };
             };
             /** @description Validation Error */
             422: {
