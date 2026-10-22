@@ -27,6 +27,7 @@ import { AgentPanel } from "@/features/agent/AgentPanel"
 import type { CanvasEvent } from "@/features/agent/useAgent"
 import { RulesCanvas } from "@/features/rules/RulesCanvas"
 import { TryCanvas } from "@/features/playground/TryCanvas"
+import { UseCanvas } from "@/features/use/UseCanvas"
 import { UseCaseCanvas } from "@/features/usecase/UseCaseCanvas"
 import { StageRail } from "./StageRail"
 import { STAGES, isStage, type StageId } from "./stages"
@@ -184,6 +185,8 @@ function Workspace() {
       />
     ) : stage === "try" ? (
       <TryCanvas project={project} policy={policy} />
+    ) : stage === "use" ? (
+      <UseCanvas project={project} onProject={setProject} />
     ) : (
       <ComingSoon stage={stage} />
     )

@@ -5,6 +5,7 @@ from typing import Annotated
 
 from fastapi import APIRouter, Depends, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from pydantic import BaseModel
 from sqlalchemy import Engine
 
 from system1.agent.router import router as agent_router
@@ -15,8 +16,14 @@ from system1.config import get_settings
 from system1.db import init_db, make_engine
 from system1.errors import install_error_handlers
 from system1.gateway.router_app import router as gateway_router
+from system1.gateway.router_public import router as public_router
 from system1.projects.router import router as projects_router
-from system1.providers import Providers, build_providers
+from system1.providers import Providers, build_providers, get_providers
+
+
+class ConfigOut(BaseModel):
+    sys1_available: bool
+
 
 log = logging.getLogger(__name__)
 
@@ -65,10 +72,15 @@ def create_app(
     def me(principal: Annotated[Principal, Depends(get_principal)]) -> Principal:
         return principal
 
+    @api.get("/config", dependencies=[Depends(get_principal)])
+    def config(providers: Annotated[Providers, Depends(get_providers)]) -> ConfigOut:
+        return ConfigOut(sys1_available=providers.sys1 is not None)
+
     api.include_router(projects_router)
     api.include_router(gateway_router)
     api.include_router(agent_router)
     app.include_router(api)
+    app.include_router(public_router)
     return app
 
 

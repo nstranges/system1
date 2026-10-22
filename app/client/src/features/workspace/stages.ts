@@ -4,7 +4,7 @@ export const STAGES = [
   { id: "try", label: "Try", ready: true },
   { id: "examples", label: "Examples", ready: false },
   { id: "train", label: "Train", ready: false },
-  { id: "use", label: "Use", ready: false },
+  { id: "use", label: "Use", ready: true },
   { id: "improve", label: "Improve", ready: false },
 ] as const
 

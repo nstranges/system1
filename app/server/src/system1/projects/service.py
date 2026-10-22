@@ -5,6 +5,7 @@ from system1.auth.principal import Principal
 from system1.decisions.models import Decision
 from system1.domain.policy import Policy, validate_policy
 from system1.errors import NotFound, PolicyInvalid
+from system1.gateway.keys import ApiKey, Feedback
 from system1.projects.models import PolicyVersion, Project
 from system1.templates.catalog import get_template
 
@@ -55,6 +56,8 @@ def get_project(session: Session, principal: Principal, project_id: str) -> Proj
 
 def delete_project(session: Session, principal: Principal, project_id: str) -> None:
     project = get_project(session, principal, project_id)
+    session.execute(delete(Feedback).where(Feedback.project_id == project.id))
+    session.execute(delete(ApiKey).where(ApiKey.project_id == project.id))
     session.execute(delete(Decision).where(Decision.project_id == project.id))
     session.execute(delete(PolicyVersion).where(PolicyVersion.project_id == project.id))
     session.delete(project)

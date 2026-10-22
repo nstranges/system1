@@ -12,6 +12,8 @@ export type PolicyIssue = components["schemas"]["PolicyIssue"]
 export type Sample = components["schemas"]["SampleOut"]
 export type LaneResult = components["schemas"]["LaneResult"]
 export type TryResult = components["schemas"]["TryResult"]
+export type ApiKeyOut = components["schemas"]["KeyOut"]
+export type ApiKeyCreated = components["schemas"]["KeyCreated"]
 
 // Server errors are `{"detail": {"code", "message", "issues"?}}`. Anything else
 // (a network failure, a framework 422) falls back to the generic text.
