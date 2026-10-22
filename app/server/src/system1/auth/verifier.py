@@ -18,13 +18,15 @@ class ClerkVerifier:
         self._clerk = Clerk(bearer_auth=secret_key)
         self._authorized_parties = authorized_parties
 
+    def options(self) -> AuthenticateRequestOptions:
+        # The SDK default accepts machine, API-key and OAuth tokens too, through a path that skips azp checks.
+        return AuthenticateRequestOptions(authorized_parties=self._authorized_parties, accepts_token=["session_token"])
+
     def claims(self, request: Request) -> dict | None:
         # The SDK only reads headers, but wants an httpx request. It does a blocking JWKS fetch
         # on a cold cache, so callers must be sync (FastAPI runs them in its threadpool).
         adapted = httpx.Request(request.method, str(request.url), headers=request.headers.raw)
-        state = self._clerk.authenticate_request(
-            adapted, AuthenticateRequestOptions(authorized_parties=self._authorized_parties)
-        )
+        state = self._clerk.authenticate_request(adapted, self.options())
         if not state.is_signed_in:
             log.info("rejected session token: %s", state.reason)
             return None

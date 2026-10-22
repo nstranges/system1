@@ -2,7 +2,7 @@ import pytest
 from fastapi.testclient import TestClient
 
 from system1.auth.principal import NoActiveOrganization, Principal, principal_from_claims
-from system1.auth.verifier import FakeVerifier
+from system1.auth.verifier import ClerkVerifier, FakeVerifier
 from system1.db import make_engine
 from system1.main import create_app
 
@@ -28,3 +28,9 @@ def test_api_without_token_returns_401():
     response = TestClient(app).get("/api/me")
     assert response.status_code == 401
     assert response.json()["detail"]["code"] == "unauthenticated"
+
+
+def test_clerk_verifier_accepts_only_session_tokens():
+    options = ClerkVerifier("sk_test_x", ["http://localhost:5173"]).options()
+    assert options.accepts_token == ["session_token"]
+    assert options.authorized_parties == ["http://localhost:5173"]
