@@ -3,7 +3,7 @@ import hmac
 import secrets
 from datetime import datetime
 
-from sqlalchemy import JSON, ForeignKey, select
+from sqlalchemy import ForeignKey, select
 from sqlalchemy.orm import Mapped, Session, mapped_column
 
 from system1.auth.principal import Principal
@@ -24,19 +24,6 @@ class ApiKey(Base):
     created_by: Mapped[str]
     created_at: Mapped[datetime] = mapped_column(default=now)
     revoked_at: Mapped[datetime | None] = mapped_column(default=None)
-
-
-class Feedback(Base):
-    """A correction sent back through the public API for one decision."""
-
-    __tablename__ = "feedback"
-
-    id: Mapped[str] = mapped_column(primary_key=True, default=new_id)
-    org_id: Mapped[str] = mapped_column(index=True)
-    project_id: Mapped[str] = mapped_column(ForeignKey("projects.id"), index=True)
-    decision_id: Mapped[str] = mapped_column(ForeignKey("decisions.id"), index=True)
-    correct_json: Mapped[dict] = mapped_column(JSON)
-    created_at: Mapped[datetime] = mapped_column(default=now)
 
 
 def _digest(raw: str) -> str:

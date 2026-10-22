@@ -28,3 +28,21 @@ class Decision(Base):
     needs_review: Mapped[bool] = mapped_column(default=False)
     dataset_row_id: Mapped[str | None] = mapped_column(default=None)
     created_at: Mapped[datetime] = mapped_column(default=now)
+
+
+class Feedback(Base):
+    """One person's (or API caller's) verdict on one decision."""
+
+    __tablename__ = "feedback"
+
+    id: Mapped[str] = mapped_column(primary_key=True, default=new_id)
+    org_id: Mapped[str] = mapped_column(index=True)
+    project_id: Mapped[str] = mapped_column(ForeignKey("projects.id"), index=True)
+    decision_id: Mapped[str] = mapped_column(ForeignKey("decisions.id"), index=True)
+    correct_json: Mapped[dict] = mapped_column(JSON)
+    kind: Mapped[str] = mapped_column(default="api_correction")  # confirm | correction | api_correction
+    user_id: Mapped[str | None] = mapped_column(default=None)  # API keys have no user
+    correct_label: Mapped[str | None] = mapped_column(default=None)
+    is_test_item: Mapped[bool] = mapped_column(default=False)
+    training_eligible: Mapped[bool] = mapped_column(default=False)
+    created_at: Mapped[datetime] = mapped_column(default=now)

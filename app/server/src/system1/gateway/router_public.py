@@ -9,10 +9,11 @@ from sqlalchemy.orm import Session
 from system1.config import get_settings
 from system1.contracts.decisions import ChoiceAnswer, ProviderError
 from system1.db import get_session
+from system1.decisions import service as feedback_service
 from system1.decisions.models import Decision
 from system1.errors import ApiError, NotFound, Unauthenticated
 from system1.gateway import service
-from system1.gateway.keys import ApiKey, Feedback, resolve_key
+from system1.gateway.keys import ApiKey, resolve_key
 from system1.gateway.service import Lane, LaneResult, State
 from system1.projects.models import Project
 from system1.providers import Providers, get_providers
@@ -148,8 +149,12 @@ def feedback(body: FeedbackIn, key: KeyDep, session: SessionDep) -> FeedbackOut:
     decision = session.get(Decision, body.decision_id)
     if decision is None or decision.project_id != key.project_id:
         raise NotFound("Decision not found.")
-    session.add(
-        Feedback(org_id=key.org_id, project_id=key.project_id, decision_id=decision.id, correct_json=body.correct)
-    )
-    session.commit()
+    project = session.get(Project, key.project_id)
+    if project is None:
+        raise Unauthenticated()
+    question_key = feedback_service.question_key(session, project)
+    label = body.correct.get(question_key)
+    if label is None:
+        raise feedback_service.BadLabel(f"Send the right answer as correct.{question_key}.")
+    feedback_service.record_feedback(session, None, decision, "api_correction", label)
     return FeedbackOut()

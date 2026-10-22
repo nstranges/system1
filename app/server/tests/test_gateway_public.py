@@ -3,8 +3,7 @@ from sqlalchemy.orm import Session
 
 from system1.adapters.fakes import FakeDecisionProvider, FakeLLM, FakeTrainer
 from system1.contracts.decisions import ChoiceAnswer, DecisionRequest, DecisionResponse
-from system1.decisions.models import Decision
-from system1.gateway.keys import Feedback
+from system1.decisions.models import Decision, Feedback
 from system1.providers import Providers
 
 FLAGSHIP = "tallyfern-triage"
@@ -63,10 +62,19 @@ def test_public_decide_with_key_returns_system1_block(client_for):
 
     feedback = client.post(
         "/v1/feedback",
-        json={"decision_id": block["decision_id"], "correct": {"queue": "billing"}},
+        json={"decision_id": block["decision_id"], "correct": {"queue": "billing_refunds"}},
         headers=_bearer(key),
     )
     assert feedback.status_code == 200
+    unknown = client.post(
+        "/v1/feedback",
+        json={"decision_id": block["decision_id"], "correct": {"queue": "billing"}},
+        headers=_bearer(key),
+    )
+    assert unknown.status_code == 422
+    with Session(client.app.state.engine) as session:
+        row = session.scalars(select(Feedback)).one()
+        assert row.kind == "api_correction" and row.user_id is None and row.correct_label == "billing_refunds"
 
 
 def test_revoked_key_gets_401(client_for):

@@ -196,6 +196,57 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/decisions/{decision_id}/feedback": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Post Feedback */
+        post: operations["post_feedback_api_decisions__decision_id__feedback_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/projects/{project_id}/inbox": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Inbox */
+        get: operations["get_inbox_api_projects__project_id__inbox_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/projects/{project_id}/training-pool": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Training Pool */
+        get: operations["get_training_pool_api_projects__project_id__training_pool_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/projects/{project_id}/agent/messages": {
         parameters: {
             query?: never;
@@ -445,15 +496,6 @@ export interface components {
             /** Message */
             message: string;
         };
-        /** FeedbackIn */
-        FeedbackIn: {
-            /** Decision Id */
-            decision_id: string;
-            /** Correct */
-            correct: {
-                [key: string]: string;
-            };
-        };
         /** FeedbackOut */
         FeedbackOut: {
             /**
@@ -481,6 +523,29 @@ export interface components {
         HTTPValidationError: {
             /** Detail */
             detail?: components["schemas"]["ValidationError"][];
+        };
+        /** InboxItem */
+        InboxItem: {
+            /** Decision Id */
+            decision_id: string;
+            /** State */
+            state: string | {
+                [key: string]: unknown;
+            } | unknown[];
+            /** Answer */
+            answer: string | null;
+            /** Lane */
+            lane: string;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+        };
+        /** InboxOut */
+        InboxOut: {
+            /** Items */
+            items: components["schemas"]["InboxItem"][];
         };
         /** InputField */
         InputField: {
@@ -655,6 +720,11 @@ export interface components {
             version: number;
             /** Issues */
             issues: components["schemas"]["PolicyIssue"][];
+        };
+        /** PoolOut */
+        PoolOut: {
+            /** Count */
+            count: number;
         };
         /** Principal */
         Principal: {
@@ -867,6 +937,25 @@ export interface components {
             input?: unknown;
             /** Context */
             ctx?: Record<string, never>;
+        };
+        /** FeedbackIn */
+        system1__decisions__router__FeedbackIn: {
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "confirm" | "correction";
+            /** Correct Label */
+            correct_label?: string | null;
+        };
+        /** FeedbackIn */
+        system1__gateway__router_public__FeedbackIn: {
+            /** Decision Id */
+            decision_id: string;
+            /** Correct */
+            correct: {
+                [key: string]: string;
+            };
         };
     };
     responses: never;
@@ -1331,6 +1420,103 @@ export interface operations {
             };
         };
     };
+    post_feedback_api_decisions__decision_id__feedback_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                decision_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["system1__decisions__router__FeedbackIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FeedbackOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_inbox_api_projects__project_id__inbox_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InboxOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_training_pool_api_projects__project_id__training_pool_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PoolOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     send_message_api_projects__project_id__agent_messages_post: {
         parameters: {
             query?: never;
@@ -1505,7 +1691,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["FeedbackIn"];
+                "application/json": components["schemas"]["system1__gateway__router_public__FeedbackIn"];
             };
         };
         responses: {

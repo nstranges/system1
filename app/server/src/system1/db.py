@@ -2,7 +2,7 @@ from collections.abc import Iterator
 from pathlib import Path
 
 from fastapi import Request
-from sqlalchemy import Engine, create_engine, event
+from sqlalchemy import Engine, create_engine, event, inspect, text
 from sqlalchemy.engine import make_url
 from sqlalchemy.orm import DeclarativeBase, Session
 from sqlalchemy.pool import StaticPool
@@ -41,6 +41,24 @@ def init_db(engine: Engine) -> None:
     from system1.projects import models as project_models  # noqa: F401
 
     Base.metadata.create_all(engine)
+    _add_missing_columns(engine, "feedback")
+
+
+def _add_missing_columns(engine: Engine, table: str) -> None:
+    """There are no migrations: a dev database made before a column existed gets it added here (SQLite)."""
+    if engine.dialect.name != "sqlite":
+        return
+    spec = Base.metadata.tables[table]
+    have = {c["name"] for c in inspect(engine).get_columns(table)}
+    with engine.begin() as conn:
+        for col in spec.columns:
+            if col.name in have:
+                continue
+            ddl = f"ALTER TABLE {table} ADD COLUMN {col.name} {col.type.compile(engine.dialect)}"
+            if col.default is not None and not col.nullable:
+                value = col.default.arg
+                ddl += f" NOT NULL DEFAULT {int(value) if isinstance(value, bool) else repr(value)}"
+            conn.execute(text(ddl))
 
 
 def get_session(request: Request) -> Iterator[Session]:

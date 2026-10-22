@@ -558,6 +558,133 @@
         }
       }
     },
+    "/api/decisions/{decision_id}/feedback": {
+      "post": {
+        "summary": "Post Feedback",
+        "operationId": "post_feedback_api_decisions__decision_id__feedback_post",
+        "parameters": [
+          {
+            "name": "decision_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Decision Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/system1__decisions__router__FeedbackIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FeedbackOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/projects/{project_id}/inbox": {
+      "get": {
+        "summary": "Get Inbox",
+        "operationId": "get_inbox_api_projects__project_id__inbox_get",
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Project Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InboxOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/projects/{project_id}/training-pool": {
+      "get": {
+        "summary": "Get Training Pool",
+        "operationId": "get_training_pool_api_projects__project_id__training_pool_get",
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Project Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PoolOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/projects/{project_id}/agent/messages": {
       "post": {
         "summary": "Send Message",
@@ -872,7 +999,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/FeedbackIn"
+                "$ref": "#/components/schemas/system1__gateway__router_public__FeedbackIn"
               }
             }
           }
@@ -1318,27 +1445,6 @@
         ],
         "title": "ErrorEvent"
       },
-      "FeedbackIn": {
-        "properties": {
-          "decision_id": {
-            "type": "string",
-            "title": "Decision Id"
-          },
-          "correct": {
-            "additionalProperties": {
-              "type": "string"
-            },
-            "type": "object",
-            "title": "Correct"
-          }
-        },
-        "type": "object",
-        "required": [
-          "decision_id",
-          "correct"
-        ],
-        "title": "FeedbackIn"
-      },
       "FeedbackOut": {
         "properties": {
           "status": {
@@ -1394,6 +1500,75 @@
         },
         "type": "object",
         "title": "HTTPValidationError"
+      },
+      "InboxItem": {
+        "properties": {
+          "decision_id": {
+            "type": "string",
+            "title": "Decision Id"
+          },
+          "state": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "items": {},
+                "type": "array"
+              }
+            ],
+            "title": "State"
+          },
+          "answer": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Answer"
+          },
+          "lane": {
+            "type": "string",
+            "title": "Lane"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "decision_id",
+          "state",
+          "answer",
+          "lane",
+          "created_at"
+        ],
+        "title": "InboxItem"
+      },
+      "InboxOut": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/InboxItem"
+            },
+            "type": "array",
+            "title": "Items"
+          }
+        },
+        "type": "object",
+        "required": [
+          "items"
+        ],
+        "title": "InboxOut"
       },
       "InputField": {
         "properties": {
@@ -1858,6 +2033,19 @@
           "issues"
         ],
         "title": "PolicyOut"
+      },
+      "PoolOut": {
+        "properties": {
+          "count": {
+            "type": "integer",
+            "title": "Count"
+          }
+        },
+        "type": "object",
+        "required": [
+          "count"
+        ],
+        "title": "PoolOut"
       },
       "Principal": {
         "properties": {
@@ -2468,6 +2656,55 @@
           "type"
         ],
         "title": "ValidationError"
+      },
+      "system1__decisions__router__FeedbackIn": {
+        "properties": {
+          "kind": {
+            "type": "string",
+            "enum": [
+              "confirm",
+              "correction"
+            ],
+            "title": "Kind"
+          },
+          "correct_label": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Correct Label"
+          }
+        },
+        "type": "object",
+        "required": [
+          "kind"
+        ],
+        "title": "FeedbackIn"
+      },
+      "system1__gateway__router_public__FeedbackIn": {
+        "properties": {
+          "decision_id": {
+            "type": "string",
+            "title": "Decision Id"
+          },
+          "correct": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "type": "object",
+            "title": "Correct"
+          }
+        },
+        "type": "object",
+        "required": [
+          "decision_id",
+          "correct"
+        ],
+        "title": "FeedbackIn"
       }
     }
   }

@@ -2,10 +2,10 @@ from sqlalchemy import delete, func, select
 from sqlalchemy.orm import Session
 
 from system1.auth.principal import Principal
-from system1.decisions.models import Decision
+from system1.decisions.models import Decision, Feedback
 from system1.domain.policy import Policy, validate_policy
 from system1.errors import NotFound, PolicyInvalid
-from system1.gateway.keys import ApiKey, Feedback
+from system1.gateway.keys import ApiKey
 from system1.projects.models import PolicyVersion, Project
 from system1.templates.catalog import get_template
 
