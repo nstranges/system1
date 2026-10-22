@@ -4,6 +4,16 @@ export interface SseEvent {
   data: any
 }
 
+export class SseError extends Error {
+  constructor(
+    readonly status: number,
+    // The server's own `{"detail": {"message"}}` text when it sent one.
+    readonly serverMessage: string | null,
+  ) {
+    super(`stream failed: ${status}`)
+  }
+}
+
 // POST-based SSE reader. EventSource cannot send an Authorization header or a
 // request body, so the stream is parsed from a fetch response by hand.
 export async function streamEvents(
@@ -23,7 +33,16 @@ export async function streamEvents(
     body: JSON.stringify(body),
     signal,
   })
-  if (!res.ok || !res.body) throw new Error(`stream failed: ${res.status}`)
+  if (!res.ok || !res.body) {
+    let message: string | null = null
+    try {
+      const detail = (await res.json())?.detail
+      message = typeof detail === "string" ? detail : (detail?.message ?? null)
+    } catch {
+      // Not JSON; the status alone has to do.
+    }
+    throw new SseError(res.status, message)
+  }
 
   const reader = res.body.pipeThrough(new TextDecoderStream()).getReader()
   let buffer = ""

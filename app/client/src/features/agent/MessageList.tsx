@@ -30,11 +30,13 @@ export function MessageList({
   projectId,
   busy,
   onSend,
+  onRetry,
 }: {
   events: AgentEvent[]
   projectId: string
   busy: boolean
   onSend: (text: string) => void
+  onRetry: (text: string) => void
 }) {
   const end = useRef<HTMLDivElement>(null)
   useEffect(() => {
@@ -42,10 +44,13 @@ export function MessageList({
   }, [events])
 
   // Choices count as answered once the user speaks again.
+  // The server ends every turn with `done`, so "last" skips the quiet events.
+  let lastShown = -1
   let lastChoices = -1
   let lastUser = -1
   let lastUserText = ""
   events.forEach((e, i) => {
+    if (e.type !== "done" && e.type !== "stage") lastShown = i
     if (e.type === "choices") lastChoices = i
     if (e.type === "user") {
       lastUser = i
@@ -125,12 +130,12 @@ export function MessageList({
                 className="space-y-1.5 rounded-lg border border-destructive/40 bg-destructive/5 p-3 text-sm"
               >
                 <p className="text-destructive">{e.message}</p>
-                {i === events.length - 1 && lastUserText && (
+                {i === lastShown && lastUserText && (
                   <Button
                     size="sm"
                     variant="outline"
                     disabled={busy}
-                    onClick={() => onSend(lastUserText)}
+                    onClick={() => onRetry(lastUserText)}
                   >
                     Try again
                   </Button>

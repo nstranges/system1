@@ -1,7 +1,7 @@
 import { useAuth } from "@clerk/react"
 import { useCallback, useEffect, useRef, useState } from "react"
 import { useApi } from "@/lib/api/client"
-import { streamEvents } from "@/lib/sse"
+import { SseError, streamEvents } from "@/lib/sse"
 import type { components } from "@/lib/api/schema"
 
 export type AgentEvent =
@@ -33,12 +33,24 @@ function append(events: AgentEvent[], e: AgentEvent): AgentEvent[] {
   return [...events, e]
 }
 
+function failureText(err: unknown): string {
+  if (err instanceof SseError) {
+    if (err.status === 429)
+      return "You're sending messages too fast. Wait a moment."
+    if (err.status === 404) return "This project couldn't be found."
+    if (err.serverMessage) return err.serverMessage
+  }
+  return "We lost the connection to your assistant."
+}
+
 export function useAgent(projectId: string, handlers: Handlers) {
   const api = useApi()
   const { getToken } = useAuth()
   const [events, setEvents] = useState<AgentEvent[]>([])
   const [loaded, setLoaded] = useState(false)
   const [busy, setBusy] = useState(false)
+  const [loadError, setLoadError] = useState(false)
+  const [reloadKey, setReloadKey] = useState(0)
   const abort = useRef<AbortController | null>(null)
   // Handlers change every render; the stream callback reads the latest ones.
   const latest = useRef(handlers)
@@ -46,37 +58,55 @@ export function useAgent(projectId: string, handlers: Handlers) {
     latest.current = handlers
   })
 
+  // Reset and abort on a project change only. An `api` identity change must
+  // not cut a running stream, so this is separate from the history load.
+  useEffect(() => {
+    setEvents([])
+    setLoaded(false)
+    setLoadError(false)
+    setBusy(false)
+    return () => {
+      abort.current?.abort()
+      abort.current = null
+    }
+  }, [projectId])
+
   useEffect(() => {
     let cancelled = false
     void (async () => {
-      let history: AgentEvent[] = []
       try {
         const { data } = await api.GET(
           "/api/projects/{project_id}/agent/history",
           { params: { path: { project_id: projectId } } },
         )
-        history = (data ?? []).reduce<AgentEvent[]>(append, [])
+        if (cancelled) return
+        if (!data) throw new Error("no history")
+        setEvents(data.reduce<AgentEvent[]>(append, []))
+        setLoadError(false)
+        setLoaded(true)
       } catch {
-        // An unreadable history just means starting with a clean panel.
+        if (!cancelled) setLoadError(true)
       }
-      if (cancelled) return
-      setEvents(history)
-      setLoaded(true)
     })()
     return () => {
       cancelled = true
-      abort.current?.abort()
     }
-  }, [api, projectId])
+  }, [api, projectId, reloadKey])
 
+  const reload = useCallback(() => {
+    setLoadError(false)
+    setReloadKey((k) => k + 1)
+  }, [])
+
+  // `echo` is false when retrying, so the user's bubble isn't duplicated.
   const send = useCallback(
-    async (text: string) => {
+    async (text: string, echo = true) => {
       const trimmed = text.trim()
       if (!trimmed || abort.current) return
       const controller = new AbortController()
       abort.current = controller
       setBusy(true)
-      setEvents((es) => append(es, { type: "user", text: trimmed }))
+      if (echo) setEvents((es) => append(es, { type: "user", text: trimmed }))
       try {
         const token = await getToken()
         if (!token) throw new Error("signed out")
@@ -93,22 +123,23 @@ export function useAgent(projectId: string, handlers: Handlers) {
           },
           controller.signal,
         )
-      } catch {
+      } catch (err) {
         if (!controller.signal.aborted) {
           setEvents((es) =>
-            append(es, {
-              type: "error",
-              message: "We lost the connection to your assistant.",
-            }),
+            append(es, { type: "error", message: failureText(err) }),
           )
         }
       } finally {
-        if (abort.current === controller) abort.current = null
-        if (!controller.signal.aborted) setBusy(false)
+        // Only the stream that is still current owns `busy`; a project change
+        // has already reset it and may have started its own stream.
+        if (abort.current === controller) {
+          abort.current = null
+          setBusy(false)
+        }
       }
     },
     [getToken, projectId],
   )
 
-  return { events, loaded, busy, send }
+  return { events, loaded, loadError, reload, busy, send }
 }

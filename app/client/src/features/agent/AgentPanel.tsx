@@ -18,10 +18,13 @@ export function AgentPanel({
   onCanvas: (e: CanvasEvent) => void
   onStage: (stage: string) => void
 }) {
-  const { events, loaded, busy, send } = useAgent(project.id, {
-    onCanvas,
-    onStage,
-  })
+  const { events, loaded, loadError, reload, busy, send } = useAgent(
+    project.id,
+    {
+      onCanvas,
+      onStage,
+    },
+  )
   const location = useLocation()
   const navigate = useNavigate()
   const firstMessage = (location.state as { firstMessage?: string } | null)
@@ -37,7 +40,7 @@ export function AgentPanel({
     if (events.length === 0) void send(firstMessage)
   }, [loaded, firstMessage, events.length, send, navigate, location.pathname])
 
-  const empty = loaded && events.length === 0 && !firstMessage
+  const empty = loaded && !loadError && events.length === 0 && !firstMessage
 
   return (
     <Card className="flex h-[70vh] flex-col lg:h-[calc(100vh-14rem)]">
@@ -68,11 +71,20 @@ export function AgentPanel({
             )}
           </div>
         )}
+        {loadError && (
+          <div className="space-y-2 rounded-lg border border-destructive/40 bg-destructive/5 p-3 text-sm">
+            <p className="text-destructive">Couldn't load the conversation.</p>
+            <Button size="sm" variant="outline" onClick={reload}>
+              Retry
+            </Button>
+          </div>
+        )}
         <MessageList
           events={events}
           projectId={project.id}
           busy={busy}
           onSend={(t) => void send(t)}
+          onRetry={(t) => void send(t, false)}
         />
         <Composer busy={busy || !loaded} onSend={(t) => void send(t)} />
       </CardContent>

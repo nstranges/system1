@@ -4,1154 +4,1207 @@
  */
 
 export interface paths {
-    "/api/health": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Health */
-        get: operations["health_api_health_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/me": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Me */
-        get: operations["me_api_me_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/templates": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Templates */
-        get: operations["templates_api_templates_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/projects": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** List Projects */
-        get: operations["list_projects_api_projects_get"];
-        put?: never;
-        /** Create Project */
-        post: operations["create_project_api_projects_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/projects/{project_id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Get Project */
-        get: operations["get_project_api_projects__project_id__get"];
-        put?: never;
-        post?: never;
-        /** Delete Project */
-        delete: operations["delete_project_api_projects__project_id__delete"];
-        options?: never;
-        head?: never;
-        /** Patch Project */
-        patch: operations["patch_project_api_projects__project_id__patch"];
-        trace?: never;
-    };
-    "/api/projects/{project_id}/policy": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Get Policy */
-        get: operations["get_policy_api_projects__project_id__policy_get"];
-        /** Put Policy */
-        put: operations["put_policy_api_projects__project_id__policy_put"];
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/projects/{project_id}/samples": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Samples */
-        get: operations["samples_api_projects__project_id__samples_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/projects/{project_id}/try": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Try It */
-        post: operations["try_it_api_projects__project_id__try_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/projects/{project_id}/agent/messages": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Send Message */
-        post: operations["send_message_api_projects__project_id__agent_messages_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/projects/{project_id}/agent/history": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** History */
-        get: operations["history_api_projects__project_id__agent_history_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/projects/{project_id}/actions/{action_id}/confirm": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Confirm */
-        post: operations["confirm_api_projects__project_id__actions__action_id__confirm_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/projects/{project_id}/actions/{action_id}/cancel": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Cancel */
-        post: operations["cancel_api_projects__project_id__actions__action_id__cancel_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
+  "/api/health": {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /** Health */
+    get: operations["health_api_health_get"]
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  "/api/me": {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /** Me */
+    get: operations["me_api_me_get"]
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  "/api/templates": {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /** Templates */
+    get: operations["templates_api_templates_get"]
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  "/api/projects": {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /** List Projects */
+    get: operations["list_projects_api_projects_get"]
+    put?: never
+    /** Create Project */
+    post: operations["create_project_api_projects_post"]
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  "/api/projects/{project_id}": {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /** Get Project */
+    get: operations["get_project_api_projects__project_id__get"]
+    put?: never
+    post?: never
+    /** Delete Project */
+    delete: operations["delete_project_api_projects__project_id__delete"]
+    options?: never
+    head?: never
+    /** Patch Project */
+    patch: operations["patch_project_api_projects__project_id__patch"]
+    trace?: never
+  }
+  "/api/projects/{project_id}/policy": {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /** Get Policy */
+    get: operations["get_policy_api_projects__project_id__policy_get"]
+    /** Put Policy */
+    put: operations["put_policy_api_projects__project_id__policy_put"]
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  "/api/projects/{project_id}/samples": {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /** Samples */
+    get: operations["samples_api_projects__project_id__samples_get"]
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  "/api/projects/{project_id}/try": {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    /** Try It */
+    post: operations["try_it_api_projects__project_id__try_post"]
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  "/api/projects/{project_id}/agent/messages": {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    /** Send Message */
+    post: operations["send_message_api_projects__project_id__agent_messages_post"]
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  "/api/projects/{project_id}/agent/history": {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /** History */
+    get: operations["history_api_projects__project_id__agent_history_get"]
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  "/api/projects/{project_id}/actions/{action_id}/confirm": {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    /** Confirm */
+    post: operations["confirm_api_projects__project_id__actions__action_id__confirm_post"]
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  "/api/projects/{project_id}/actions/{action_id}/cancel": {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    /** Cancel */
+    post: operations["cancel_api_projects__project_id__actions__action_id__cancel_post"]
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
 }
-export type webhooks = Record<string, never>;
+export type webhooks = Record<string, never>
 export interface components {
-    schemas: {
-        /** AllOf */
-        "AllOf-Input": {
-            /** All */
-            all: (components["schemas"]["Leaf"] | components["schemas"]["AllOf-Input"] | components["schemas"]["AnyOf-Input"] | components["schemas"]["NotOf-Input"])[];
-        };
-        /** AllOf */
-        "AllOf-Output": {
-            /** All */
-            all: (components["schemas"]["Leaf"] | components["schemas"]["AllOf-Output"] | components["schemas"]["AnyOf-Output"] | components["schemas"]["NotOf-Output"])[];
-        };
-        /** AnyOf */
-        "AnyOf-Input": {
-            /** Any */
-            any: (components["schemas"]["Leaf"] | components["schemas"]["AllOf-Input"] | components["schemas"]["AnyOf-Input"] | components["schemas"]["NotOf-Input"])[];
-        };
-        /** AnyOf */
-        "AnyOf-Output": {
-            /** Any */
-            any: (components["schemas"]["Leaf"] | components["schemas"]["AllOf-Output"] | components["schemas"]["AnyOf-Output"] | components["schemas"]["NotOf-Output"])[];
-        };
-        /** CanvasEvent */
-        CanvasEvent: {
-            /**
-             * @description discriminator enum property added by openapi-typescript
-             * @enum {string}
-             */
-            type: "canvas";
-            policy: components["schemas"]["Policy-Output"];
-            /** Version */
-            version: number;
-            /** Changed */
-            changed: string[];
-        };
-        /** ChoicesEvent */
-        ChoicesEvent: {
-            /**
-             * @description discriminator enum property added by openapi-typescript
-             * @enum {string}
-             */
-            type: "choices";
-            /** Question */
-            question: string;
-            /** Options */
-            options: string[];
-        };
-        /** ConfirmEvent */
-        ConfirmEvent: {
-            /**
-             * @description discriminator enum property added by openapi-typescript
-             * @enum {string}
-             */
-            type: "confirm";
-            /** Action Id */
-            action_id: string;
-            /**
-             * Kind
-             * @enum {string}
-             */
-            kind: "dataset" | "training";
-            /** Title */
-            title: string;
-            /** Detail */
-            detail: string;
-            /** Est Minutes */
-            est_minutes: number;
-            /** Est Cost Usd */
-            est_cost_usd: number;
-        };
-        /** ConfirmOut */
-        ConfirmOut: {
-            /** Status */
-            status: string;
-            /** Result */
-            result: {
-                [key: string]: unknown;
-            };
-        };
-        /** DoneEvent */
-        DoneEvent: {
-            /**
-             * @description discriminator enum property added by openapi-typescript
-             * @enum {string}
-             */
-            type: "done";
-        };
-        /** ErrorEvent */
-        ErrorEvent: {
-            /**
-             * @description discriminator enum property added by openapi-typescript
-             * @enum {string}
-             */
-            type: "error";
-            /** Message */
-            message: string;
-        };
-        /** FitEvent */
-        FitEvent: {
-            /**
-             * @description discriminator enum property added by openapi-typescript
-             * @enum {string}
-             */
-            type: "fit";
-            /**
-             * Rating
-             * @enum {string}
-             */
-            rating: "good" | "workable" | "poor";
-            /** Reasons */
-            reasons: string[];
-        };
-        /** HTTPValidationError */
-        HTTPValidationError: {
-            /** Detail */
-            detail?: components["schemas"]["ValidationError"][];
-        };
-        /** InputField */
-        InputField: {
-            /** Key */
-            key: string;
-            /** Label */
-            label: string;
-            /**
-             * Type
-             * @enum {string}
-             */
-            type: "enum" | "int" | "float" | "bool" | "text";
-            /** Values */
-            values?: string[] | null;
-            /**
-             * Nullable
-             * @default true
-             */
-            nullable: boolean;
-            /**
-             * Description
-             * @default
-             */
-            description: string;
-        };
-        /** LaneResult */
-        LaneResult: {
-            /**
-             * Lane
-             * @enum {string}
-             */
-            lane: "jev" | "jev_labels" | "sys1";
-            /** Label */
-            label?: string | null;
-            /**
-             * Probabilities
-             * @default {}
-             */
-            probabilities: {
-                [key: string]: number;
-            };
-            /** Model */
-            model?: string | null;
-            /** Latency Ms */
-            latency_ms?: number | null;
-            /** Decision Id */
-            decision_id?: string | null;
-            /** Error */
-            error?: string | null;
-        };
-        /** Leaf */
-        Leaf: {
-            /** Field */
-            field: string;
-            /**
-             * Op
-             * @enum {string}
-             */
-            op: "eq" | "ne" | "gt" | "gte" | "lt" | "lte" | "in" | "is_null";
-            /** Value */
-            value?: unknown;
-        };
-        /** MessageIn */
-        MessageIn: {
-            /** Text */
-            text: string;
-        };
-        /** NotOf */
-        "NotOf-Input": {
-            /** Not */
-            not: components["schemas"]["Leaf"] | components["schemas"]["AllOf-Input"] | components["schemas"]["AnyOf-Input"] | components["schemas"]["NotOf-Input"];
-        };
-        /** NotOf */
-        "NotOf-Output": {
-            /** Not */
-            not: components["schemas"]["Leaf"] | components["schemas"]["AllOf-Output"] | components["schemas"]["AnyOf-Output"] | components["schemas"]["NotOf-Output"];
-        };
-        /** Option */
-        Option: {
-            /** Key */
-            key: string;
-            /** Name */
-            name: string;
-            /** Covers */
-            covers?: string[];
-            /** Excludes */
-            excludes?: string[];
-            /**
-             * Example
-             * @default
-             */
-            example: string;
-        };
-        /** Policy */
-        "Policy-Input": {
-            /** Decision Question */
-            decision_question: string;
-            /**
-             * Question Key
-             * @default decision
-             */
-            question_key: string;
-            /** Inputs */
-            inputs?: components["schemas"]["InputField"][];
-            /** Options */
-            options: components["schemas"]["Option"][];
-            /** Rules */
-            rules?: components["schemas"]["Rule-Input"][];
-        };
-        /** Policy */
-        "Policy-Output": {
-            /** Decision Question */
-            decision_question: string;
-            /**
-             * Question Key
-             * @default decision
-             */
-            question_key: string;
-            /** Inputs */
-            inputs?: components["schemas"]["InputField"][];
-            /** Options */
-            options: components["schemas"]["Option"][];
-            /** Rules */
-            rules?: components["schemas"]["Rule-Output"][];
-        };
-        /** PolicyIn */
-        PolicyIn: {
-            policy: components["schemas"]["Policy-Input"];
-        };
-        /** PolicyIssue */
-        PolicyIssue: {
-            /** Path */
-            path: string;
-            /** Message */
-            message: string;
-        };
-        /** PolicyOut */
-        PolicyOut: {
-            policy: components["schemas"]["Policy-Output"];
-            /** Version */
-            version: number;
-            /** Issues */
-            issues: components["schemas"]["PolicyIssue"][];
-        };
-        /** Principal */
-        Principal: {
-            /** User Id */
-            user_id: string;
-            /** Org Id */
-            org_id: string;
-            /** Org Role */
-            org_role: string;
-            /** Org Slug */
-            org_slug: string | null;
-        };
-        /** ProjectCreate */
-        ProjectCreate: {
-            /** Name */
-            name: string;
-            /** Template Id */
-            template_id?: string | null;
-            /** Description */
-            description?: string | null;
-        };
-        /** ProjectOut */
-        ProjectOut: {
-            /** Id */
-            id: string;
-            /** Name */
-            name: string;
-            /** Description */
-            description: string | null;
-            /** Template Id */
-            template_id: string | null;
-            /** Stage */
-            stage: string;
-            /** Default Lane */
-            default_lane: string;
-            /** Live Model Label */
-            live_model_label: string | null;
-            /**
-             * Created At
-             * Format: date-time
-             */
-            created_at: string;
-        };
-        /** ProjectPatch */
-        ProjectPatch: {
-            /** Name */
-            name?: string | null;
-            /** Description */
-            description?: string | null;
-            /** Default Lane */
-            default_lane?: ("jev" | "sys1" | "auto") | null;
-        };
-        /** Rule */
-        "Rule-Input": {
-            /** Id */
-            id: string;
-            /** Text */
-            text: string;
-            /** Label */
-            label: string;
-            /** When */
-            when?: components["schemas"]["Leaf"] | components["schemas"]["AllOf-Input"] | components["schemas"]["AnyOf-Input"] | components["schemas"]["NotOf-Input"] | null;
-        };
-        /** Rule */
-        "Rule-Output": {
-            /** Id */
-            id: string;
-            /** Text */
-            text: string;
-            /** Label */
-            label: string;
-            /** When */
-            when?: components["schemas"]["Leaf"] | components["schemas"]["AllOf-Output"] | components["schemas"]["AnyOf-Output"] | components["schemas"]["NotOf-Output"] | null;
-        };
-        /** SampleOut */
-        SampleOut: {
-            /** Id */
-            id: string;
-            /** State */
-            state: string | {
-                [key: string]: unknown;
-            } | unknown[];
-        };
-        /** StageEvent */
-        StageEvent: {
-            /**
-             * @description discriminator enum property added by openapi-typescript
-             * @enum {string}
-             */
-            type: "stage";
-            /** Stage */
-            stage: string;
-        };
-        /** TemplateOut */
-        TemplateOut: {
-            /** Id */
-            id: string;
-            /** Name */
-            name: string;
-            /** Summary */
-            summary: string;
-            /** Fit */
-            fit: string;
-            /** Fit Reasons */
-            fit_reasons: string[];
-            /** Sample Inputs */
-            sample_inputs: string[];
-            /** Flagship */
-            flagship: boolean;
-        };
-        /** TextEvent */
-        TextEvent: {
-            /**
-             * @description discriminator enum property added by openapi-typescript
-             * @enum {string}
-             */
-            type: "text";
-            /** Delta */
-            delta: string;
-        };
-        /** ToolEvent */
-        ToolEvent: {
-            /**
-             * @description discriminator enum property added by openapi-typescript
-             * @enum {string}
-             */
-            type: "tool";
-            /** Name */
-            name: string;
-            /**
-             * Status
-             * @enum {string}
-             */
-            status: "started" | "done" | "error";
-            /**
-             * Summary
-             * @default
-             */
-            summary: string;
-        };
-        /** TryIn */
-        TryIn: {
-            /** Text */
-            text?: string | null;
-            /** Sample Id */
-            sample_id?: string | null;
-        };
-        /** TryResult */
-        TryResult: {
-            /** Results */
-            results: components["schemas"]["LaneResult"][];
-            /** Gold */
-            gold?: string | null;
-            /** Rule Id */
-            rule_id?: string | null;
-            /**
-             * Recorded
-             * @default {}
-             */
-            recorded: {
-                [key: string]: string;
-            };
-            /**
-             * Recorded Is Fixture
-             * @default false
-             */
-            recorded_is_fixture: boolean;
-        };
-        /** TryResultEvent */
-        TryResultEvent: {
-            /**
-             * @description discriminator enum property added by openapi-typescript
-             * @enum {string}
-             */
-            type: "try_result";
-            /** Input */
-            input: string;
-            result: components["schemas"]["TryResult"];
-        };
-        /** UserEvent */
-        UserEvent: {
-            /**
-             * @description discriminator enum property added by openapi-typescript
-             * @enum {string}
-             */
-            type: "user";
-            /** Text */
-            text: string;
-        };
-        /** ValidationError */
-        ValidationError: {
-            /** Location */
-            loc: (string | number)[];
-            /** Message */
-            msg: string;
-            /** Error Type */
-            type: string;
-            /** Input */
-            input?: unknown;
-            /** Context */
-            ctx?: Record<string, never>;
-        };
-    };
-    responses: never;
-    parameters: never;
-    requestBodies: never;
-    headers: never;
-    pathItems: never;
+  schemas: {
+    /** AllOf */
+    "AllOf-Input": {
+      /** All */
+      all: (
+        | components["schemas"]["Leaf"]
+        | components["schemas"]["AllOf-Input"]
+        | components["schemas"]["AnyOf-Input"]
+        | components["schemas"]["NotOf-Input"]
+      )[]
+    }
+    /** AllOf */
+    "AllOf-Output": {
+      /** All */
+      all: (
+        | components["schemas"]["Leaf"]
+        | components["schemas"]["AllOf-Output"]
+        | components["schemas"]["AnyOf-Output"]
+        | components["schemas"]["NotOf-Output"]
+      )[]
+    }
+    /** AnyOf */
+    "AnyOf-Input": {
+      /** Any */
+      any: (
+        | components["schemas"]["Leaf"]
+        | components["schemas"]["AllOf-Input"]
+        | components["schemas"]["AnyOf-Input"]
+        | components["schemas"]["NotOf-Input"]
+      )[]
+    }
+    /** AnyOf */
+    "AnyOf-Output": {
+      /** Any */
+      any: (
+        | components["schemas"]["Leaf"]
+        | components["schemas"]["AllOf-Output"]
+        | components["schemas"]["AnyOf-Output"]
+        | components["schemas"]["NotOf-Output"]
+      )[]
+    }
+    /** CanvasEvent */
+    CanvasEvent: {
+      /**
+       * @description discriminator enum property added by openapi-typescript
+       * @enum {string}
+       */
+      type: "canvas"
+      policy: components["schemas"]["Policy-Output"]
+      /** Version */
+      version: number
+      /** Changed */
+      changed: string[]
+    }
+    /** ChoicesEvent */
+    ChoicesEvent: {
+      /**
+       * @description discriminator enum property added by openapi-typescript
+       * @enum {string}
+       */
+      type: "choices"
+      /** Question */
+      question: string
+      /** Options */
+      options: string[]
+    }
+    /** ConfirmEvent */
+    ConfirmEvent: {
+      /**
+       * @description discriminator enum property added by openapi-typescript
+       * @enum {string}
+       */
+      type: "confirm"
+      /** Action Id */
+      action_id: string
+      /**
+       * Kind
+       * @enum {string}
+       */
+      kind: "dataset" | "training"
+      /** Title */
+      title: string
+      /** Detail */
+      detail: string
+      /** Est Minutes */
+      est_minutes: number
+      /** Est Cost Usd */
+      est_cost_usd: number
+    }
+    /** ConfirmOut */
+    ConfirmOut: {
+      /** Status */
+      status: string
+      /** Result */
+      result: {
+        [key: string]: unknown
+      }
+    }
+    /** DoneEvent */
+    DoneEvent: {
+      /**
+       * @description discriminator enum property added by openapi-typescript
+       * @enum {string}
+       */
+      type: "done"
+    }
+    /** ErrorEvent */
+    ErrorEvent: {
+      /**
+       * @description discriminator enum property added by openapi-typescript
+       * @enum {string}
+       */
+      type: "error"
+      /** Message */
+      message: string
+    }
+    /** FitEvent */
+    FitEvent: {
+      /**
+       * @description discriminator enum property added by openapi-typescript
+       * @enum {string}
+       */
+      type: "fit"
+      /**
+       * Rating
+       * @enum {string}
+       */
+      rating: "good" | "workable" | "poor"
+      /** Reasons */
+      reasons: string[]
+    }
+    /** HTTPValidationError */
+    HTTPValidationError: {
+      /** Detail */
+      detail?: components["schemas"]["ValidationError"][]
+    }
+    /** InputField */
+    InputField: {
+      /** Key */
+      key: string
+      /** Label */
+      label: string
+      /**
+       * Type
+       * @enum {string}
+       */
+      type: "enum" | "int" | "float" | "bool" | "text"
+      /** Values */
+      values?: string[] | null
+      /**
+       * Nullable
+       * @default true
+       */
+      nullable: boolean
+      /**
+       * Description
+       * @default
+       */
+      description: string
+    }
+    /** LaneResult */
+    LaneResult: {
+      /**
+       * Lane
+       * @enum {string}
+       */
+      lane: "jev" | "jev_labels" | "sys1"
+      /** Label */
+      label?: string | null
+      /**
+       * Probabilities
+       * @default {}
+       */
+      probabilities: {
+        [key: string]: number
+      }
+      /** Model */
+      model?: string | null
+      /** Latency Ms */
+      latency_ms?: number | null
+      /** Decision Id */
+      decision_id?: string | null
+      /** Error */
+      error?: string | null
+    }
+    /** Leaf */
+    Leaf: {
+      /** Field */
+      field: string
+      /**
+       * Op
+       * @enum {string}
+       */
+      op: "eq" | "ne" | "gt" | "gte" | "lt" | "lte" | "in" | "is_null"
+      /** Value */
+      value?: unknown
+    }
+    /** MessageIn */
+    MessageIn: {
+      /** Text */
+      text: string
+    }
+    /** NotOf */
+    "NotOf-Input": {
+      /** Not */
+      not:
+        | components["schemas"]["Leaf"]
+        | components["schemas"]["AllOf-Input"]
+        | components["schemas"]["AnyOf-Input"]
+        | components["schemas"]["NotOf-Input"]
+    }
+    /** NotOf */
+    "NotOf-Output": {
+      /** Not */
+      not:
+        | components["schemas"]["Leaf"]
+        | components["schemas"]["AllOf-Output"]
+        | components["schemas"]["AnyOf-Output"]
+        | components["schemas"]["NotOf-Output"]
+    }
+    /** Option */
+    Option: {
+      /** Key */
+      key: string
+      /** Name */
+      name: string
+      /** Covers */
+      covers?: string[]
+      /** Excludes */
+      excludes?: string[]
+      /**
+       * Example
+       * @default
+       */
+      example: string
+    }
+    /** Policy */
+    "Policy-Input": {
+      /** Decision Question */
+      decision_question: string
+      /**
+       * Question Key
+       * @default decision
+       */
+      question_key: string
+      /** Inputs */
+      inputs?: components["schemas"]["InputField"][]
+      /** Options */
+      options: components["schemas"]["Option"][]
+      /** Rules */
+      rules?: components["schemas"]["Rule-Input"][]
+    }
+    /** Policy */
+    "Policy-Output": {
+      /** Decision Question */
+      decision_question: string
+      /**
+       * Question Key
+       * @default decision
+       */
+      question_key: string
+      /** Inputs */
+      inputs?: components["schemas"]["InputField"][]
+      /** Options */
+      options: components["schemas"]["Option"][]
+      /** Rules */
+      rules?: components["schemas"]["Rule-Output"][]
+    }
+    /** PolicyIn */
+    PolicyIn: {
+      policy: components["schemas"]["Policy-Input"]
+    }
+    /** PolicyIssue */
+    PolicyIssue: {
+      /** Path */
+      path: string
+      /** Message */
+      message: string
+    }
+    /** PolicyOut */
+    PolicyOut: {
+      policy: components["schemas"]["Policy-Output"]
+      /** Version */
+      version: number
+      /** Issues */
+      issues: components["schemas"]["PolicyIssue"][]
+    }
+    /** Principal */
+    Principal: {
+      /** User Id */
+      user_id: string
+      /** Org Id */
+      org_id: string
+      /** Org Role */
+      org_role: string
+      /** Org Slug */
+      org_slug: string | null
+    }
+    /** ProjectCreate */
+    ProjectCreate: {
+      /** Name */
+      name: string
+      /** Template Id */
+      template_id?: string | null
+      /** Description */
+      description?: string | null
+    }
+    /** ProjectOut */
+    ProjectOut: {
+      /** Id */
+      id: string
+      /** Name */
+      name: string
+      /** Description */
+      description: string | null
+      /** Template Id */
+      template_id: string | null
+      /** Stage */
+      stage: string
+      /** Default Lane */
+      default_lane: string
+      /** Live Model Label */
+      live_model_label: string | null
+      /**
+       * Created At
+       * Format: date-time
+       */
+      created_at: string
+    }
+    /** ProjectPatch */
+    ProjectPatch: {
+      /** Name */
+      name?: string | null
+      /** Description */
+      description?: string | null
+      /** Default Lane */
+      default_lane?: ("jev" | "sys1" | "auto") | null
+    }
+    /** Rule */
+    "Rule-Input": {
+      /** Id */
+      id: string
+      /** Text */
+      text: string
+      /** Label */
+      label: string
+      /** When */
+      when?:
+        | components["schemas"]["Leaf"]
+        | components["schemas"]["AllOf-Input"]
+        | components["schemas"]["AnyOf-Input"]
+        | components["schemas"]["NotOf-Input"]
+        | null
+    }
+    /** Rule */
+    "Rule-Output": {
+      /** Id */
+      id: string
+      /** Text */
+      text: string
+      /** Label */
+      label: string
+      /** When */
+      when?:
+        | components["schemas"]["Leaf"]
+        | components["schemas"]["AllOf-Output"]
+        | components["schemas"]["AnyOf-Output"]
+        | components["schemas"]["NotOf-Output"]
+        | null
+    }
+    /** SampleOut */
+    SampleOut: {
+      /** Id */
+      id: string
+      /** State */
+      state:
+        | string
+        | {
+            [key: string]: unknown
+          }
+        | unknown[]
+    }
+    /** StageEvent */
+    StageEvent: {
+      /**
+       * @description discriminator enum property added by openapi-typescript
+       * @enum {string}
+       */
+      type: "stage"
+      /** Stage */
+      stage: string
+    }
+    /** TemplateOut */
+    TemplateOut: {
+      /** Id */
+      id: string
+      /** Name */
+      name: string
+      /** Summary */
+      summary: string
+      /** Fit */
+      fit: string
+      /** Fit Reasons */
+      fit_reasons: string[]
+      /** Sample Inputs */
+      sample_inputs: string[]
+      /** Flagship */
+      flagship: boolean
+    }
+    /** TextEvent */
+    TextEvent: {
+      /**
+       * @description discriminator enum property added by openapi-typescript
+       * @enum {string}
+       */
+      type: "text"
+      /** Delta */
+      delta: string
+    }
+    /** ToolEvent */
+    ToolEvent: {
+      /**
+       * @description discriminator enum property added by openapi-typescript
+       * @enum {string}
+       */
+      type: "tool"
+      /** Name */
+      name: string
+      /**
+       * Status
+       * @enum {string}
+       */
+      status: "started" | "done" | "error"
+      /**
+       * Summary
+       * @default
+       */
+      summary: string
+    }
+    /** TryIn */
+    TryIn: {
+      /** Text */
+      text?: string | null
+      /** Sample Id */
+      sample_id?: string | null
+    }
+    /** TryResult */
+    TryResult: {
+      /** Results */
+      results: components["schemas"]["LaneResult"][]
+      /** Gold */
+      gold?: string | null
+      /** Rule Id */
+      rule_id?: string | null
+      /**
+       * Recorded
+       * @default {}
+       */
+      recorded: {
+        [key: string]: string
+      }
+      /**
+       * Recorded Is Fixture
+       * @default false
+       */
+      recorded_is_fixture: boolean
+    }
+    /** TryResultEvent */
+    TryResultEvent: {
+      /**
+       * @description discriminator enum property added by openapi-typescript
+       * @enum {string}
+       */
+      type: "try_result"
+      /** Input */
+      input: string
+      result: components["schemas"]["TryResult"]
+    }
+    /** UserEvent */
+    UserEvent: {
+      /**
+       * @description discriminator enum property added by openapi-typescript
+       * @enum {string}
+       */
+      type: "user"
+      /** Text */
+      text: string
+    }
+    /** ValidationError */
+    ValidationError: {
+      /** Location */
+      loc: (string | number)[]
+      /** Message */
+      msg: string
+      /** Error Type */
+      type: string
+      /** Input */
+      input?: unknown
+      /** Context */
+      ctx?: Record<string, never>
+    }
+  }
+  responses: never
+  parameters: never
+  requestBodies: never
+  headers: never
+  pathItems: never
 }
-export type $defs = Record<string, never>;
+export type $defs = Record<string, never>
 export interface operations {
-    health_api_health_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        [key: string]: string;
-                    };
-                };
-            };
-        };
-    };
-    me_api_me_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Principal"];
-                };
-            };
-        };
-    };
-    templates_api_templates_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["TemplateOut"][];
-                };
-            };
-        };
-    };
-    list_projects_api_projects_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ProjectOut"][];
-                };
-            };
-        };
-    };
-    create_project_api_projects_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["ProjectCreate"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ProjectOut"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    get_project_api_projects__project_id__get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                project_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ProjectOut"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    delete_project_api_projects__project_id__delete: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                project_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            204: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    patch_project_api_projects__project_id__patch: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                project_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["ProjectPatch"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ProjectOut"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    get_policy_api_projects__project_id__policy_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                project_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["PolicyOut"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    put_policy_api_projects__project_id__policy_put: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                project_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["PolicyIn"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["PolicyOut"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    samples_api_projects__project_id__samples_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                project_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["SampleOut"][];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    try_it_api_projects__project_id__try_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                project_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["TryIn"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["TryResult"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    send_message_api_projects__project_id__agent_messages_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                project_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["MessageIn"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    history_api_projects__project_id__agent_history_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                project_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": (components["schemas"]["UserEvent"] | components["schemas"]["TextEvent"] | components["schemas"]["ToolEvent"] | components["schemas"]["ChoicesEvent"] | components["schemas"]["FitEvent"] | components["schemas"]["CanvasEvent"] | components["schemas"]["TryResultEvent"] | components["schemas"]["ConfirmEvent"] | components["schemas"]["StageEvent"] | components["schemas"]["ErrorEvent"] | components["schemas"]["DoneEvent"])[];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    confirm_api_projects__project_id__actions__action_id__confirm_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                project_id: string;
-                action_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ConfirmOut"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    cancel_api_projects__project_id__actions__action_id__cancel_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                project_id: string;
-                action_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ConfirmOut"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
+  health_api_health_get: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": {
+            [key: string]: string
+          }
+        }
+      }
+    }
+  }
+  me_api_me_get: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["Principal"]
+        }
+      }
+    }
+  }
+  templates_api_templates_get: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["TemplateOut"][]
+        }
+      }
+    }
+  }
+  list_projects_api_projects_get: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["ProjectOut"][]
+        }
+      }
+    }
+  }
+  create_project_api_projects_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["ProjectCreate"]
+      }
+    }
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["ProjectOut"]
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"]
+        }
+      }
+    }
+  }
+  get_project_api_projects__project_id__get: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        project_id: string
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["ProjectOut"]
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"]
+        }
+      }
+    }
+  }
+  delete_project_api_projects__project_id__delete: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        project_id: string
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      204: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"]
+        }
+      }
+    }
+  }
+  patch_project_api_projects__project_id__patch: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        project_id: string
+      }
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["ProjectPatch"]
+      }
+    }
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["ProjectOut"]
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"]
+        }
+      }
+    }
+  }
+  get_policy_api_projects__project_id__policy_get: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        project_id: string
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["PolicyOut"]
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"]
+        }
+      }
+    }
+  }
+  put_policy_api_projects__project_id__policy_put: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        project_id: string
+      }
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["PolicyIn"]
+      }
+    }
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["PolicyOut"]
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"]
+        }
+      }
+    }
+  }
+  samples_api_projects__project_id__samples_get: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        project_id: string
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["SampleOut"][]
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"]
+        }
+      }
+    }
+  }
+  try_it_api_projects__project_id__try_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        project_id: string
+      }
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["TryIn"]
+      }
+    }
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["TryResult"]
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"]
+        }
+      }
+    }
+  }
+  send_message_api_projects__project_id__agent_messages_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        project_id: string
+      }
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["MessageIn"]
+      }
+    }
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"]
+        }
+      }
+    }
+  }
+  history_api_projects__project_id__agent_history_get: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        project_id: string
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": (
+            | components["schemas"]["UserEvent"]
+            | components["schemas"]["TextEvent"]
+            | components["schemas"]["ToolEvent"]
+            | components["schemas"]["ChoicesEvent"]
+            | components["schemas"]["FitEvent"]
+            | components["schemas"]["CanvasEvent"]
+            | components["schemas"]["TryResultEvent"]
+            | components["schemas"]["ConfirmEvent"]
+            | components["schemas"]["StageEvent"]
+            | components["schemas"]["ErrorEvent"]
+            | components["schemas"]["DoneEvent"]
+          )[]
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"]
+        }
+      }
+    }
+  }
+  confirm_api_projects__project_id__actions__action_id__confirm_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        project_id: string
+        action_id: string
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["ConfirmOut"]
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"]
+        }
+      }
+    }
+  }
+  cancel_api_projects__project_id__actions__action_id__cancel_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        project_id: string
+        action_id: string
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["ConfirmOut"]
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"]
+        }
+      }
+    }
+  }
 }

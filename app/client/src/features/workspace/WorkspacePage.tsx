@@ -1,5 +1,11 @@
 import { useCallback, useEffect, useState } from "react"
-import { Link, Navigate, useNavigate, useParams } from "react-router"
+import {
+  Link,
+  Navigate,
+  useLocation,
+  useNavigate,
+  useParams,
+} from "react-router"
 import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
 import {
@@ -51,7 +57,13 @@ function Workspace() {
   const [policy, setPolicy] = useState<PolicyOut | null>(null)
   const [rulesDraft, setRulesDraft] = useState<PolicyInput | null>(null)
   const [missing, setMissing] = useState(false)
-  const [panel, setPanel] = useState<"assistant" | "canvas">("canvas")
+  const location = useLocation()
+  // A new blank project opens on the assistant, which is about to speak.
+  const [panel, setPanel] = useState<"assistant" | "canvas">(
+    (location.state as { firstMessage?: string } | null)?.firstMessage
+      ? "assistant"
+      : "canvas",
+  )
 
   const load = useCallback(async () => {
     if (!projectId) return
@@ -164,6 +176,7 @@ function Workspace() {
       />
     ) : stage === "rules" ? (
       <RulesCanvas
+        key={policy.version}
         project={project}
         policy={policy}
         draft={rulesDraft}
