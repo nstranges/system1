@@ -1,4 +1,5 @@
 from collections.abc import AsyncIterator
+from contextlib import aclosing
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, Request
@@ -68,8 +69,10 @@ async def send_message(
         # The stream outlives the request's dependency session, so it opens its own.
         with Session(request.app.state.engine) as own:
             ctx = AgentContext(own, principal, providers, get_settings(), get_project(own, principal, project_id))
-            async for event in run_agent_turn(ctx, body.text):
-                yield _sse(event)
+            # aclosing so a client disconnect finalises the turn (history repair) while this session is open.
+            async with aclosing(run_agent_turn(ctx, body.text)) as events:
+                async for event in events:
+                    yield _sse(event)
 
     return StreamingResponse(stream(), media_type="text/event-stream", headers={"Cache-Control": "no-cache"})
 
@@ -99,6 +102,7 @@ async def confirm(
     handler = get_action_handler(action.kind)
     if handler is None:
         raise NotAvailable()
+    project = get_project(session, principal, project_id)
     # Claim atomically so two concurrent confirms can't both start paid work.
     claimed = session.execute(
         update(PendingAction)
@@ -108,7 +112,6 @@ async def confirm(
     session.commit()
     if claimed.rowcount == 0:
         raise AlreadyResolved()
-    project = get_project(session, principal, project_id)
     settings: Settings = get_settings()
     try:
         result = await handler(AgentContext(session, principal, providers, settings, project), action)
