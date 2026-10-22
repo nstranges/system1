@@ -36,6 +36,7 @@ def init_db(engine: Engine) -> None:
     # Import so every table module has registered with Base before create_all.
     from system1 import usage  # noqa: F401
     from system1.agent import models as agent_models  # noqa: F401
+    from system1.context import models as context_models  # noqa: F401
     from system1.decisions import models as decision_models  # noqa: F401
     from system1.gateway import keys  # noqa: F401
     from system1.projects import models as project_models  # noqa: F401

@@ -2,6 +2,7 @@ from sqlalchemy import delete, func, select
 from sqlalchemy.orm import Session
 
 from system1.auth.principal import Principal
+from system1.context.models import ContextDoc
 from system1.decisions.models import Decision, Feedback
 from system1.domain.policy import Policy, validate_policy
 from system1.errors import NotFound, PolicyInvalid
@@ -75,6 +76,7 @@ def delete_project(session: Session, principal: Principal, project_id: str) -> N
     session.execute(delete(Feedback).where(Feedback.project_id == project.id))
     session.execute(delete(ApiKey).where(ApiKey.project_id == project.id))
     session.execute(delete(Decision).where(Decision.project_id == project.id))
+    session.execute(delete(ContextDoc).where(ContextDoc.project_id == project.id))
     session.execute(delete(PolicyVersion).where(PolicyVersion.project_id == project.id))
     session.delete(project)
     session.commit()

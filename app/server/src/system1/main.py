@@ -13,6 +13,7 @@ from system1.auth.deps import get_principal
 from system1.auth.principal import Principal
 from system1.auth.verifier import ClerkVerifier, RejectAllVerifier, TokenVerifier
 from system1.config import get_settings
+from system1.context.router import router as context_router
 from system1.db import init_db, make_engine
 from system1.decisions.router import router as decisions_router
 from system1.errors import install_error_handlers
@@ -78,6 +79,7 @@ def create_app(
         return ConfigOut(sys1_available=providers.sys1 is not None)
 
     api.include_router(projects_router)
+    api.include_router(context_router)
     api.include_router(gateway_router)
     api.include_router(decisions_router)
     api.include_router(agent_router)
