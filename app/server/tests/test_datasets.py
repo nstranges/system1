@@ -244,3 +244,93 @@ def test_new_project_columns_are_added_to_an_old_projects_table():
     with Session(engine) as session:
         project = session.get(Project, "p")
         assert (project.frozen_at, project.test_set_version, project.dataset_version) == (None, 1, 0)
+
+
+def test_freeze_settles_buckets_unbalanced_by_pre_freeze_relabels(client_for):
+    client = client_for("org_a")
+    pid = _project(client)
+    _add(client, pid, _rows("a", 30) + _rows("b", 30))
+    with Session(client.app.state.engine) as session:
+        # Relabel without going through review, as any future writer might.
+        for row in session.query(Example).filter_by(project_id=pid, label="a", split="test").limit(3):
+            row.label = "b"
+        session.commit()
+    _freeze(client, pid)
+    per_bucket = _health(client, pid)["per_bucket"]
+    for key, counts in per_bucket.items():
+        if not counts["total"]:
+            continue
+        assert counts["total"] >= MIN_TEST_PER_BUCKET + 1
+        assert counts["test"] == max(MIN_TEST_PER_BUCKET, round(0.2 * counts["total"])), key
+
+
+def test_unknown_labels_reject_the_whole_batch(client_for):
+    client = client_for("org_a")
+    pid = _project(client)
+    with Session(client.app.state.engine) as session:
+        project = project_service.get_project(session, PRINCIPAL, pid)
+        try:
+            service.add_examples(
+                session, project, [NewExample("ok", "a", "uploaded"), NewExample("bad", "zzz", "uploaded")]
+            )
+        except service.UnknownLabel as err:
+            assert err.code == "unknown_label" and err.status_code == 422 and "'zzz'" in err.message
+        else:
+            raise AssertionError("expected UnknownLabel")
+    assert _health(client, pid)["dataset_version"] == 0
+    assert sum(b["total"] for b in _health(client, pid)["per_bucket"].values()) == 0
+
+
+def test_review_versions_and_no_existence_oracle(client_for):
+    client = client_for("org_a")
+    pid = _project(client)
+    _add(client, pid, _rows("a", 3, "generated", 0.2))
+    first, second = (r["id"] for r in client.get(f"/api/projects/{pid}/review").json()[:2])
+    start = _health(client, pid)["dataset_version"]
+
+    assert client.post(f"/api/examples/{first}/review", json={"action": "agree"}).status_code == 200
+    assert client.post(f"/api/examples/{second}/review", json={"action": "move", "to": "a"}).json()["review"] is None
+    assert _health(client, pid)["dataset_version"] == start
+
+    assert client.post(f"/api/examples/{second}/review", json={"action": "move", "to": "b"}).json()["review"] == "moved"
+    assert _health(client, pid)["dataset_version"] == start + 1
+    assert next(r for r in _all(client, pid) if r.id == second).dataset_version == start + 1
+
+    other = client_for("org_b", engine=client.app.state.engine)
+    missing = other.post("/api/examples/nope/review", json={"action": "agree"})
+    foreign = other.post(f"/api/examples/{first}/review", json={"action": "agree"})
+    assert missing.status_code == foreign.status_code == 404
+    assert missing.json() == foreign.json()
+
+
+def test_split_is_independent_of_insertion_order(client_for):
+    client = client_for("org_a")
+    pid = _project(client)
+    rows = _rows("a", 40)
+    _add(client, pid, rows)
+    forward = {r.input_json: r.split for r in _all(client, pid)}
+    # Same project id, same inputs, the other way round: delete and re-add in reverse.
+    with Session(client.app.state.engine) as session:
+        session.query(Example).filter_by(project_id=pid).delete()
+        session.commit()
+    _add(client, pid, rows[::-1])
+    assert {r.input_json: r.split for r in _all(client, pid)} == forward
+
+
+def test_drop_with_reset_bumps_test_set_version_and_synthetic_test_flag(client_for):
+    client = client_for("org_a")
+    pid = _project(client)
+    _add(client, pid, _rows("a", 30, "generated") + _rows("b", 30, "generated") + _rows("c", 30, "generated"))
+    assert _health(client, pid)["synthetic_test"] is True
+    _freeze(client, pid)
+    done = client.post(f"/api/projects/{pid}/buckets/c/delete", json={"mode": "drop", "reset_test": True})
+    assert done.status_code == 200 and done.json()["test_set_version"] == 2
+    assert _health(client, pid)["per_bucket"].keys() == {"a", "b"}
+
+    # An uploaded row that lands in test makes the test set real.
+    _add(client, pid, _rows("a", 40, "uploaded", prefix="up "))
+    with Session(client.app.state.engine) as session:
+        row = session.query(Example).filter_by(project_id=pid, source="uploaded", split="train").first()
+        row.split = "test"
+        session.commit()
+    assert _health(client, pid)["synthetic_test"] is False

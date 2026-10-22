@@ -44,6 +44,12 @@ class UnknownBucket(ApiError):
     message = "Pick a bucket that exists."
 
 
+class UnknownLabel(ApiError):
+    status_code = 422
+    code = "unknown_label"
+    message = "Some examples use a label that isn't a bucket in this project."
+
+
 @dataclass
 class NewExample:
     input: str | dict
@@ -114,6 +120,13 @@ def _bucket_keys(session: Session, project: Project) -> list[str]:
 
 def add_examples(session: Session, project: Project, rows: list[NewExample]) -> int:
     """Callers must already have checked the project belongs to their org."""
+    known = set(_bucket_keys(session, project))
+    unknown = list(dict.fromkeys(r.label for r in rows if r.label not in known))
+    if unknown:
+        shown = ", ".join(f"'{label}'" for label in unknown[:5])
+        raise UnknownLabel(
+            f"These labels aren't buckets in this project: {shown}{' and more' if len(unknown) > 5 else ''}."
+        )
     seen = {normalize(v) for v in session.scalars(select(Example.input_json).where(Example.project_id == project.id))}
     fresh: list[NewExample] = []
     for row in rows:
@@ -173,6 +186,10 @@ def _place_after_freeze(session: Session, project: Project, new: list[Example]) 
 
 def freeze(session: Session, project: Project) -> None:
     if project.frozen_at is None:
+        # Review moves and relabels may have left the buckets off-quota; settle them before the set locks.
+        labels = set(session.scalars(select(Example.label).where(Example.project_id == project.id).distinct()))
+        session.flush()
+        _rebalance(session, project, labels)
         project.frozen_at = now()
         session.commit()
 
@@ -228,6 +245,8 @@ def get_example(session: Session, principal: Principal, example_id: str) -> tupl
     example = session.get(Example, example_id)
     if example is None:
         raise NotFound("That example doesn't exist.")
+    if example.org_id != principal.org_id:
+        raise NotFound("That example doesn't exist.")  # same message as a missing one: no existence oracle
     return example, project_service.get_project(session, principal, example.project_id)
 
 
@@ -242,11 +261,17 @@ def review(
     if action == "move":
         if to is None or to not in _bucket_keys(session, project):
             raise UnknownBucket()
-        example.label = to
-        example.review = "moved"
+        if to != example.label:
+            old = example.label
+            example.label = to
+            example.review = "moved"
+            project.dataset_version += 1
+            example.dataset_version = project.dataset_version
+            if project.frozen_at is None:
+                session.flush()
+                _rebalance(session, project, {old, to})
     else:
         example.review = "agree"
-    project.dataset_version += 1
     session.commit()
     return example
 
