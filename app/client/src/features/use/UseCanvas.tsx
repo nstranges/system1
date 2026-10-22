@@ -98,14 +98,13 @@ export function UseCanvas({
     void loadKeys()
   }
 
-  async function copy(text: string) {
+  async function copy(text: string, target?: HTMLElement | null) {
     try {
       await navigator.clipboard.writeText(text)
       toast("Copied")
     } catch {
       // Clipboard can be blocked: select the text so Ctrl+C works.
-      const el = keyRef.current
-      if (el) window.getSelection()?.selectAllChildren(el)
+      if (target) window.getSelection()?.selectAllChildren(target)
       toast("Press Ctrl+C to copy")
     }
   }
@@ -184,7 +183,10 @@ export function UseCanvas({
               >
                 {created.key}
               </code>
-              <Button size="sm" onClick={() => void copy(created.key)}>
+              <Button
+                size="sm"
+                onClick={() => void copy(created.key, keyRef.current)}
+              >
                 Copy
               </Button>
             </div>

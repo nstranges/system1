@@ -4,6 +4,7 @@ from sqlalchemy.orm import Session
 from system1.adapters.fakes import FakeDecisionProvider, FakeLLM, FakeTrainer
 from system1.contracts.decisions import ChoiceAnswer, DecisionRequest, DecisionResponse
 from system1.decisions.models import Decision
+from system1.gateway.keys import Feedback
 from system1.providers import Providers
 
 FLAGSHIP = "tallyfern-triage"
@@ -112,3 +113,36 @@ def test_auto_falls_back_to_jev_and_flags_review_when_sys1_unsure(client_for):
     with Session(client.app.state.engine) as session:
         decision = session.get(Decision, body["system1"]["decision_id"])
         assert decision is not None and decision.needs_review and decision.lane == "jev"
+
+
+def test_feedback_for_another_projects_or_orgs_decision_gets_404(client_for):
+    client = client_for("org_a")
+    _, key_a = _project_and_key(client)
+    _, key_b = _project_and_key(client)
+    other = client_for("org_b", engine=client.app.state.engine)
+    _, key_other = _project_and_key(other)
+    decision_b = client.post("/v1/systemone", json={"state": "hi"}, headers=_bearer(key_b)).json()["system1"]
+    decision_o = other.post("/v1/systemone", json={"state": "hi"}, headers=_bearer(key_other)).json()["system1"]
+
+    for decision in (decision_b, decision_o):
+        res = client.post(
+            "/v1/feedback",
+            json={"decision_id": decision["decision_id"], "correct": {"queue": "x"}},
+            headers=_bearer(key_a),
+        )
+        assert res.status_code == 404
+    with Session(client.app.state.engine) as session:
+        assert session.scalars(select(Feedback)).all() == []
+
+
+def test_explicit_sys1_without_provider_gets_503(client_for):
+    providers = Providers(
+        jev=FakeDecisionProvider("jev", "jev-fake"), sys1=None, llm=FakeLLM([]), trainer=FakeTrainer()
+    )
+    client = client_for("org_a", providers=providers)
+    _, key = _project_and_key(client)
+
+    res = client.post("/v1/systemone", json={"state": "hi", "model": "sys1"}, headers=_bearer(key))
+    assert res.status_code == 503
+    detail = res.json()["detail"]
+    assert detail["code"] == "provider_error" and detail["message"] == "Your model isn't connected yet."

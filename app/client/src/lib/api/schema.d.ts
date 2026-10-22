@@ -556,6 +556,11 @@ export interface components {
             decision_id?: string | null;
             /** Error */
             error?: string | null;
+            /**
+             * Retryable
+             * @default false
+             */
+            retryable: boolean;
         };
         /** Leaf */
         Leaf: {

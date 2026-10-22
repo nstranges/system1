@@ -1575,6 +1575,11 @@
               }
             ],
             "title": "Error"
+          },
+          "retryable": {
+            "type": "boolean",
+            "title": "Retryable",
+            "default": false
           }
         },
         "type": "object",

@@ -31,6 +31,7 @@ class LaneResult(BaseModel):
     latency_ms: float | None = None
     decision_id: str | None = None
     error: str | None = None
+    retryable: bool = False
 
 
 class TryResult(BaseModel):
@@ -100,7 +101,7 @@ async def run_lane(
     try:
         response = await provider.decide(DecisionRequest(model=model, state=state, questions=questions))
     except ProviderError as exc:
-        return LaneResult(lane=lane, error=exc.user_message)
+        return LaneResult(lane=lane, error=exc.user_message, retryable=exc.retryable)
 
     answer = response.answers.get(next(iter(questions)))
     label = answer.choice if answer else None

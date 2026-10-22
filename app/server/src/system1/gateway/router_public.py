@@ -1,3 +1,4 @@
+import logging
 import time
 from typing import Annotated
 
@@ -18,6 +19,8 @@ from system1.providers import Providers, get_providers
 
 # Authenticates with a project API key only. Clerk sessions are not accepted here.
 router = APIRouter(prefix="/v1")
+
+log = logging.getLogger(__name__)
 
 SessionDep = Annotated[Session, Depends(get_session)]
 ProvidersDep = Annotated[Providers, Depends(get_providers)]
@@ -89,7 +92,7 @@ async def _run(
         session, providers, project, state, lane, "api", policy_and_version=policy_and_version
     )
     if result.error:
-        raise ProviderError(result.error)
+        raise ProviderError(result.error, retryable=result.retryable)
     return result
 
 
@@ -116,6 +119,8 @@ async def decide(body: DecideIn, key: KeyDep, session: SessionDep, providers: Pr
         sure = result.error is None and max(result.probabilities.values(), default=0.0) >= get_settings().auto_threshold
         if not sure:
             flag_review = result.error is None
+            if result.error:
+                log.warning("sys1 failed, falling back to jev for project %s: %s", project.id, result.error)
             result = await _run(session, providers, project, body.state, "jev", policy_and_version)
     else:
         result = await _run(session, providers, project, body.state, "jev", policy_and_version)
