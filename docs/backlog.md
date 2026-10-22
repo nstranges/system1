@@ -36,6 +36,9 @@ Last updated: Oct 21, 2026. The current plan lives in the [product design](super
 | TypeSafe partnership | A formal arrangement, if TypeSafe wants one | Only matters if this becomes a real product | Oct 21 |
 | Real trainer adapter | Connect training to the product through the `Trainer` contract, so "Train my model" and Retrain work from the UI | After the training approach settles | Oct 21 |
 | Registry check before going live | A new model version replaces the live one only if it beats it on the same frozen test set (paired bootstrap) | Needs the real trainer adapter | Oct 21 |
+| Unique verdict per decision | Add `CREATE UNIQUE INDEX` on `feedback(decision_id)` (after deduping) and handle the insert race; today one-verdict-per-decision is enforced in code only | Needed before anything exports feedback rows for training | Oct 21 |
+| Confirm outcome in history | Add `status` to history `confirm` events so a decided confirmation card still shows its outcome after a reload | Cosmetic | Oct 21 |
+| Agent tone pass | Playbook asks three questions before drafting in stage 1; draft earlier. Tune after real onboarding conversations | After G3 feedback | Oct 21 |
 | Drift signals | Track the share of `auto` traffic falling back to Jev and the average top probability over time | After real traffic exists | Oct 21 |
 | API-generated data at scale | Thousands of examples per project through the Anthropic API | From phase 4 of the phase plan | Oct 20 |
 | Qwen3.5-2B as the base model | The backup if Laya's input window or option budget becomes the bottleneck | From phase 4 of the phase plan | Oct 20 |
