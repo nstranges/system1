@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from "react"
 import { toast } from "sonner"
+import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { useApi } from "@/lib/api/client"
 import { readProblem, type PolicyOut, type Project } from "@/lib/api/types"
@@ -33,16 +34,27 @@ export function ImproveCanvas({
   const api = useApi()
   const [items, setItems] = useState<InboxItem[] | null>(null)
   const [count, setCount] = useState(0)
+  const [failed, setFailed] = useState(false)
 
   const load = useCallback(async () => {
     const path = { params: { path: { project_id: project.id } } }
-    const [inbox, pool] = await Promise.all([
-      api.GET("/api/projects/{project_id}/inbox", path),
-      api.GET("/api/projects/{project_id}/training-pool", path),
-    ])
-    if (inbox.data) setItems(inbox.data.items)
-    else toast.error(readProblem(inbox.error).message)
-    if (pool.data) setCount(pool.data.count)
+    try {
+      const [inbox, pool] = await Promise.all([
+        api.GET("/api/projects/{project_id}/inbox", path),
+        api.GET("/api/projects/{project_id}/training-pool", path),
+      ])
+      if (inbox.data) {
+        setItems(inbox.data.items)
+        setFailed(false)
+      } else {
+        setFailed(true)
+        toast.error(readProblem(inbox.error).message)
+      }
+      if (pool.data) setCount(pool.data.count)
+    } catch (e) {
+      setFailed(true)
+      toast.error(readProblem(e).message)
+    }
   }, [api, project.id])
 
   useEffect(() => {
@@ -62,6 +74,14 @@ export function ImproveCanvas({
         <span className="font-medium">{count}</span> new{" "}
         {count === 1 ? "answer" : "answers"} since your last training
       </p>
+      {failed && (
+        <p className="flex items-center gap-3 text-sm text-destructive">
+          We couldn't load this list.
+          <Button size="sm" variant="outline" onClick={() => void load()}>
+            Try again
+          </Button>
+        </p>
+      )}
       {items === null ? null : items.length === 0 ? (
         <p className="text-sm text-muted-foreground">
           Nothing to look at right now. Anything your model isn't sure about
@@ -85,6 +105,9 @@ export function ImproveCanvas({
                   <FeedbackControls
                     decisionId={it.decision_id}
                     options={policy.policy.options}
+                    canConfirm={policy.policy.options.some(
+                      (o) => o.key === it.answer,
+                    )}
                     onSent={() => void load()}
                   />
                 </CardContent>

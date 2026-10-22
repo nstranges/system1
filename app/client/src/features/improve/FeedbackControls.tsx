@@ -9,9 +9,12 @@ import { readProblem, type PolicyOption } from "@/lib/api/types"
 export function FeedbackControls({
   decisionId,
   options,
+  canConfirm = true,
   onSent,
 }: {
   decisionId: string
+  // False when the shown answer isn't a current option, so there is nothing to confirm.
+  canConfirm?: boolean
   options: PolicyOption[]
   onSent?: () => void
 }) {
@@ -23,18 +26,23 @@ export function FeedbackControls({
 
   async function send(kind: "confirm" | "correction", label?: string) {
     setBusy(true)
-    const { response, error } = await api.POST(
-      "/api/decisions/{decision_id}/feedback",
-      {
-        params: { path: { decision_id: decisionId } },
-        body: { kind, correct_label: label ?? null },
-      },
-    )
-    setBusy(false)
-    if (!response.ok) return void toast.error(readProblem(error).message)
-    setSent(true)
-    setPicking(false)
-    onSent?.()
+    try {
+      const { response, error } = await api.POST(
+        "/api/decisions/{decision_id}/feedback",
+        {
+          params: { path: { decision_id: decisionId } },
+          body: { kind, correct_label: label ?? null },
+        },
+      )
+      if (!response.ok) return void toast.error(readProblem(error).message)
+      setSent(true)
+      setPicking(false)
+      onSent?.()
+    } catch (e) {
+      toast.error(readProblem(e).message)
+    } finally {
+      setBusy(false)
+    }
   }
 
   if (sent) {
@@ -72,15 +80,17 @@ export function FeedbackControls({
   }
   return (
     <div className="flex items-center gap-1">
-      <Button
-        size="sm"
-        variant="outline"
-        disabled={busy}
-        aria-label="This answer is right"
-        onClick={() => void send("confirm")}
-      >
-        ✓ Right
-      </Button>
+      {canConfirm && (
+        <Button
+          size="sm"
+          variant="outline"
+          disabled={busy}
+          aria-label="This answer is right"
+          onClick={() => void send("confirm")}
+        >
+          ✓ Right
+        </Button>
+      )}
       <Button
         size="sm"
         variant="outline"

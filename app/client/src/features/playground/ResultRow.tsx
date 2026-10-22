@@ -100,6 +100,7 @@ export function ResultRow({
               <FeedbackControls
                 decisionId={result.decision_id}
                 options={options}
+                canConfirm={options.some((o) => o.key === result.label)}
               />
             </div>
           )}

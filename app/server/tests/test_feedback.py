@@ -77,3 +77,19 @@ def test_init_db_adds_missing_feedback_columns(tmp_path):
     init_db(engine)
     columns = {c["name"] for c in inspect(engine).get_columns("feedback")}
     assert {"kind", "user_id", "correct_label", "is_test_item", "training_eligible"} <= columns
+
+
+def test_latest_verdict_replaces_the_earlier_one(client_for):
+    client = client_for("org_a")
+    project_id, label = _setup(client)
+    decision_id = _lanes(client, project_id, text="refund please")["sys1"]
+    url = f"/api/decisions/{decision_id}/feedback"
+
+    client.post(url, json={"kind": "confirm"})
+    client.post(url, json={"kind": "correction", "correct_label": label})
+    other = client.get(f"/api/projects/{project_id}/policy").json()["policy"]["options"][1]["key"]
+    client.post(url, json={"kind": "correction", "correct_label": other})
+    with Session(client.app.state.engine) as session:
+        row = session.query(Feedback).one()
+        assert row.kind == "correction" and row.correct_label == other and row.training_eligible
+    assert _pool(client, project_id) == 1
