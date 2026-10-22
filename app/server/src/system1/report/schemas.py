@@ -38,6 +38,9 @@ class ReportDetails(BaseModel):
     per_bucket: dict[str, dict[str, float]] = Field(default_factory=dict)
     confusions: dict[str, list[Confusion]] = Field(default_factory=dict)
     test_per_bucket: dict[str, int] = Field(default_factory=dict)
+    # Where "your model" came from: the trainer that ran and the adapter it produced, if any.
+    trainer: str | None = None
+    adapter_ref: str | None = None
 
 
 class Report(BaseModel):

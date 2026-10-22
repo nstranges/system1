@@ -21,3 +21,8 @@ class HttpSys1Provider(TypeSafeJevProvider):
         backoff_base: float = 0.5,
     ):
         super().__init__(base_url, api_key, model, transport=transport, backoff_base=backoff_base)
+
+    @property
+    def adapter_ref(self) -> str:
+        """The trained adapter this endpoint serves. A report card scores it only for a run that produced this one."""
+        return self.model

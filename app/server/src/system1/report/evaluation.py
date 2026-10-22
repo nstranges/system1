@@ -6,7 +6,7 @@ versions doesn't call Jev again. Jev calls never count against the Anthropic tok
 
 import asyncio
 from collections.abc import Callable
-from typing import Literal
+from typing import Literal, NamedTuple
 
 from pydantic import BaseModel
 from sqlalchemy import select
@@ -23,6 +23,7 @@ from system1.report.models import JevEval
 
 JEV_LANES: tuple[Literal["jev", "jev_labels"], ...] = ("jev", "jev_labels")
 MAX_IN_FLIGHT = 4
+PERSIST_EVERY = 50
 
 
 class PredRecord(BaseModel):
@@ -36,20 +37,41 @@ class PredRecord(BaseModel):
     error: str | None = None
 
 
-def load_test_examples(session: Session, project: Project) -> list[Example]:
-    return list(
-        session.scalars(
-            select(Example).where(Example.project_id == project.id, Example.split == "test").order_by(Example.id)
-        )
+class TestExample(NamedTuple):
+    """Plain values, so scoring never re-reads an ORM row that a commit has expired."""
+
+    __test__ = False  # not a pytest class
+
+    id: str
+    input: str | dict
+    label: str
+
+
+def load_test_examples(session: Session, project: Project) -> list[TestExample]:
+    rows = session.execute(
+        select(Example.id, Example.input_json, Example.label)
+        .where(Example.project_id == project.id, Example.split == "test")
+        .order_by(Example.id)
     )
+    return [TestExample(*row) for row in rows]
 
 
-def _cached(
-    session: Session, project: Project, test_set_version: int, policy_version: int, lane: str
-) -> JevEval | None:
+async def _gather(coros) -> list:
+    """Like asyncio.gather, but when one fails the rest are cancelled and awaited instead of left running."""
+    tasks = [asyncio.ensure_future(c) for c in coros]
+    try:
+        return await asyncio.gather(*tasks)
+    except BaseException:
+        for task in tasks:
+            task.cancel()
+        await asyncio.gather(*tasks, return_exceptions=True)
+        raise
+
+
+def _cached(session: Session, project_id: str, test_set_version: int, policy_version: int, lane: str) -> JevEval | None:
     return session.scalars(
         select(JevEval).where(
-            JevEval.project_id == project.id,
+            JevEval.project_id == project_id,
             JevEval.test_set_version == test_set_version,
             JevEval.policy_version == policy_version,
             JevEval.lane == lane,
@@ -70,20 +92,41 @@ async def evaluate_lane(
     gate: asyncio.Semaphore | None = None,
 ) -> list[PredRecord]:
     policy, policy_version = policy_and_version or latest_policy(session, project)
+    project_id = project.id
     examples = load_test_examples(session, project)
-    cache_row = _cached(session, project, test_set_version, policy_version, lane) if use_cache else None
+    cache_row = _cached(session, project_id, test_set_version, policy_version, lane) if use_cache else None
     saved: dict[str, dict] = dict(cache_row.results_json) if cache_row else {}
     fetched: dict[str, dict | str] = {}  # example id -> answer, or the reason there was none
     gate = gate or asyncio.Semaphore(MAX_IN_FLIGHT)
 
-    async def ask(example: Example) -> None:
+    def persist() -> None:
+        new = {k: v for k, v in fetched.items() if isinstance(v, dict)}
+        if not (use_cache and new):
+            return
+        merged = {**saved, **new}
+        row = _cached(session, project_id, test_set_version, policy_version, lane)
+        if row is None:
+            session.add(
+                JevEval(
+                    project_id=project_id,
+                    test_set_version=test_set_version,
+                    policy_version=policy_version,
+                    lane=lane,
+                    results_json=merged,
+                )
+            )
+        else:
+            row.results_json = merged
+        session.commit()
+
+    async def ask(example: TestExample) -> None:
         async with gate:
             try:
                 result = await run_lane(
                     session,
                     providers,
                     project,
-                    example.input_json,
+                    example.input,
                     lane,
                     "eval",
                     policy_and_version=(policy, policy_version),
@@ -99,6 +142,9 @@ async def evaluate_lane(
                         "p_gold": result.probabilities.get(example.label),
                         "latency_ms": result.latency_ms,
                     }
+                    # Keep paid answers if a later one blows up the whole run.
+                    if len(fetched) % PERSIST_EVERY == 0:
+                        persist()
         if on_done:
             on_done()
 
@@ -106,24 +152,10 @@ async def evaluate_lane(
     if on_done:
         for _ in range(len(examples) - len(todo)):
             on_done()
-    await asyncio.gather(*(ask(e) for e in todo))
-
-    new = {k: v for k, v in fetched.items() if isinstance(v, dict)}
-    if use_cache and new:
-        merged = {**saved, **new}
-        if cache_row is None:
-            session.add(
-                JevEval(
-                    project_id=project.id,
-                    test_set_version=test_set_version,
-                    policy_version=policy_version,
-                    lane=lane,
-                    results_json=merged,
-                )
-            )
-        else:
-            cache_row.results_json = merged
-        session.commit()
+    try:
+        await _gather(ask(e) for e in todo)
+    finally:
+        persist()
 
     records = []
     for example in examples:
@@ -165,20 +197,18 @@ async def evaluate_jev(
         if on_progress:
             on_progress(done / total)
 
-    results = await asyncio.gather(
-        *(
-            evaluate_lane(
-                session,
-                providers,
-                project,
-                lane,
-                test_set_version,
-                policy_and_version=policy_and_version,
-                use_cache=True,
-                on_done=tick,
-                gate=gate,
-            )
-            for lane in JEV_LANES
+    results = await _gather(
+        evaluate_lane(
+            session,
+            providers,
+            project,
+            lane,
+            test_set_version,
+            policy_and_version=policy_and_version,
+            use_cache=True,
+            on_done=tick,
+            gate=gate,
         )
+        for lane in JEV_LANES
     )
     return dict(zip(JEV_LANES, results, strict=True))

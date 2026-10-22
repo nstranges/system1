@@ -1,8 +1,10 @@
+import asyncio
+
 import pytest
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from system1.adapters.fakes import FakeDecisionProvider, FakeLLM, PreviewTrainer
+from system1.adapters.fakes import FakeDecisionProvider, FakeLLM, FakeTrainer, PreviewTrainer
 from system1.contracts.decisions import DecisionRequest, ProviderError
 from system1.contracts.training import TrainingJob
 from system1.datasets import service as dataset_service
@@ -56,7 +58,12 @@ class FirstOptionProvider:
 
     name = "sys1"
 
+    def __init__(self, adapter_ref: str = "adapter/1"):
+        self.adapter_ref = adapter_ref
+        self.calls = 0
+
     async def decide(self, req: DecisionRequest):
+        self.calls += 1
         return await FakeDecisionProvider("sys1", "sys1-fake").decide(req.model_copy(update={"state": ""}))
 
 
@@ -266,7 +273,7 @@ def test_trainer_receives_dataset_ref_and_config(client_for):
 
 def test_too_few_test_verdict(client_for):
     trainer = FinishingTrainer("succeeded", adapter_ref="adapter/1")
-    client = client_for("org_a", providers=_providers(trainer=trainer, sys1=FirstOptionProvider()))
+    client = client_for("org_a", providers=_providers(trainer=trainer, sys1=FirstOptionProvider("adapter/1")))
     pid = _project(client)  # 30 per bucket gives 6 test examples per bucket, under the 10 needed
     _train(client, pid)
     report = client.get(f"/api/projects/{pid}/report").json()
@@ -279,7 +286,7 @@ def test_too_few_test_verdict(client_for):
 
 def test_verdict_names_a_winner_with_enough_test_examples(client_for):
     trainer = FinishingTrainer("succeeded", adapter_ref="adapter/1")
-    client = client_for("org_a", providers=_providers(trainer=trainer, sys1=FirstOptionProvider()))
+    client = client_for("org_a", providers=_providers(trainer=trainer, sys1=FirstOptionProvider("adapter/1")))
     pid = _project(client, per_bucket=50)
     _train(client, pid)
     report = client.get(f"/api/projects/{pid}/report").json()
@@ -288,25 +295,30 @@ def test_verdict_names_a_winner_with_enough_test_examples(client_for):
     assert "Jev" in report["verdict"]["sentence"]
 
 
-def test_sys1_row_is_unavailable_when_nothing_serves_the_model(client_for):
+def test_trained_but_not_connected_is_not_scored(client_for):
     trainer = FinishingTrainer("succeeded", adapter_ref="adapter/1")
     client = client_for("org_a", providers=_providers(trainer=trainer, sys1=None))
     pid = _project(client)
-    _train(client, pid)
-    sys1 = _rows(client.get(f"/api/projects/{pid}/report").json())["sys1"]
-    assert sys1["status"] == "unavailable" and sys1["accuracy"] is None
-
-
-def test_unavailable_trainer_still_gives_a_card_with_jev_rows(client_for):
-    note = "Training isn't connected yet."
-    client = client_for("org_a", providers=_providers(trainer=FinishingTrainer("unavailable", note)))
-    pid = _project(client)
     job = _train(client, pid)
-    assert job["status"] == "succeeded"
+    assert job["status"] == "succeeded"  # a model was produced
     report = client.get(f"/api/projects/{pid}/report").json()
-    rows = _rows(report)
-    assert rows["sys1"]["status"] == "unavailable" and rows["sys1"]["message"] == note
-    assert rows["jev"]["accuracy"] == 1.0 and not report["is_preview"]
+    sys1 = _rows(report)["sys1"]
+    assert sys1["status"] == "preview" and sys1["accuracy"] is None
+    assert sys1["message"] == "Trained, but your model isn't connected yet."
+    assert report["details"]["trainer"] == "FinishingTrainer" and report["details"]["adapter_ref"] == "adapter/1"
+
+
+def test_sys1_provider_for_another_adapter_is_not_scored(client_for):
+    other = FirstOptionProvider(adapter_ref="adapter/someone-elses")
+    client = client_for("org_a", providers=_providers(trainer=FakeTrainer(), sys1=other))
+    pid = _project(client)
+    _train(client, pid)
+    report = client.get(f"/api/projects/{pid}/report").json()
+    sys1 = _rows(report)["sys1"]
+    assert sys1["status"] == "preview" and sys1["accuracy"] is None and other.calls == 0
+    assert report["details"]["trainer"] == "FakeTrainer" and report["details"]["adapter_ref"].startswith(
+        "fake-adapter/"
+    )
 
 
 def test_failed_trainer_fails_the_job_with_its_message(client_for):
@@ -393,3 +405,69 @@ def test_confirmed_training_action_starts_the_same_job(client_for):
     wait_for_job(job_id)
     assert client.get(f"/api/jobs/{job_id}").json()["kind"] == "training"
     assert client.get(f"/api/projects/{pid}/report").json()["available"] is True
+
+
+@pytest.mark.parametrize("per_bucket", [30, 50])
+def test_no_model_verdict_comes_before_the_too_few_rule(client_for, per_bucket):
+    for trainer in (PreviewTrainer(duration_s=0), FinishingTrainer("unavailable", "Not connected.")):
+        client = client_for("org_a", providers=_providers(trainer=trainer))
+        pid = _project(client, per_bucket=per_bucket)
+        _train(client, pid)
+        report = client.get(f"/api/projects/{pid}/report").json()
+        assert report["too_few_test"] is (per_bucket == 30)
+        sentence = report["verdict"]["sentence"]
+        assert report["verdict"]["winner"] == "none" and "no verdict on your model yet" in sentence
+        assert "Here's how Jev does" in sentence and "Too few" not in sentence
+        assert ("Real training connects soon" in sentence) is isinstance(trainer, PreviewTrainer)
+        client.delete(f"/api/projects/{pid}")
+
+
+def test_jev_answers_are_asked_again_when_the_guidelines_change(client_for):
+    jev = CountingJev()
+    client = client_for("org_a", providers=_providers(jev=jev))
+    pid = _project(client)
+    _train(client, pid)
+    assert jev.calls == 24
+    policy = {"decision_question": "Where does it go?", "options": OPTIONS, "guidelines": ["Refunds are billing."]}
+    assert client.put(f"/api/projects/{pid}/policy", json={"policy": policy}).status_code == 200
+    _train(client, pid)
+    assert jev.calls == 48  # a new policy version is a new cache key
+    with Session(client.app.state.engine) as session:
+        assert {e.policy_version for e in session.scalars(select(JevEval))} == {2, 3}
+
+
+def test_at_most_four_jev_calls_are_in_flight(client_for):
+    class Slow(FakeDecisionProvider):
+        def __init__(self):
+            super().__init__("jev", "jev-fake")
+            self.now = self.peak = 0
+
+        async def decide(self, req: DecisionRequest):
+            self.now += 1
+            self.peak = max(self.peak, self.now)
+            await asyncio.sleep(0.01)
+            self.now -= 1
+            return await super().decide(req)
+
+    jev = Slow()
+    client = client_for("org_a", providers=_providers(jev=jev))
+    _train(client, _project(client))
+    assert 1 < jev.peak <= 4
+
+
+def test_answers_already_paid_for_survive_a_failed_run(client_for):
+    class Crashes(FakeDecisionProvider):
+        calls = 0
+
+        async def decide(self, req: DecisionRequest):
+            Crashes.calls += 1
+            if Crashes.calls > 10:
+                raise RuntimeError("boom")
+            return await super().decide(req)
+
+    client = client_for("org_a", providers=_providers(jev=Crashes("jev", "jev-fake")))
+    pid = _project(client)
+    assert _train(client, pid)["status"] == "failed"
+    with Session(client.app.state.engine) as session:
+        saved = sum(len(r.results_json) for r in session.scalars(select(JevEval)))
+    assert 0 < saved <= 10

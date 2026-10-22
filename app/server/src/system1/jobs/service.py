@@ -38,7 +38,7 @@ class JobContext:
         self.result: dict | None = None
         # Shown when the job succeeds, e.g. to say it came up short.
         self.message: str | None = None
-        # Ends the job as this status instead of "succeeded", e.g. "preview" for a training run that made no model.
+        # Ends the job as this status instead of "succeeded", "preview" or "unavailable" for a training run that made no model.
         self.final_status: str | None = None
 
     def progress(self, value: float, stage: str | None = None) -> None:
@@ -90,7 +90,7 @@ def _finish(session: Session, job_id: str, status: str, message: str | None, res
     job.message = message
     if result is not None:
         job.result_json = result
-    if status in ("succeeded", "preview"):
+    if status in ("succeeded", "preview", "unavailable"):
         job.progress = 1.0
     job.finished_at = now()
     session.commit()

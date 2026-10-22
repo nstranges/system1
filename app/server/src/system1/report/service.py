@@ -36,6 +36,7 @@ POLL_INTERVAL_S = 0.25
 # Above this share of failed answers a row isn't scored: the accuracy would mostly measure the outage.
 ERROR_LIMIT = 0.30
 PREVIEW_MESSAGE = "Real training connects soon."
+NOT_CONNECTED_MESSAGE = "Trained, but your model isn't connected yet."
 NO_ANSWER = "no answer"
 
 LABELS: dict[RowKey, str] = {
@@ -66,6 +67,11 @@ class TrainerFailed(ApiError):
     status_code = 502
     code = "training_failed"
     message = "Training didn't finish."
+
+
+def _serves(provider: object | None, adapter_ref: str) -> bool:
+    """True when the sys1 provider says it serves exactly this adapter."""
+    return provider is not None and getattr(provider, "adapter_ref", None) == adapter_ref
 
 
 def _names(policy: Policy, keys: Sequence[str]) -> str:
@@ -122,7 +128,23 @@ def _verdict(
     rows: dict[RowKey, ReportRow], records: dict[RowKey, list[PredRecord]], few: bool, preview: bool
 ) -> Verdict:
     sys1, jev, labels = rows.get("sys1"), rows.get("jev"), rows.get("jev_labels")
-    if any(r.status == "errored" for r in (jev, labels) if r):
+    jev_errored = any(r.status == "errored" for r in (jev, labels) if r)
+    if sys1 is None or sys1.accuracy is None:
+        # Nothing to compare yet, however many test examples there are: say so before anything about getting more.
+        lead = (
+            "Real training connects soon, so there's no verdict on your model yet."
+            if preview
+            else "There's no verdict on your model yet."
+        )
+        scores = [f"{r.label} gets {_pct(r.accuracy)}" for r in (jev, labels) if r and r.accuracy is not None]
+        if jev_errored:
+            tail = "Jev didn't answer enough of your test examples to show how it does. Try again in a minute."
+        elif scores:
+            tail = f"Here's how Jev does on your test examples: {'; '.join(scores)} right."
+        else:
+            tail = ""
+        return Verdict(winner="none", sentence=f"{lead} {tail}".strip())
+    if jev_errored or jev is None or jev.accuracy is None:
         return Verdict(
             winner="none",
             sentence="Jev didn't answer enough of your test examples, so there's no verdict. Try again in a minute.",
@@ -134,16 +156,6 @@ def _verdict(
                 "Too few test examples for a firm verdict. "
                 f"Add more examples so each bucket has about {VERDICT_MIN_TEST_PER_BUCKET} to test on."
             ),
-        )
-    if sys1 is None or sys1.accuracy is None or jev is None or jev.accuracy is None:
-        lead = (
-            "Real training connects soon, so there's no verdict on your model yet."
-            if preview
-            else "There's no verdict on your model yet."
-        )
-        scores = [f"{r.label} gets {_pct(r.accuracy)}" for r in (jev, labels) if r and r.accuracy is not None]
-        return Verdict(
-            winner="none", sentence=f"{lead} {'; '.join(scores)} of your test examples right." if scores else lead
         )
 
     mine = {r.id: r.correct for r in records["sys1"]}
@@ -302,23 +314,23 @@ def start_training(
 
         records: dict[RowKey, list[PredRecord]] = {"jev": jev["jev"], "jev_labels": jev["jev_labels"]}
         sys1_note: ReportRow | None = None
-        if trained.status == "succeeded" and trained.adapter_ref and providers.sys1 is not None:
+        if trained.status == "succeeded" and trained.adapter_ref and _serves(providers.sys1, trained.adapter_ref):
             progress.stage = "testing"
             records["sys1"] = await evaluate_lane(
                 ctx.session, providers, own, "sys1", test_set_version, policy_and_version=(policy, policy_version)
             )
         elif trained.status == "preview":
             sys1_note = ReportRow(key="sys1", label=LABELS["sys1"], status="preview", message=PREVIEW_MESSAGE)
+        elif trained.status == "succeeded":
+            # The server's sys1 endpoint may be serving some other model; only a match to this run's adapter is scored.
+            sys1_note = ReportRow(key="sys1", label=LABELS["sys1"], status="preview", message=NOT_CONNECTED_MESSAGE)
         else:
-            message = (
-                "Your model is trained but isn't connected for answers yet."
-                if trained.status == "succeeded"
-                else trained.message
-            )
-            sys1_note = ReportRow(key="sys1", label=LABELS["sys1"], status="unavailable", message=message)
+            sys1_note = ReportRow(key="sys1", label=LABELS["sys1"], status="unavailable", message=trained.message)
 
         test_per_bucket = _test_per_bucket(ctx.session, own, policy)
         rows, verdict, details = assemble(records, sys1_note, test_per_bucket, preview=trained.status == "preview")
+        details.trainer = type(providers.trainer).__name__
+        details.adapter_ref = trained.adapter_ref
         card = ReportCard(
             org_id=org_id,
             project_id=project_id,
@@ -333,11 +345,13 @@ def start_training(
         )
         ctx.session.add(card)
         ctx.session.commit()
+        # Only a trainer that produced a model ends the job as "succeeded".
         if trained.status == "preview":
-            ctx.final_status = "preview"
-            ctx.message = PREVIEW_MESSAGE
+            ctx.final_status, ctx.message = "preview", PREVIEW_MESSAGE
         elif trained.status == "unavailable":
-            ctx.message = trained.message
+            ctx.final_status, ctx.message = "unavailable", trained.message
+        elif sys1_note is not None:
+            ctx.message = NOT_CONNECTED_MESSAGE
         return {**summary, "report_card_id": card.id, "trainer_status": trained.status}
 
     job_service.start_job(job_service.session_factory_for(session), job.id, work)

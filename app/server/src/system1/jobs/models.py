@@ -16,7 +16,9 @@ class Job(Base):
     org_id: Mapped[str] = mapped_column(index=True)
     project_id: Mapped[str] = mapped_column(ForeignKey("projects.id"), index=True)
     kind: Mapped[str]  # generation | training
-    status: Mapped[str] = mapped_column(default="queued")  # queued | running | succeeded | failed | preview
+    status: Mapped[str] = mapped_column(
+        default="queued"
+    )  # queued | running | succeeded | failed | preview | unavailable
     progress: Mapped[float] = mapped_column(default=0.0)
     stage: Mapped[str | None] = mapped_column(default=None)
     message: Mapped[str | None] = mapped_column(default=None)

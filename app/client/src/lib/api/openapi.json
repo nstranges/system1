@@ -3837,6 +3837,28 @@
             },
             "type": "object",
             "title": "Test Per Bucket"
+          },
+          "trainer": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Trainer"
+          },
+          "adapter_ref": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Adapter Ref"
           }
         },
         "type": "object",

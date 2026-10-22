@@ -1338,6 +1338,10 @@ export interface components {
             test_per_bucket?: {
                 [key: string]: number;
             };
+            /** Trainer */
+            trainer?: string | null;
+            /** Adapter Ref */
+            adapter_ref?: string | null;
         };
         /** ReportRow */
         ReportRow: {
