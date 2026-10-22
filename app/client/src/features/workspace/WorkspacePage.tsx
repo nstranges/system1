@@ -176,7 +176,6 @@ function Workspace() {
       />
     ) : stage === "rules" ? (
       <RulesCanvas
-        key={policy.version}
         project={project}
         policy={policy}
         draft={rulesDraft}

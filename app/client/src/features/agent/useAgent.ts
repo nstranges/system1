@@ -81,6 +81,8 @@ export function useAgent(projectId: string, handlers: Handlers) {
         )
         if (cancelled) return
         if (!data) throw new Error("no history")
+        // A refetch must not overwrite events a running stream is appending.
+        if (abort.current) return
         setEvents(data.reduce<AgentEvent[]>(append, []))
         setLoadError(false)
         setLoaded(true)

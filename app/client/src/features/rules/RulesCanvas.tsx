@@ -97,7 +97,13 @@ export function RulesCanvas({
   const draft: PolicyInput = unsaved ?? policy.policy
   const dirty = unsaved !== null
   const [saving, setSaving] = useState(false)
-  const [issues, setIssues] = useState<PolicyIssue[]>(policy.issues)
+  // Issues come from the policy; a failed save overrides them only until the
+  // policy object changes (a save, an agent edit, a refetch).
+  const [override, setOverride] = useState<{
+    base: PolicyOut
+    issues: PolicyIssue[]
+  } | null>(null)
+  const issues = override?.base === policy ? override.issues : policy.issues
 
   const change = (next: PolicyInput) => onDraft(next)
 
@@ -110,14 +116,14 @@ export function RulesCanvas({
     setSaving(false)
     if (data) {
       onDraft(null)
-      setIssues([])
+      setOverride(null)
       onPolicy(data)
       toast.success("Rules saved")
       return
     }
     // The draft stays as typed so nothing is lost while fixing the problems.
     const problem = readProblem(error)
-    setIssues(problem.issues)
+    setOverride({ base: policy, issues: problem.issues })
     toast.error(problem.message)
   }
 
@@ -136,7 +142,7 @@ export function RulesCanvas({
             disabled={!dirty || saving}
             onClick={() => {
               onDraft(null)
-              setIssues(policy.issues)
+              setOverride(null)
             }}
           >
             Discard changes
