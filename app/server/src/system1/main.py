@@ -13,16 +13,21 @@ from system1.auth.verifier import ClerkVerifier, RejectAllVerifier, TokenVerifie
 from system1.config import get_settings
 from system1.db import init_db, make_engine
 from system1.errors import install_error_handlers
+from system1.providers import Providers, build_providers
 
 log = logging.getLogger(__name__)
 
 
-def create_app(verifier: TokenVerifier | None = None, engine: Engine | None = None) -> FastAPI:
+def create_app(
+    verifier: TokenVerifier | None = None, engine: Engine | None = None, providers: Providers | None = None
+) -> FastAPI:
     settings = get_settings()
 
     @asynccontextmanager
     async def lifespan(app: FastAPI) -> AsyncIterator[None]:
         init_db(app.state.engine)
+        if app.state.providers is None:
+            app.state.providers = build_providers(settings)
         yield
 
     app = FastAPI(title="system1", lifespan=lifespan)
@@ -34,6 +39,7 @@ def create_app(verifier: TokenVerifier | None = None, engine: Engine | None = No
             log.warning("CLERK_SECRET_KEY is not set: every /api request except /api/health will be rejected")
             verifier = RejectAllVerifier()
     app.state.verifier = verifier
+    app.state.providers = providers
 
     install_error_handlers(app)
     app.add_middleware(
