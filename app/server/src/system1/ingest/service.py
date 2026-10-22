@@ -151,6 +151,17 @@ def _unique_key(value: str, taken: set[str]) -> str:
     return key
 
 
+def _existing_buckets(policy: Policy) -> list[tuple[str, set[str]]]:
+    """Each existing bucket's key with the spellings an upload value may match it by."""
+    return [(o.key, {o.key, _snake(o.key), _snake(o.name), o.name.casefold()}) for o in policy.options]
+
+
+def _match_existing(value: str, existing: list[tuple[str, set[str]]]) -> str | None:
+    """A value that already names a bucket (by key or name, ignoring case) goes there instead of a lookalike."""
+    spellings = {value.casefold(), _snake(value)}
+    return next((key for key, names in existing if spellings & names), None)
+
+
 @dataclass
 class _Candidate:
     text: str
@@ -188,17 +199,24 @@ def import_upload(
     policy, _ = project_service.latest_policy(session, project)
     taken = {o.key for o in policy.options}
     chosen = {_value(k).casefold(): v for k, v in mapping.label_map.items()}
+    # Every target is checked, including those of values with no surviving rows, so a typo never goes unnoticed.
+    for target in mapping.label_map.values():
+        if target is not None and target not in taken:
+            raise IngestError(f"'{target}' isn't a bucket in this project.")
+    existing = _existing_buckets(policy)
     target_of: dict[str, str] = {}  # canonical upload value -> bucket key
     new_options: list[Option] = []
     for value in dict.fromkeys(c.label for c in candidates):
         norm = value.casefold()
         if norm in chosen:
             target = chosen[norm]
-            if target is not None and target not in taken:
-                raise IngestError(f"'{target}' isn't a bucket in this project.")
             if target is not None:
                 target_of[value] = target
         elif mapping.create_buckets:
+            match = _match_existing(value, existing)
+            if match is not None:
+                target_of[value] = match
+                continue
             key = _unique_key(value, taken)
             taken.add(key)
             target_of[value] = key

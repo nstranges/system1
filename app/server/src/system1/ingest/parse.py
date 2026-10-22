@@ -10,7 +10,7 @@ from pathlib import PurePosixPath
 import openpyxl
 
 from system1.context.extract import clean_name, clean_text
-from system1.datasets.constants import UPLOAD_MAX_BYTES, UPLOAD_MAX_ROWS
+from system1.datasets.constants import UPLOAD_MAX_BYTES, UPLOAD_MAX_COLUMNS, UPLOAD_MAX_ROWS
 from system1.errors import ApiError
 
 MAX_XLSX_UNZIPPED_BYTES = 50_000_000
@@ -43,6 +43,10 @@ def _too_many_rows() -> IngestError:
     return IngestError(f"That file has more than {UPLOAD_MAX_ROWS:,} rows.")
 
 
+def _too_many_columns() -> IngestError:
+    return IngestError(f"That file has more than {UPLOAD_MAX_COLUMNS} columns.")
+
+
 def _cell(value: object) -> str:
     if value is None:
         return ""
@@ -53,23 +57,33 @@ def _cell(value: object) -> str:
     return clean_text(str(value))
 
 
-def _names(raw: list[str]) -> list[str]:
-    """Column names stripped and made unique, so two columns can never share a key."""
+def _header(raw: list[str]) -> list[str]:
+    """Column names stripped and made unique, so two columns can never share a key. Trailing blank
+    names are formatting (`a,b,`), not columns. The count is checked before any per-column work."""
+    names = list(raw)
+    while names and not names[-1].strip():
+        names.pop()
+    if not names:
+        raise IngestError("That file is empty.")
+    if len(names) > UPLOAD_MAX_COLUMNS:
+        raise _too_many_columns()
     out: list[str] = []
-    for name in raw:
+    used: set[str] = set()
+    repeats: dict[str, int] = {}
+    for name in names:
         name = " ".join(clean_text(name).split())
         if not name:
             raise IngestError("Every column needs a name in the first row.")
-        candidate, n = name, 2
-        while candidate in out:
-            candidate = f"{name} ({n})"
-            n += 1
+        candidate = name
+        while candidate in used:
+            repeats[name] = repeats.get(name, 1) + 1
+            candidate = f"{name} ({repeats[name]})"
+        used.add(candidate)
         out.append(candidate)
     return out
 
 
-def _build(header: list[str], body: list[list[str]]) -> Table:
-    columns = _names(header)
+def _build(columns: list[str], body: list[list[str]]) -> Table:
     rows = []
     for cells in body:
         values = [_cell(c) for c in cells[: len(columns)]]
@@ -100,35 +114,50 @@ def _csv_table(data: bytes) -> Table:
         dialect = csv.excel
     try:
         records = csv.reader(io.StringIO(text, newline=""), dialect)
-        header = next(records, [])
-        # +2 leaves room for blank lines between records; _build enforces the real limit.
-        body = []
+        columns: list[str] | None = None
+        body: list[list[str]] = []
         for record in records:
-            body.append(record)
+            if columns is None:
+                if any(c.strip() for c in record):
+                    columns = _header(record)
+                continue
+            # Cut to the header width as it is read, so a ragged row can't hold a wide list in memory.
+            body.append(record[: len(columns)])
+            # Blank lines don't count as rows, so this only stops runaway input; _build enforces the real limit.
             if len(body) > UPLOAD_MAX_ROWS * 2 + 2:
                 raise _too_many_rows()
     except csv.Error:
         raise IngestError() from None
-    return _build(header, body)
+    if columns is None:
+        raise IngestError("That file is empty.")
+    return _build(columns, body)
 
 
 def _jsonl_table(data: bytes) -> Table:
-    objects: list[dict] = []
-    for line in _decode(data).splitlines():
-        if not line.strip():
-            continue
-        try:
+    try:
+        objects: list[dict] = []
+        keys: dict[str, None] = {}
+        for line in _decode(data).splitlines():
+            if not line.strip():
+                continue
             obj = json.loads(line)
-        except ValueError:
-            raise IngestError() from None
-        if not isinstance(obj, dict):
-            raise IngestError()
-        objects.append(obj)
-        if len(objects) > UPLOAD_MAX_ROWS:
-            raise _too_many_rows()
-    raw_keys = list(dict.fromkeys(k for obj in objects for k in obj))
-    body = [[_json_value(obj[k]) if k in obj else "" for k in raw_keys] for obj in objects]
-    return _build(raw_keys, body)
+            if not isinstance(obj, dict):
+                raise IngestError()
+            keys.update(dict.fromkeys(obj))
+            if len(keys) > UPLOAD_MAX_COLUMNS:
+                raise _too_many_columns()
+            objects.append(obj)
+            if len(objects) > UPLOAD_MAX_ROWS:
+                raise _too_many_rows()
+        raw_keys = list(keys)
+        if not raw_keys:
+            raise IngestError("That file has no rows.")
+        columns = _header(raw_keys)
+        body = [[_json_value(obj[k]) if k in obj else "" for k in raw_keys] for obj in objects]
+    except (ValueError, RecursionError):
+        # Deeply nested JSON exhausts the parser's stack; it is just another unreadable file.
+        raise IngestError() from None
+    return _build(columns, body)
 
 
 def _json_value(value: object) -> str:
@@ -144,27 +173,33 @@ def _xlsx_table(data: bytes) -> Table:
         book = openpyxl.load_workbook(io.BytesIO(data), read_only=True, data_only=True)
         try:
             sheet = book.worksheets[0]
-            header: list[str] | None = None
+            columns: list[str] | None = None
+            header_row = 0
+            # One column past the limit is enough to tell the sheet is too wide, however wide it is declared.
+            for scanned, row in enumerate(sheet.iter_rows(max_col=UPLOAD_MAX_COLUMNS + 1, values_only=True), start=1):
+                if scanned > MAX_XLSX_SCANNED_ROWS:
+                    raise IngestError()
+                cells = [_cell(c) for c in row]
+                if any(cells):
+                    columns, header_row = _header(cells), scanned
+                    break
+            if columns is None:
+                raise IngestError("That file is empty.")
             body: list[list[str]] = []
-            for scanned, row in enumerate(sheet.iter_rows(values_only=True), start=1):
+            # Reading only the header's width means a stray far-away cell can't widen every row.
+            rows = sheet.iter_rows(min_row=header_row + 1, max_col=len(columns), values_only=True)
+            for scanned, row in enumerate(rows, start=1):
                 if scanned > MAX_XLSX_SCANNED_ROWS:
                     raise IngestError()
                 cells = [_cell(c) for c in row]
                 if not any(cells):
-                    continue
-                if header is None:
-                    header = cells
                     continue
                 body.append(cells)
                 if len(body) > UPLOAD_MAX_ROWS:
                     raise _too_many_rows()
         finally:
             book.close()
-        if header is None:
-            raise IngestError("That file is empty.")
-        while header and not header[-1]:
-            header.pop()  # trailing blank header cells are formatting, not columns
-        return _build(header, body)
+        return _build(columns, body)
     except IngestError:
         raise
     except Exception:  # noqa: BLE001 - boundary around a parser with no stable exception contract

@@ -1,12 +1,15 @@
 import io
 import json
+import time
 from datetime import timedelta
 
 import openpyxl
+import pytest
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
-from system1.datasets.constants import UPLOAD_MAX_ROWS
+from system1.datasets import service as dataset_service
+from system1.datasets.constants import UPLOAD_MAX_BYTES, UPLOAD_MAX_COLUMNS, UPLOAD_MAX_ROWS
 from system1.datasets.models import Example
 from system1.ingest.models import StagedUpload
 from system1.ingest.parse import parse_table
@@ -187,3 +190,114 @@ def test_other_org_upload_404_and_staging_limits(client_for):
     assert _stage(engine_client, pid, _csv([("a", "refund")])).status_code == 200
     with Session(engine_client.app.state.engine) as session:
         assert session.scalar(select(func.count()).select_from(StagedUpload)) == 1
+
+
+def test_deeply_nested_jsonl_is_a_plain_422(client_for):
+    client = client_for("org_a")
+    pid = _project(client)
+    data = ('{"a": ' + "[" * 100_000 + "]" * 100_000 + "}").encode()
+    res = _stage(client, pid, data, "t.jsonl")
+    assert res.status_code == 422
+    assert res.json()["detail"]["message"] == "We couldn't read that file as CSV, Excel or JSONL."
+
+
+def test_column_count_is_bounded(client_for):
+    client = client_for("org_a")
+    pid = _project(client)
+    wide = ",".join(f"c{i}" for i in range(UPLOAD_MAX_COLUMNS + 1)) + "\n" + "x\n"
+    res = _stage(client, pid, wide.encode())
+    assert res.status_code == 422
+    assert res.json()["detail"]["message"] == "That file has more than 200 columns."
+
+    keys = {f"k{i}": "x" for i in range(UPLOAD_MAX_COLUMNS + 1)}
+    res = _stage(client, pid, json.dumps(keys).encode(), "t.jsonl")
+    assert res.json()["detail"]["message"] == "That file has more than 200 columns."
+
+    started = time.monotonic()
+    res = _stage(client, pid, (",".join(["dup"] * 2000) + "\nx\n").encode())
+    assert res.status_code == 422 and time.monotonic() - started < 1
+
+    ok = _stage(client, pid, (",".join(["dup"] * UPLOAD_MAX_COLUMNS) + "\nx\n").encode())
+    assert ok.status_code == 200 and ok.json()["columns"][:3] == ["dup", "dup (2)", "dup (3)"]
+
+
+def test_xlsx_stray_far_cell_does_not_widen_rows():
+    book = openpyxl.Workbook()
+    sheet = book.active
+    sheet.append(["text", "kind"])
+    sheet.append(["hello", "refund"])
+    sheet["XFD2"] = "stray"
+    sheet.append(["bye", "other"])
+    buf = io.BytesIO()
+    book.save(buf)
+    started = time.monotonic()
+    table = parse_table("t.xlsx", buf.getvalue())
+    assert time.monotonic() - started < 2
+    assert table.columns == ["text", "kind"]
+    assert table.rows == [{"text": "hello", "kind": "refund"}, {"text": "bye", "kind": "other"}]
+
+
+def test_trailing_blank_csv_headers_are_dropped():
+    table = parse_table("t.csv", b"text,kind,,\nhello,refund,,\n")
+    assert table.columns == ["text", "kind"]
+    assert table.rows == [{"text": "hello", "kind": "refund"}]
+
+
+def test_create_buckets_matches_existing_buckets_by_key_or_name(client_for):
+    client = client_for("org_a")
+    pid = _project(client, [{"key": "refund", "name": "Refund"}, {"key": "acct", "name": "Account Access"}])
+    rows = [("a", "REFUND"), ("b", "account access"), ("c", "Billing")]
+    up = _stage(client, pid, _csv(rows)).json()
+    res = _import(client, pid, up["upload_id"], create_buckets=True)
+    assert res.status_code == 200, res.text
+    assert res.json()["created_buckets"] == ["billing"]
+    keys = [o["key"] for o in client.get(f"/api/projects/{pid}/policy").json()["policy"]["options"]]
+    assert keys == ["refund", "acct", "billing"]
+    with Session(client.app.state.engine) as session:
+        labels = sorted(e.label for e in session.scalars(select(Example).where(Example.project_id == pid)))
+    assert labels == ["acct", "billing", "refund"]
+
+
+def test_label_map_targets_are_checked_even_without_rows(client_for):
+    client = client_for("org_a")
+    pid = _project(client)
+    up = _stage(client, pid, _csv([("a", "refund")])).json()
+    res = _import(client, pid, up["upload_id"], label_map={"refund": "refund", "ghost": "nowhere"})
+    assert res.status_code == 422 and "nowhere" in res.json()["detail"]["message"]
+    assert _counts(client, pid) == (0, 2)
+
+
+def test_oversized_upload_is_413(client_for):
+    client = client_for("org_a")
+    pid = _project(client)
+    res = _stage(client, pid, b"a" * (UPLOAD_MAX_BYTES + 1))
+    assert res.status_code == 413
+    assert res.json()["detail"]["message"] == "That file is over 5 MB."
+
+
+def test_expired_upload_is_404(client_for):
+    client = client_for("org_a")
+    pid = _project(client)
+    up = _stage(client, pid, _csv([("a", "refund")])).json()
+    with Session(client.app.state.engine) as session:
+        session.get(StagedUpload, up["upload_id"]).created_at = now() - timedelta(hours=2)
+        session.commit()
+    res = client.get(f"/api/projects/{pid}/uploads/{up['upload_id']}/labels", params={"column": "kind"})
+    assert res.status_code == 404
+    assert _import(client, pid, up["upload_id"]).status_code == 404
+
+
+def test_failure_after_the_policy_is_staged_rolls_everything_back(client_for, monkeypatch):
+    client = client_for("org_a")
+    pid = _project(client)
+    up = _stage(client, pid, _csv([("a", "refund"), ("b", "Billing")])).json()
+
+    def boom(*_args, **_kwargs):
+        raise RuntimeError("database went away")
+
+    monkeypatch.setattr(dataset_service, "add_examples", boom)
+    with pytest.raises(RuntimeError):
+        _import(client, pid, up["upload_id"], label_map={"refund": "refund"}, create_buckets=True)
+    assert _counts(client, pid) == (0, 2)
+    with Session(client.app.state.engine) as session:
+        assert session.get(StagedUpload, up["upload_id"]) is not None
