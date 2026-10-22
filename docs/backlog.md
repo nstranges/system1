@@ -39,6 +39,13 @@ Last updated: Oct 21, 2026. The current plan lives in the [product design](super
 | Unique verdict per decision | Add `CREATE UNIQUE INDEX` on `feedback(decision_id)` (after deduping) and handle the insert race; today one-verdict-per-decision is enforced in code only | Needed before anything exports feedback rows for training | Oct 21 |
 | Confirm outcome in history | Add `status` to history `confirm` events so a decided confirmation card still shows its outcome after a reload | Cosmetic | Oct 21 |
 | Agent tone pass | Playbook asks three questions before drafting in stage 1; draft earlier. Tune after real onboarding conversations | After G3 feedback | Oct 21 |
+| First-run onboarding tour | A guided tour the first time someone uses the app | After the journey settles | Oct 22 |
+| Dataset marketplace / library | A browsable library of datasets and use cases, with tags and sorting, from us or other teams; also useful for inspiration | Idea | Oct 22 |
+| Bring your own API key | Let a team use its own Anthropic or OpenAI key for the assistant and generation (consumer ChatGPT/Claude plans give apps no API access) | After the hackathon | Oct 22 |
+| Re-check uploaded data after training | Use the trained model's disagreement with uploaded labels to surface likely mislabels (Cleanlab-style) | Needs real training | Oct 22 |
+| Variants from corrections | Generate extra examples from each human correction before retraining | Needs real training | Oct 22 |
+| Better synthetic pipeline | Thomas's improved generation pipeline, swapped in behind ExampleGenerator | Thomas | Oct 22 |
+| OCR and Google Sheets import | Scanned PDFs and Sheets as inputs | Later | Oct 22 |
 | Drift signals | Track the share of `auto` traffic falling back to Jev and the average top probability over time | After real traffic exists | Oct 21 |
 | API-generated data at scale | Thousands of examples per project through the Anthropic API | From phase 4 of the phase plan | Oct 20 |
 | Qwen3.5-2B as the base model | The backup if Laya's input window or option budget becomes the bottleneck | From phase 4 of the phase plan | Oct 20 |

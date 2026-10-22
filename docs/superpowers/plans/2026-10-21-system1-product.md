@@ -1,5 +1,7 @@
 # system1 Product Implementation Plan
 
+> **Superseded in part (Oct 22):** Phase C (Tasks 15–18) is replaced by [the journey v2 plan](2026-10-22-system1-journey-v2.md). Phases A and B stand as built.
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Build the system1 website end to end: a FastAPI server and React client where an organization signs in with Clerk, picks or describes a decision, builds rules with an agent, tries them live on Jev, generates labelled examples, sees a report card, gets an API key, and corrects decisions. Training stays outside `app/`, behind a contract.

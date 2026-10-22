@@ -31,7 +31,7 @@ The benchmark still decides the pitch. On 2026-10-21 Thomas decided to start bui
   - sys1 served live
   - Clerk sign-in
 
-  It's specified in [docs/superpowers/specs/2026-10-21-system1-product-design.md](docs/superpowers/specs/2026-10-21-system1-product-design.md). It's built on the `product-design` branch. The model side (datasets, the decision provider, training, evaluation results) sits behind contracts with fakes, so it can change without touching the app. The detailed implementation plan gets written with Thomas before any product code. The build runs in blocks with gates where Thomas checks in.
+  It's specified in [docs/superpowers/specs/2026-10-21-system1-product-design.md](docs/superpowers/specs/2026-10-21-system1-product-design.md), with the journey replaced by the data-first [journey v2](docs/superpowers/specs/2026-10-22-system1-journey-v2-design.md) (Define → Data → Review → Train → Use ⇄ Improve; plan in [docs/superpowers/plans/2026-10-22-system1-journey-v2.md](docs/superpowers/plans/2026-10-22-system1-journey-v2.md)). It's built on the `product-design` branch. The model side (datasets, the decision provider, training, evaluation results) sits behind contracts with fakes, so it can change without touching the app. The detailed implementation plan gets written with Thomas before any product code. The build runs in blocks with gates where Thomas checks in.
 - **Roadmap after the hackathon product:**
   - V2: Era by Eon, to test the agent
   - V3: SurrealDB Agent Memory, if there's time
