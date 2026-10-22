@@ -1,7 +1,12 @@
+import json
+from pathlib import Path
+
 import pytest
 
 from system1.domain.policy import InputField, Option, Policy, Rule, validate_policy
 from system1.domain.questions import build_questions
+
+RULES = Path(__file__).parents[1] / "src/system1/templates/data/tallyfern/rules.json"
 
 
 def make_policy(**overrides) -> Policy:
@@ -59,3 +64,20 @@ def test_build_questions_policy_variant_shape():
 def test_build_questions_rejects_invalid_policy():
     with pytest.raises(ValueError):
         build_questions(make_policy(rules=[Rule(id="R1", text="t", label="zzz")]), "labels")
+
+
+def test_validate_rejects_non_snake_case_option_keys():
+    policy = make_policy(
+        options=[Option(key="Billing Team", name="A"), Option(key="a-b", name="B")],
+        rules=[Rule(id="R1", text="t", label="Billing Team")],
+    )
+    issues = validate_policy(policy)
+    assert [i.path for i in issues] == ["options[0].key", "options[1].key"]
+    assert all("snake_case" in i.message for i in issues)
+
+
+def test_tallyfern_option_keys_are_snake_case():
+    from system1.domain.policy import SNAKE_CASE
+
+    labels = {r["label"] for r in json.loads(RULES.read_text())}
+    assert len(labels) == 13 and all(SNAKE_CASE.fullmatch(k) for k in labels)

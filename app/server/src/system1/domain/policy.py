@@ -4,12 +4,14 @@ Pure Pydantic. Rules are data (a recursive condition tree), so the same policy
 can be evaluated, shown to the user and rendered into a model prompt.
 """
 
+import re
 from typing import Any, Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 
 MIN_OPTIONS = 2
 MAX_OPTIONS = 15
+SNAKE_CASE = re.compile(r"[a-z][a-z0-9]*(_[a-z0-9]+)*")
 
 
 class InputField(BaseModel):
@@ -101,6 +103,10 @@ def validate_policy(policy: Policy) -> list[PolicyIssue]:
     for i, option in enumerate(policy.options):
         if option.key in seen:
             issues.append(PolicyIssue(path=f"options[{i}].key", message=f"duplicate option key '{option.key}'"))
+        if not SNAKE_CASE.fullmatch(option.key):
+            issues.append(
+                PolicyIssue(path=f"options[{i}].key", message=f"option key '{option.key}' must be snake_case")
+            )
         seen.add(option.key)
 
     input_keys = {f.key for f in policy.inputs}
