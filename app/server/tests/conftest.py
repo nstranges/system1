@@ -16,7 +16,9 @@ def client_for() -> Iterator[Callable[..., TestClient]]:
     """Build a client signed in as `user_id` in `org_id` (None means no active organization)."""
     stack = ExitStack()
 
-    def build(org_id: str | None, user_id: str = "user_1", providers: Providers | None = None) -> TestClient:
+    def build(
+        org_id: str | None, user_id: str = "user_1", providers: Providers | None = None, engine=None
+    ) -> TestClient:
         claims: dict = {"sub": user_id}
         if org_id is None:
             claims["sts"] = "pending"
@@ -28,7 +30,9 @@ def client_for() -> Iterator[Callable[..., TestClient]]:
             llm=FakeLLM([]),
             trainer=FakeTrainer(),
         )
-        app = create_app(verifier=FakeVerifier(claims), engine=make_engine("sqlite:///:memory:"), providers=providers)
+        app = create_app(
+            verifier=FakeVerifier(claims), engine=engine or make_engine("sqlite:///:memory:"), providers=providers
+        )
         return stack.enter_context(TestClient(app))
 
     with stack:

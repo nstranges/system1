@@ -13,6 +13,8 @@ from system1.auth.verifier import ClerkVerifier, RejectAllVerifier, TokenVerifie
 from system1.config import get_settings
 from system1.db import init_db, make_engine
 from system1.errors import install_error_handlers
+from system1.gateway.router_app import router as gateway_router
+from system1.projects.router import router as projects_router
 from system1.providers import Providers, build_providers
 
 log = logging.getLogger(__name__)
@@ -60,6 +62,8 @@ def create_app(
     def me(principal: Annotated[Principal, Depends(get_principal)]) -> Principal:
         return principal
 
+    api.include_router(projects_router)
+    api.include_router(gateway_router)
     app.include_router(api)
     return app
 
