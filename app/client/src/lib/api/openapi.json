@@ -1732,6 +1732,84 @@
         }
       }
     },
+    "/api/projects/{project_id}/training": {
+      "post": {
+        "summary": "Train",
+        "operationId": "train_api_projects__project_id__training_post",
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Project Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JobStarted"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/projects/{project_id}/report": {
+      "get": {
+        "summary": "Get Report",
+        "operationId": "get_report_api_projects__project_id__report_get",
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Project Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Report"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/v1/systemone": {
       "post": {
         "summary": "Decide",
@@ -2172,6 +2250,29 @@
           "result"
         ],
         "title": "ConfirmOut"
+      },
+      "Confusion": {
+        "properties": {
+          "gold": {
+            "type": "string",
+            "title": "Gold"
+          },
+          "pred": {
+            "type": "string",
+            "title": "Pred"
+          },
+          "count": {
+            "type": "integer",
+            "title": "Count"
+          }
+        },
+        "type": "object",
+        "required": [
+          "gold",
+          "pred",
+          "count"
+        ],
+        "title": "Confusion"
       },
       "ContextDocOut": {
         "properties": {
@@ -3638,6 +3739,215 @@
         "type": "object",
         "title": "ProjectPatch"
       },
+      "Report": {
+        "properties": {
+          "available": {
+            "type": "boolean",
+            "title": "Available"
+          },
+          "rows": {
+            "items": {
+              "$ref": "#/components/schemas/ReportRow"
+            },
+            "type": "array",
+            "title": "Rows"
+          },
+          "verdict": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Verdict"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "details": {
+            "$ref": "#/components/schemas/ReportDetails"
+          },
+          "is_preview": {
+            "type": "boolean",
+            "title": "Is Preview",
+            "default": false
+          },
+          "is_fixture": {
+            "type": "boolean",
+            "title": "Is Fixture",
+            "default": false
+          },
+          "test_set_version": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Test Set Version"
+          },
+          "too_few_test": {
+            "type": "boolean",
+            "title": "Too Few Test",
+            "default": false
+          },
+          "job_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Job Id"
+          }
+        },
+        "type": "object",
+        "required": [
+          "available"
+        ],
+        "title": "Report"
+      },
+      "ReportDetails": {
+        "properties": {
+          "per_bucket": {
+            "additionalProperties": {
+              "additionalProperties": {
+                "type": "number"
+              },
+              "type": "object"
+            },
+            "type": "object",
+            "title": "Per Bucket"
+          },
+          "confusions": {
+            "additionalProperties": {
+              "items": {
+                "$ref": "#/components/schemas/Confusion"
+              },
+              "type": "array"
+            },
+            "type": "object",
+            "title": "Confusions"
+          },
+          "test_per_bucket": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "type": "object",
+            "title": "Test Per Bucket"
+          }
+        },
+        "type": "object",
+        "title": "ReportDetails"
+      },
+      "ReportRow": {
+        "properties": {
+          "key": {
+            "type": "string",
+            "enum": [
+              "sys1",
+              "jev",
+              "jev_labels",
+              "base"
+            ],
+            "title": "Key"
+          },
+          "label": {
+            "type": "string",
+            "title": "Label"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "ok",
+              "preview",
+              "unavailable",
+              "errored"
+            ],
+            "title": "Status"
+          },
+          "message": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Message"
+          },
+          "accuracy": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Accuracy"
+          },
+          "ci_low": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ci Low"
+          },
+          "ci_high": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ci High"
+          },
+          "n": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "N"
+          },
+          "errors": {
+            "type": "integer",
+            "title": "Errors",
+            "default": 0
+          },
+          "median_latency_ms": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Median Latency Ms"
+          }
+        },
+        "type": "object",
+        "required": [
+          "key",
+          "label",
+          "status"
+        ],
+        "title": "ReportRow"
+      },
       "ReviewIn": {
         "properties": {
           "action": {
@@ -4135,6 +4445,63 @@
           "type"
         ],
         "title": "ValidationError"
+      },
+      "Verdict": {
+        "properties": {
+          "winner": {
+            "type": "string",
+            "enum": [
+              "sys1",
+              "jev",
+              "inconclusive",
+              "none"
+            ],
+            "title": "Winner"
+          },
+          "diff": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Diff"
+          },
+          "ci_low": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ci Low"
+          },
+          "ci_high": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ci High"
+          },
+          "sentence": {
+            "type": "string",
+            "title": "Sentence"
+          }
+        },
+        "type": "object",
+        "required": [
+          "winner",
+          "sentence"
+        ],
+        "title": "Verdict"
       },
       "system1__decisions__router__FeedbackIn": {
         "properties": {

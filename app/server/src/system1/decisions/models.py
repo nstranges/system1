@@ -13,7 +13,7 @@ class Decision(Base):
     id: Mapped[str] = mapped_column(primary_key=True, default=new_id)
     org_id: Mapped[str] = mapped_column(index=True)
     project_id: Mapped[str] = mapped_column(ForeignKey("projects.id"), index=True)
-    source: Mapped[str]  # playground | api | agent
+    source: Mapped[str]  # playground | api | agent | eval
     lane: Mapped[str]  # jev | jev_labels | sys1
     model_reported: Mapped[str]
     state_json: Mapped[str | dict | list] = mapped_column(JSON)
@@ -45,4 +45,6 @@ class Feedback(Base):
     correct_label: Mapped[str | None] = mapped_column(default=None)
     is_test_item: Mapped[bool] = mapped_column(default=False)
     training_eligible: Mapped[bool] = mapped_column(default=False)
+    # Set once the correction has been copied into the examples, so a retrain never copies it twice.
+    copied_to_example: Mapped[bool] = mapped_column(default=False)
     created_at: Mapped[datetime] = mapped_column(default=now)

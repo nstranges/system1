@@ -571,6 +571,40 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/projects/{project_id}/training": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Train */
+        post: operations["train_api_projects__project_id__training_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/projects/{project_id}/report": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Report */
+        get: operations["get_report_api_projects__project_id__report_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/systemone": {
         parameters: {
             query?: never;
@@ -716,6 +750,15 @@ export interface components {
             result: {
                 [key: string]: unknown;
             };
+        };
+        /** Confusion */
+        Confusion: {
+            /** Gold */
+            gold: string;
+            /** Pred */
+            pred: string;
+            /** Count */
+            count: number;
         };
         /** ContextDocOut */
         ContextDocOut: {
@@ -1251,6 +1294,83 @@ export interface components {
             /** Default Lane */
             default_lane?: ("jev" | "sys1" | "auto") | null;
         };
+        /** Report */
+        Report: {
+            /** Available */
+            available: boolean;
+            /** Rows */
+            rows?: components["schemas"]["ReportRow"][];
+            verdict?: components["schemas"]["Verdict"] | null;
+            details?: components["schemas"]["ReportDetails"];
+            /**
+             * Is Preview
+             * @default false
+             */
+            is_preview: boolean;
+            /**
+             * Is Fixture
+             * @default false
+             */
+            is_fixture: boolean;
+            /** Test Set Version */
+            test_set_version?: number | null;
+            /**
+             * Too Few Test
+             * @default false
+             */
+            too_few_test: boolean;
+            /** Job Id */
+            job_id?: string | null;
+        };
+        /** ReportDetails */
+        ReportDetails: {
+            /** Per Bucket */
+            per_bucket?: {
+                [key: string]: {
+                    [key: string]: number;
+                };
+            };
+            /** Confusions */
+            confusions?: {
+                [key: string]: components["schemas"]["Confusion"][];
+            };
+            /** Test Per Bucket */
+            test_per_bucket?: {
+                [key: string]: number;
+            };
+        };
+        /** ReportRow */
+        ReportRow: {
+            /**
+             * Key
+             * @enum {string}
+             */
+            key: "sys1" | "jev" | "jev_labels" | "base";
+            /** Label */
+            label: string;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "ok" | "preview" | "unavailable" | "errored";
+            /** Message */
+            message?: string | null;
+            /** Accuracy */
+            accuracy?: number | null;
+            /** Ci Low */
+            ci_low?: number | null;
+            /** Ci High */
+            ci_high?: number | null;
+            /** N */
+            n?: number | null;
+            /**
+             * Errors
+             * @default 0
+             */
+            errors: number;
+            /** Median Latency Ms */
+            median_latency_ms?: number | null;
+        };
         /** ReviewIn */
         ReviewIn: {
             /**
@@ -1438,6 +1558,22 @@ export interface components {
             input?: unknown;
             /** Context */
             ctx?: Record<string, never>;
+        };
+        /** Verdict */
+        Verdict: {
+            /**
+             * Winner
+             * @enum {string}
+             */
+            winner: "sys1" | "jev" | "inconclusive" | "none";
+            /** Diff */
+            diff?: number | null;
+            /** Ci Low */
+            ci_low?: number | null;
+            /** Ci High */
+            ci_high?: number | null;
+            /** Sentence */
+            sentence: string;
         };
         /** FeedbackIn */
         system1__decisions__router__FeedbackIn: {
@@ -2673,6 +2809,68 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["DraftOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    train_api_projects__project_id__training_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["JobStarted"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_report_api_projects__project_id__report_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Report"];
                 };
             };
             /** @description Validation Error */

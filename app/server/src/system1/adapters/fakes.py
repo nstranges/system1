@@ -1,4 +1,5 @@
 import time
+import uuid
 from collections import deque
 from collections.abc import AsyncIterator, Callable
 from typing import Any
@@ -96,12 +97,14 @@ class PreviewTrainer:
         self._jobs: dict[str, dict[str, float]] = {}
 
     def start(self, dataset_ref: str, config: dict) -> TrainingJob:
-        job_id = f"preview-job-{len(self._jobs) + 1}"
+        job_id = f"preview-job-{uuid.uuid4().hex[:12]}"
         self._jobs[job_id] = {"started": self._clock(), "polls": 0}
         return TrainingJob(id=job_id, status="queued", message="Queued.")
 
     def status(self, job_id: str) -> TrainingJob:
-        job = self._jobs.setdefault(job_id, {"started": self._clock(), "polls": 0})
+        job = self._jobs.get(job_id)
+        if job is None:
+            return TrainingJob(id=job_id, status="failed", message="Unknown job.")
         job["polls"] += 1
         elapsed = self._clock() - job["started"]
         progress = elapsed / self._duration_s if self._duration_s > 0 else 1.0

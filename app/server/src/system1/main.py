@@ -27,6 +27,7 @@ from system1.jobs.router import router as jobs_router
 from system1.jobs.service import fail_unfinished_jobs
 from system1.projects.router import router as projects_router
 from system1.providers import Providers, build_providers, get_providers
+from system1.report.router import router as report_router
 
 
 class ConfigOut(BaseModel):
@@ -95,6 +96,7 @@ def create_app(
     api.include_router(generation_router)
     api.include_router(jobs_router)
     api.include_router(drafting_router)
+    api.include_router(report_router)
     app.include_router(api)
     app.include_router(public_router)
     return app

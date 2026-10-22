@@ -86,7 +86,7 @@ async def run_lane(
     project: Project,
     state: State,
     lane: Lane,
-    source: Literal["playground", "api", "agent"],
+    source: Literal["playground", "api", "agent", "eval"],
     *,
     policy_and_version: tuple[Policy, int] | None = None,
     dataset_row_id: str | None = None,

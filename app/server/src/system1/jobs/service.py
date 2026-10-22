@@ -38,6 +38,8 @@ class JobContext:
         self.result: dict | None = None
         # Shown when the job succeeds, e.g. to say it came up short.
         self.message: str | None = None
+        # Ends the job as this status instead of "succeeded", e.g. "preview" for a training run that made no model.
+        self.final_status: str | None = None
 
     def progress(self, value: float, stage: str | None = None) -> None:
         job = self.session.get(Job, self._job_id)
@@ -88,7 +90,7 @@ def _finish(session: Session, job_id: str, status: str, message: str | None, res
     job.message = message
     if result is not None:
         job.result_json = result
-    if status == "succeeded":
+    if status in ("succeeded", "preview"):
         job.progress = 1.0
     job.finished_at = now()
     session.commit()
@@ -109,7 +111,7 @@ async def run_job(session_factory: SessionFactory, job_id: str, work: JobWork) -
             except Exception as exc:  # noqa: BLE001 - job boundary: nothing awaits this task, so any failure must be recorded on the job
                 _finish(session, job_id, "failed", _failure_message(exc), ctx.result)
             else:
-                _finish(session, job_id, "succeeded", ctx.message, result)
+                _finish(session, job_id, ctx.final_status or "succeeded", ctx.message, result)
     except Exception:
         log.exception("job %s could not be recorded", job_id)
     finally:

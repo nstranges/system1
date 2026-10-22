@@ -7,6 +7,7 @@ from system1.auth.principal import Principal
 from system1.decisions.models import Decision, Feedback
 from system1.errors import ApiError, NotFound
 from system1.gateway.service import flagship_rows
+from system1.jobs.models import Job
 from system1.projects.models import Project, now
 from system1.projects.service import latest_policy
 
@@ -79,7 +80,13 @@ def inbox(session: Session, project: Project) -> list[Decision]:
 
 
 def training_pool_count(session: Session, project: Project) -> int:
+    """Eligible corrections made since the project's latest training job (of any status); all of them if it never trained."""
     stmt = select(func.count(func.distinct(Feedback.decision_id))).where(
         Feedback.project_id == project.id, Feedback.training_eligible.is_(True)
     )
+    last_training = session.scalar(
+        select(func.max(Job.created_at)).where(Job.project_id == project.id, Job.kind == "training")
+    )
+    if last_training is not None:
+        stmt = stmt.where(Feedback.created_at > last_training)
     return session.scalar(stmt) or 0
