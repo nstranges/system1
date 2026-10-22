@@ -57,7 +57,8 @@ def test_agent_set_rules_updates_policy_and_emits_canvas(client_for):
 
     # The canvas is re-sent after the tool changed it, and history replays for the UI.
     second_call = client.app.state.providers.llm.calls[1]["messages"]
-    assert second_call[-1]["role"] == "system" and "version 2" in second_call[-1]["content"]
+    assert second_call[-1]["role"] == "user"
+    assert "version 2" in second_call[-1]["content"][-1]["text"]
     history = client.get(f"/api/projects/{project_id}/agent/history").json()
     assert history[0] == {"type": "user", "text": "reword the first rule"}
     assert any(e["type"] == "canvas" for e in history)
@@ -115,3 +116,23 @@ def test_budget_exceeded_emits_error_event(client_for, monkeypatch):
     assert [e["type"] for e in events] == ["error", "done"]
     assert "budget" in events[0]["message"]
     assert client.app.state.providers.llm.calls == []
+
+
+def test_failed_message_leaves_history_valid_for_the_next_one(client_for):
+    from system1.contracts.decisions import ProviderError
+
+    class Boom:
+        def __iter__(self):
+            raise ProviderError("down")
+
+    client = client_for("org_a")
+    project_id = make_project(client)
+    client.app.state.providers.llm._script.extend([Boom(), text_turn("Back again.")])
+
+    first = send(client, project_id, "one")
+    assert [e["type"] for e in first] == ["error", "done"]
+    second = send(client, project_id, "two")
+    assert second[-1]["type"] == "done" and any(e["type"] == "text" for e in second)
+
+    messages = client.app.state.providers.llm.calls[1]["messages"]
+    assert [m["role"] for m in messages] == ["user", "assistant", "user"]

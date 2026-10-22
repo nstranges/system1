@@ -4,7 +4,7 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, Request
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, TypeAdapter
-from sqlalchemy import select
+from sqlalchemy import select, update
 from sqlalchemy.orm import Session
 
 from system1.agent.context import AgentContext, get_action_handler
@@ -99,11 +99,25 @@ async def confirm(
     handler = get_action_handler(action.kind)
     if handler is None:
         raise NotAvailable()
+    # Claim atomically so two concurrent confirms can't both start paid work.
+    claimed = session.execute(
+        update(PendingAction)
+        .where(PendingAction.id == action.id, PendingAction.status == "pending")
+        .values(status="confirmed")
+    )
+    session.commit()
+    if claimed.rowcount == 0:
+        raise AlreadyResolved()
     project = get_project(session, principal, project_id)
     settings: Settings = get_settings()
-    result = await handler(AgentContext(session, principal, providers, settings, project), action)
-    action.status = "confirmed"
-    session.commit()
+    try:
+        result = await handler(AgentContext(session, principal, providers, settings, project), action)
+    except Exception:
+        # Nothing ran, so let the user try again.
+        session.rollback()
+        session.execute(update(PendingAction).where(PendingAction.id == action.id).values(status="pending"))
+        session.commit()
+        raise
     return ConfirmOut(status="confirmed", result=result)
 
 

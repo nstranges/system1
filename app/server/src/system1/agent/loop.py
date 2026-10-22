@@ -1,3 +1,4 @@
+import logging
 from collections.abc import AsyncIterator
 
 import anthropic
@@ -22,6 +23,7 @@ from system1.errors import NotFound
 from system1.projects.service import latest_policy
 from system1.usage import BudgetExceeded, check_budget, record_usage
 
+log = logging.getLogger(__name__)
 MAX_TOOL_ROUNDS = 8
 
 
@@ -46,20 +48,18 @@ def load_messages(ctx: AgentContext) -> list[dict]:
     return [{"role": t.role, "content": t.api_content_json} for t in turns]
 
 
-def _canvas_turn(ctx: AgentContext) -> None:
+def _canvas_block(ctx: AgentContext) -> dict:
     try:
         policy, version = latest_policy(ctx.session, ctx.project)
     except NotFound:
         policy, version = None, None
-    message = canvas_message(policy, version, ctx.project.stage)
-    _append(ctx, "system", message["content"])
+    return canvas_message(policy, version, ctx.project.stage)
 
 
 async def _run(ctx: AgentContext, user_text: str) -> AsyncIterator[AgentEvent]:
     check_budget(ctx.session, ctx.principal.org_id)
-
-    _append(ctx, "user", user_text, [UserEvent(text=user_text)])
-    _canvas_turn(ctx)
+    # The canvas rides in the user message, so history only ever alternates user/assistant.
+    _append(ctx, "user", [{"type": "text", "text": user_text}, _canvas_block(ctx)], [UserEvent(text=user_text)])
     tools = tool_definitions()
     system = system_blocks(ctx.settings)
 
@@ -91,21 +91,51 @@ async def _run(ctx: AgentContext, user_text: str) -> AsyncIterator[AgentEvent]:
         _append(ctx, "assistant", complete.content, [TextEvent(delta=text)] if text else [])
         if not tool_uses:
             return
+        if any(isinstance(e, CanvasEvent | StageEvent) for e in events):
+            results.append(_canvas_block(ctx))
         _append(ctx, "user", results, events)
         for event in events:
             yield event
-        if any(isinstance(e, CanvasEvent | StageEvent) for e in events):
-            _canvas_turn(ctx)
+    yield ErrorEvent(message="I'm taking too long on that. Try asking in a smaller step.")
+
+
+def _repair(ctx: AgentContext) -> None:
+    """Leave the history valid for the next message whatever went wrong: every user turn gets an
+    assistant reply and every tool_use gets its tool_result."""
+    ctx.session.rollback()
+    last = ctx.session.scalars(
+        select(AgentTurn).where(AgentTurn.project_id == ctx.project.id).order_by(AgentTurn.seq.desc())
+    ).first()
+    if last is None:
+        return
+    if last.role == "user":
+        _append(ctx, "assistant", [{"type": "text", "text": "(That reply didn't go through.)"}])
+    elif last.role == "assistant" and isinstance(last.api_content_json, list):
+        uses = [b for b in last.api_content_json if b.get("type") == "tool_use"]
+        if uses:
+            errors = [
+                {"type": "tool_result", "tool_use_id": u["id"], "content": "Error: interrupted.", "is_error": True}
+                for u in uses
+            ]
+            _append(ctx, "user", errors)
+            _append(ctx, "assistant", [{"type": "text", "text": "(That reply didn't go through.)"}])
 
 
 async def run_agent_turn(ctx: AgentContext, user_text: str) -> AsyncIterator[AgentEvent]:
     try:
-        async for event in _run(ctx, user_text):
-            yield event
-    except BudgetExceeded as exc:
-        yield ErrorEvent(message=exc.message)
-    except ProviderError as exc:
-        yield ErrorEvent(message=exc.user_message)
-    except anthropic.APIError:
-        yield ErrorEvent(message="The AI assistant had a problem. Try again in a moment.")
+        try:
+            async for event in _run(ctx, user_text):
+                yield event
+        except BudgetExceeded as exc:
+            yield ErrorEvent(message=exc.message)
+        except ProviderError as exc:
+            yield ErrorEvent(message=exc.user_message)
+        except anthropic.APIError:
+            yield ErrorEvent(message="The AI assistant had a problem. Try again in a moment.")
+        except Exception:
+            log.exception("agent turn failed")
+            yield ErrorEvent(message="Something went wrong. Please try again.")
+    finally:
+        # Also runs on cancellation and GeneratorExit; the exception keeps propagating afterwards.
+        _repair(ctx)
     yield DoneEvent()

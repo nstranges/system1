@@ -20,9 +20,10 @@ def system_blocks(settings: Settings) -> list[dict]:
 
 
 def canvas_message(policy: Policy | None, version: int | None, stage: str) -> dict:
-    """The canvas as the user sees it now, injected as a mid-conversation system message."""
+    """The canvas as the user sees it now, injected as a text block."""
     if policy is None:
         body = "There is no policy yet. Set the options first, then the inputs and rules."
     else:
         body = f"Policy version {version}:\n{policy.model_dump_json(by_alias=True, indent=2)}"
-    return {"role": "system", "content": f"Current canvas (stage: {stage}).\n{body}"}
+    # A plain text block: it rides inside a user message so roles keep alternating user/assistant.
+    return {"type": "text", "text": f"[Current canvas, stage: {stage}]\n{body}"}
