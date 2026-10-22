@@ -33,7 +33,10 @@ Last updated: Oct 21, 2026. The current plan lives in the [product design](super
 | Team accounts and roles | Clerk organizations, so a team shares projects | After V1 | Oct 21 |
 | Billing | Per-decision pricing for hosted endpoints, with training included | After V1 | Oct 21 |
 | Customers' own TypeSafe keys | The production Jev lane runs on each customer's TypeSafe account | Needed before real customers (TypeSafe §2.3a) | Oct 21 |
-| TypeSafe partnership | A formal arrangement, if TypeSafe wants one | Depends on the email below | Oct 21 |
+| TypeSafe partnership | A formal arrangement, if TypeSafe wants one | Only matters if this becomes a real product | Oct 21 |
+| Real trainer adapter | Connect training to the product through the `Trainer` contract, so "Train my model" and Retrain work from the UI | After the training approach settles | Oct 21 |
+| Registry check before going live | A new model version replaces the live one only if it beats it on the same frozen test set (paired bootstrap) | Needs the real trainer adapter | Oct 21 |
+| Drift signals | Track the share of `auto` traffic falling back to Jev and the average top probability over time | After real traffic exists | Oct 21 |
 | API-generated data at scale | Thousands of examples per project through the Anthropic API | From phase 4 of the phase plan | Oct 20 |
 | Qwen3.5-2B as the base model | The backup if Laya's input window or option budget becomes the bottleneck | From phase 4 of the phase plan | Oct 20 |
 | Expansion use cases | Refunds, lead routing and expense checks for the same buyer | After the first customer | Oct 21 |
@@ -44,7 +47,6 @@ Last updated: Oct 21, 2026. The current plan lives in the [product design](super
 |---|---|---|---|
 | Nicholas reviews the four contracts | Dataset rows, decision provider, trainer and evaluation results are defined without him for now (product spec, "Contracts and modularity") | Nicholas | Oct 21 |
 | Confirm the sys1 serving contract with Nicholas | The app assumes Jev's request and response shape, behind the decision-provider adapter. If his server differs, we add one adapter class | Thomas | Oct 21 |
-| Email TypeSafe about the project | §2.3(b) "competing product" is an open exposure. Get their written OK before anything commercial | Thomas | Oct 21 |
 | Laya's real input window (512 or 2,048) | Sets how long tickets and option descriptions can be | Nicholas | Oct 20 |
 | Why our LoRA scores 0.658 against about 0.77 published | Needs explaining before we rely on the training pipeline | Nicholas | Oct 20 |
 | The rule-ID question (S5) | Keep it only if queue accuracy holds | Nicholas | Oct 21 |
@@ -63,4 +65,6 @@ Last updated: Oct 21, 2026. The current plan lives in the [product design](super
 
 ## Done or dropped
 
-Nothing yet.
+| Item | What happened | Date |
+|---|---|---|
+| Email TypeSafe about the project | Dropped. Thomas confirmed that using Jev in the product and the demo is fine | Oct 21 |
