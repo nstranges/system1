@@ -2,6 +2,7 @@ from collections.abc import AsyncIterator
 
 from anthropic import AsyncAnthropic
 
+from system1.contracts.decisions import ProviderError
 from system1.contracts.llm import T, TextDelta, TurnComplete
 
 # Opus 5.5 can refuse on safety classifiers; "default" lets the API re-run the request on the
@@ -11,9 +12,19 @@ _BETAS = ["server-side-fallback-2026-07-01"]
 
 class AnthropicLLM:
     def __init__(self, api_key: str | None, model: str, effort: str):
-        self._client = AsyncAnthropic(api_key=api_key)
+        self._api_key = api_key
+        self._client_instance: AsyncAnthropic | None = None
         self._model = model
         self._effort = effort
+
+    @property
+    def _client(self) -> AsyncAnthropic:
+        # Built on first use: the SDK raises at construction without a key, which must not stop the app starting.
+        if not self._api_key:
+            raise ProviderError("The AI assistant isn't configured on this server.")
+        if self._client_instance is None:
+            self._client_instance = AsyncAnthropic(api_key=self._api_key)
+        return self._client_instance
 
     async def stream_turn(
         self, *, system: list[dict], messages: list[dict], tools: list[dict]

@@ -2,6 +2,7 @@ import asyncio
 import time
 
 import httpx
+from pydantic import ValidationError
 
 from system1.contracts.decisions import DecisionRequest, DecisionResponse, ProviderError
 
@@ -13,6 +14,8 @@ class TypeSafeJevProvider:
     """Calls a Jev-compatible `POST {base_url}/v1/systemone` endpoint."""
 
     name = "jev"
+    label = "Jev"
+    requires_key = True
     not_configured = "Jev isn't configured on this server"
     busy = "Jev is busy right now. Try again in a moment."
 
@@ -53,17 +56,20 @@ class TypeSafeJevProvider:
                 await asyncio.sleep(self._backoff_base * 2**attempt)
         raise AssertionError("unreachable")  # the loop always returns or raises
 
-    requires_key = True
-
     def _parse(self, resp: httpx.Response, latency_ms: float) -> DecisionResponse:
         if resp.status_code == 422:
             raise ProviderError(_detail(resp), status=422)
+        if resp.status_code in (401, 403):
+            raise ProviderError(f"{self.label} rejected the API key. Check TYPESAFE_API_KEY.", status=resp.status_code)
         if resp.status_code >= 400:
-            raise ProviderError(f"{self.name} rejected the request ({resp.status_code}).", status=resp.status_code)
-        data = resp.json()
-        return DecisionResponse(
-            model=data["model"], answers=data["answers"], usage=data.get("usage"), latency_ms=latency_ms
-        )
+            raise ProviderError(f"{self.label} rejected the request ({resp.status_code}).", status=resp.status_code)
+        try:
+            data = resp.json()
+            return DecisionResponse(
+                model=data["model"], answers=data["answers"], usage=data.get("usage"), latency_ms=latency_ms
+            )
+        except (ValueError, KeyError, TypeError, ValidationError) as exc:
+            raise ProviderError(f"{self.label} returned an unexpected response.", status=resp.status_code) from exc
 
 
 def _detail(resp: httpx.Response) -> str:

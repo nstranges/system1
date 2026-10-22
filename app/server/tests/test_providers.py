@@ -101,6 +101,27 @@ async def test_jev_retries_exhausted_raises_busy_message():
     assert exc.value.retryable is True
 
 
+async def test_jev_malformed_200_raises_provider_error():
+    with pytest.raises(ProviderError) as exc:
+        await jev(lambda request: httpx.Response(200, json={"oops": 1})).decide(REQUEST)
+    assert exc.value.user_message == "Jev returned an unexpected response."
+
+
+async def test_anthropic_llm_without_key_starts_but_raises_provider_error():
+    from pydantic import BaseModel
+
+    from system1.config import Settings
+    from system1.providers import build_providers
+
+    class Out(BaseModel):
+        x: int
+
+    providers = build_providers(Settings(_env_file=None, anthropic_api_key=None))
+    with pytest.raises(ProviderError) as exc:
+        await providers.llm.structured(system="s", prompt="p", schema=Out)
+    assert exc.value.user_message == "The AI assistant isn't configured on this server."
+
+
 @pytest.mark.live
 @pytest.mark.skipif(not os.environ.get("LIVE"), reason="calls the real Jev API; set LIVE=1")
 async def test_jev_live_smoke():

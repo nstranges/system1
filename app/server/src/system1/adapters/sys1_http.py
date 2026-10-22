@@ -7,6 +7,7 @@ class HttpSys1Provider(TypeSafeJevProvider):
     """sys1 behind any Jev-compatible server (such as laya-serve); the key is optional."""
 
     name = "sys1"
+    label = "sys1"
     requires_key = False
     busy = "sys1 is busy right now. Try again in a moment."
 
