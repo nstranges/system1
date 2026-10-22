@@ -122,6 +122,30 @@ async def test_anthropic_llm_without_key_starts_but_raises_provider_error():
     assert exc.value.user_message == "The AI assistant isn't configured on this server."
 
 
+@pytest.mark.parametrize(("stop_reason", "parsed"), [("max_tokens", object()), ("end_turn", None)])
+async def test_anthropic_structured_cut_off_answer_is_a_retryable_provider_error(stop_reason, parsed):
+    from types import SimpleNamespace
+
+    from pydantic import BaseModel
+
+    from system1.adapters.anthropic_llm import AnthropicLLM
+
+    class Out(BaseModel):
+        x: int
+
+    async def parse(**kwargs):
+        return SimpleNamespace(
+            stop_reason=stop_reason, parsed_output=parsed, usage=SimpleNamespace(input_tokens=1, output_tokens=1)
+        )
+
+    llm = AnthropicLLM("key", "model", "low")
+    llm._client_instance = SimpleNamespace(beta=SimpleNamespace(messages=SimpleNamespace(parse=parse)))
+    with pytest.raises(ProviderError) as exc:
+        await llm.structured(system="s", prompt="p", schema=Out)
+    assert exc.value.retryable is True
+    assert exc.value.user_message == "The assistant's answer was cut off. Try again."
+
+
 @pytest.mark.live
 @pytest.mark.skipif(not os.environ.get("LIVE"), reason="calls the real Jev API; set LIVE=1")
 async def test_jev_live_smoke():

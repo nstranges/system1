@@ -1,8 +1,13 @@
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+from system1.adapters.fakes import FakeLLM
+from system1.config import get_settings
+from system1.contracts.decisions import ProviderError
 from system1.datasets import service as dataset_service
 from system1.datasets.service import NewExample
+from system1.domain.policy import Option, Policy
+from system1.drafting import service as drafting
 from system1.drafting.service import DraftBucket, DraftSpec
 from system1.projects import service as project_service
 from system1.usage import TokenUsage
@@ -55,8 +60,9 @@ def test_draft_from_examples_keeps_existing_keys(client_for):
     assert options["billing"]["name"] == "Billing"
     assert options["billing"]["covers"] == ["A charge or invoice looks wrong"]
     assert options["billing"]["example"] == "Hi"
-    assert body["policy"]["guidelines"] == ["Fraud wins over everything."]
-    assert body["policy"]["decision_question"] == "Which team handles this?"
+    # Hand-written guidelines and question stay; the draft only adds to them.
+    assert body["policy"]["guidelines"] == ["Keep me?", "Fraud wins over everything."]
+    assert body["policy"]["decision_question"] == "Where does it go?"
     assert body["notes"] == ["1 'shipping' example looks like billing."]
     assert body["issues"] == []
 
@@ -100,3 +106,85 @@ def test_draft_is_not_saved(client_for):
     assert res.status_code == 200, res.text
     assert "Refunds within 30 days." in client.app.state.providers.llm.calls[0]["prompt"]
     assert client.get(f"/api/projects/{pid}/policy").json() == before
+
+
+def _policy(n: int, question: str = "Where does it go?") -> Policy:
+    return Policy(decision_question=question, options=[Option(key=f"b{i}", name=f"Bucket {i}") for i in range(n)])
+
+
+def test_draft_over_the_bucket_limit_drops_new_buckets_and_notes_it():
+    spec = DraftSpec(buckets=[DraftBucket(key=k, name=k) for k in ("x", "y", "b3")])
+    policy, notes = drafting._to_policy(_policy(14), spec, "Triage")
+
+    assert [o.key for o in policy.options][:2] == ["x", "b3"]
+    assert len(policy.options) == 15
+    assert notes == ["Left out 1 suggested bucket: a decision can have at most 15."]
+
+
+def test_draft_keys_are_snake_case_and_unique():
+    spec = DraftSpec(
+        buckets=[
+            DraftBucket(key="Refund Request!", name="Refund request"),
+            DraftBucket(key="refund-request", name="Refund again"),
+            DraftBucket(key="9 lives", name="Nine"),
+            DraftBucket(key="", name="Refund request"),  # same name as an earlier new bucket: a duplicate
+        ]
+    )
+    policy, _ = drafting._to_policy(_policy(0), spec, "Triage")
+
+    assert [o.key for o in policy.options] == ["refund_request", "refund_request_2", "b_9_lives"]
+
+
+def test_draft_question_follows_the_draft_only_for_the_starter_question():
+    spec = DraftSpec(decision_question="Which team handles this?")
+    assert drafting._to_policy(_policy(0, "Triage"), spec, "Triage")[0].decision_question == "Which team handles this?"
+    assert drafting._to_policy(_policy(0, "Mine"), spec, "Triage")[0].decision_question == "Mine"
+
+
+def test_examples_are_sampled_per_label_in_id_order_and_truncated(client_for):
+    client = client_for("org_a")
+    pid = _project(client)
+    rows = [(f"billing {i:02d} " + "x" * 600, "billing") for i in range(15)] + [("one", "shipping")]
+    _add_examples(client, pid, rows)
+
+    with Session(client.app.state.engine) as session:
+        project = session.get(project_service.Project, pid)
+        picked = drafting.sample_examples(session, project)
+        first_ten = sorted(
+            session.scalars(select(drafting.Example).where(drafting.Example.label == "billing")), key=lambda e: e.id
+        )[:10]
+
+    assert picked["shipping"] == ["one"]
+    assert len(picked["billing"]) == 10
+    assert all(len(t) == drafting.EXAMPLE_CHARS for t in picked["billing"])
+    assert [t[:10] for t in picked["billing"]] == [e.input_json[:10] for e in first_ten]
+
+
+def test_draft_is_refused_when_the_budget_is_used_up(client_for, monkeypatch):
+    client = client_for("org_a", llm_script=[(_spec(), 10)])
+    pid = _project(client)
+    _add_examples(client, pid, [("Charged twice", "billing")])
+    monkeypatch.setattr(get_settings(), "org_daily_token_cap", 0)
+
+    res = client.post(f"/api/projects/{pid}/draft", json={"source": "examples"})
+
+    assert res.status_code == 429
+    assert client.app.state.providers.llm.calls == []
+
+
+def test_draft_provider_error_maps_to_a_gateway_error(client_for):
+    class Down(FakeLLM):
+        async def structured(self, **kwargs):
+            raise ProviderError("busy", retryable=True)
+
+    llm = Down([])
+    providers = client_for("org_a").app.state.providers
+    providers.llm = llm
+    client = client_for("org_a", providers=providers)
+    pid = _project(client)
+    _add_examples(client, pid, [("Charged twice", "billing")])
+
+    res = client.post(f"/api/projects/{pid}/draft", json={"source": "examples"})
+
+    assert res.status_code == 503
+    assert res.json()["detail"]["message"] == "busy"

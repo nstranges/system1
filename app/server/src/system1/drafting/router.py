@@ -36,6 +36,7 @@ async def draft(
     project_id: str, body: DraftIn, principal: PrincipalDep, session: SessionDep, providers: ProvidersDep
 ) -> DraftOut:
     project = get_project(session, principal, project_id)
+    service.require_source(session, project, body.source)
     check_budget(session, principal.org_id)
     make = service.draft_from_examples if body.source == "examples" else service.draft_from_context
     result = await make(session, providers.llm, project)

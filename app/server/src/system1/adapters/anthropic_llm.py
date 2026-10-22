@@ -61,6 +61,7 @@ class AnthropicLLM:
             betas=_BETAS,
             fallbacks="default",
         )
-        if response.parsed_output is None:
-            raise ValueError(f"The model returned no structured output (stop_reason={response.stop_reason}).")
+        # A truncated or empty answer is the provider's failure, not a bug: it maps to 502/503 like any other.
+        if response.stop_reason == "max_tokens" or response.parsed_output is None:
+            raise ProviderError("The assistant's answer was cut off. Try again.", retryable=True)
         return response.parsed_output, response.usage.input_tokens + response.usage.output_tokens

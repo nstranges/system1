@@ -8,7 +8,7 @@ from sqlalchemy.orm import Session
 from system1.context.models import ContextDoc
 from system1.context.service import context_text
 from system1.contracts.llm import LLM
-from system1.datasets.constants import MAX_GUIDELINE_CHARS
+from system1.datasets.constants import MAX_GUIDELINE_CHARS, MAX_GUIDELINES
 from system1.datasets.models import Example
 from system1.domain.policy import MAX_OPTIONS, Option, Policy
 from system1.errors import ApiError
@@ -26,6 +26,8 @@ MAX_QUESTION_CHARS = 300
 MAX_KEY_CHARS = 40
 MAX_NAME_CHARS = 80
 MAX_LINE_CHARS = 300
+# A full draft (15 buckets with lines and examples, guidelines and notes) can pass the default 4000.
+DRAFT_MAX_TOKENS = 8000
 
 
 class NoExamples(ApiError):
@@ -64,9 +66,10 @@ class Draft(BaseModel):
 
 _OUTPUT_RULES = (
     "Return buckets (each with a short snake_case key, a plain name, up to five short 'use this when...' lines and "
-    "an optional example input), up to 8 guidelines (one plain sentence each, most important first, under 300 "
+    "an optional example input), up to 8 NEW guidelines (one plain sentence each, most important first, under 300 "
     "characters), the decision as a short question, and up to 6 notes for the person reviewing the draft. "
-    "If a bucket already exists, reuse its key exactly. Never drop an existing bucket."
+    "If a bucket already exists, reuse its key exactly. Never drop an existing bucket. "
+    "The current guidelines are kept as they are: return only guidelines that add something new, never repeat one."
 )
 
 _EXAMPLES_SYSTEM = (
@@ -137,7 +140,7 @@ def _lines(items: list[str], limit: int, chars: int = MAX_LINE_CHARS) -> list[st
     return [t for t in (_squash(i, chars) for i in items) if t][:limit]
 
 
-def _to_policy(current: Policy, spec: DraftSpec) -> tuple[Policy, list[str]]:
+def _to_policy(current: Policy, spec: DraftSpec, starter_question: str) -> tuple[Policy, list[str]]:
     """Builds a policy from the model's draft without ever losing a bucket the current policy already has, since
     its examples and rules are tied to its key."""
     notes = _lines(spec.notes, MAX_DRAFT_NOTES)
@@ -147,13 +150,14 @@ def _to_policy(current: Policy, spec: DraftSpec) -> tuple[Policy, list[str]]:
     used: set[str] = set()
     # In the draft's order; the flag marks buckets the current policy doesn't have.
     drafted: list[tuple[Option, bool]] = []
+    new_names: set[str] = set()
 
     for bucket in spec.buckets:
         raw_key = bucket.key.strip()
         name = _squash(bucket.name, MAX_NAME_CHARS)
         existing = (
             by_key.get(raw_key)
-            or by_key.get(_sanitise_key(raw_key, set()))
+            or (by_key.get(_sanitise_key(raw_key, set())) if raw_key else None)
             or by_name.get(name.casefold())
             or by_name.get(raw_key.casefold())
         )
@@ -166,6 +170,9 @@ def _to_policy(current: Policy, spec: DraftSpec) -> tuple[Policy, list[str]]:
                 update = {"covers": covers or existing.covers, "example": example or existing.example}
                 drafted.append((existing.model_copy(update=update), False))
             continue
+        if name.casefold() in new_names:
+            continue
+        new_names.add(name.casefold())
         key = _sanitise_key(raw_key or name, taken)
         taken.add(key)
         drafted.append(
@@ -190,10 +197,27 @@ def _to_policy(current: Policy, spec: DraftSpec) -> tuple[Policy, list[str]]:
             f"a decision can have at most {MAX_OPTIONS}."
         )
 
-    question = _squash(spec.decision_question, MAX_QUESTION_CHARS) or current.decision_question
-    guidelines = _lines(spec.guidelines, MAX_DRAFT_GUIDELINES, MAX_GUIDELINE_CHARS) or current.guidelines
+    # Hand-written wording stays: the draft's question only replaces an empty one or the project-name starter.
+    question = current.decision_question
+    if not question.strip() or question == starter_question:
+        question = _squash(spec.decision_question, MAX_QUESTION_CHARS) or question
+    guidelines = list(current.guidelines)
+    present = {g.casefold() for g in guidelines}
+    for text in _lines(spec.guidelines, MAX_DRAFT_GUIDELINES, MAX_GUIDELINE_CHARS):
+        if text.casefold() not in present and len(guidelines) < MAX_GUIDELINES:
+            present.add(text.casefold())
+            guidelines.append(text)
     policy = current.model_copy(update={"options": options, "guidelines": guidelines, "decision_question": question})
     return policy, notes
+
+
+def require_source(session: Session, project: Project, source: str) -> None:
+    """Raises the 422 for a missing source, so a caller can check before spending budget."""
+    if source == "examples":
+        if not session.scalar(select(Example.id).where(Example.project_id == project.id).limit(1)):
+            raise NoExamples()
+    elif not session.scalar(select(ContextDoc.id).where(ContextDoc.project_id == project.id).limit(1)):
+        raise NoContext()
 
 
 async def draft_from_examples(session: Session, llm: LLM, project: Project) -> Draft:
@@ -209,8 +233,9 @@ async def draft_from_examples(session: Session, llm: LLM, project: Project) -> D
         system=_EXAMPLES_SYSTEM,
         prompt="Draft the buckets and guidelines for this decision.\n\n" + data_block("\n\n".join(parts)),
         schema=DraftSpec,
+        max_tokens=DRAFT_MAX_TOKENS,
     )
-    policy, notes = _to_policy(current, spec)
+    policy, notes = _to_policy(current, spec, project.name)
     return Draft(policy=policy, notes=notes, tokens=tokens)
 
 
@@ -227,6 +252,7 @@ async def draft_from_context(session: Session, llm: LLM, project: Project) -> Dr
             + data_block(f"{_describe_policy(current)}\n\nDocuments:\n{documents}")
         ),
         schema=DraftSpec,
+        max_tokens=DRAFT_MAX_TOKENS,
     )
-    policy, notes = _to_policy(current, spec)
+    policy, notes = _to_policy(current, spec, project.name)
     return Draft(policy=policy, notes=notes, tokens=tokens)
