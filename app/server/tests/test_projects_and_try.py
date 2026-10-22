@@ -73,6 +73,7 @@ def test_try_returns_both_jev_lanes_and_logs_not_for_training(client_for):
     assert {"jev", "jev_labels"} <= set(lanes)
     assert all(r["error"] is None and r["label"] for r in lanes.values())
     assert body["gold"] and body["rule_id"]
+    assert body["recorded"] and body["recorded_is_fixture"] is True
 
     with Session(client.app.state.engine) as session:
         rows = session.scalars(select(Decision)).all()

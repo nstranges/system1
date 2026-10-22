@@ -473,6 +473,11 @@ export interface components {
       recorded: {
         [key: string]: string
       }
+      /**
+       * Recorded Is Fixture
+       * @default false
+       */
+      recorded_is_fixture: boolean
     }
     /** ValidationError */
     ValidationError: {

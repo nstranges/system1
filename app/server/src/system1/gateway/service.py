@@ -39,6 +39,8 @@ class TryResult(BaseModel):
     rule_id: str | None = None
     # Predictions saved from an offline evaluation run, not live calls. The UI labels them "recorded".
     recorded: dict[str, str] = {}
+    # True while any recorded prediction comes from sample (fixture) numbers; the UI shows a banner then.
+    recorded_is_fixture: bool = False
 
 
 def _flagship(project: Project) -> Template | None:
@@ -172,16 +174,19 @@ async def try_input(
 
     template = _flagship(project)
     recorded: dict[str, str] = {}
+    recorded_is_fixture = False
     if template and template.flagship:
         flagship = template.flagship
         for run in EvalFilesSource(flagship.eval_dir, flagship.eval_models).runs():
             record = next((r for r in run.records if r.id == row.id), None)
             if record:
                 recorded[run.model_key] = record.pred
+                recorded_is_fixture = recorded_is_fixture or run.is_fixture
     key = next(iter(row.gold), None)
     return TryResult(
         results=list(results),
         gold=row.gold.get(key) if key else None,
         rule_id=row.metadata.get("rule_id"),
         recorded=recorded,
+        recorded_is_fixture=recorded_is_fixture,
     )

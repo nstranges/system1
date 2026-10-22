@@ -1283,6 +1283,11 @@
             "type": "object",
             "title": "Recorded",
             "default": {}
+          },
+          "recorded_is_fixture": {
+            "type": "boolean",
+            "title": "Recorded Is Fixture",
+            "default": false
           }
         },
         "type": "object",
