@@ -554,6 +554,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/projects/{project_id}/draft": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Draft */
+        post: operations["draft_api_projects__project_id__draft_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/systemone": {
         parameters: {
             query?: never;
@@ -774,6 +791,22 @@ export interface components {
              * @enum {string}
              */
             type: "done";
+        };
+        /** DraftIn */
+        DraftIn: {
+            /**
+             * Source
+             * @enum {string}
+             */
+            source: "examples" | "context";
+        };
+        /** DraftOut */
+        DraftOut: {
+            policy: components["schemas"]["Policy-Output"];
+            /** Notes */
+            notes: string[];
+            /** Issues */
+            issues: components["schemas"]["PolicyIssue"][];
         };
         /** ErrorEvent */
         ErrorEvent: {
@@ -2605,6 +2638,41 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["JobOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    draft_api_projects__project_id__draft_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DraftIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DraftOut"];
                 };
             };
             /** @description Validation Error */

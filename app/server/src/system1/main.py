@@ -17,6 +17,7 @@ from system1.context.router import router as context_router
 from system1.datasets.router import router as datasets_router
 from system1.db import init_db, make_engine
 from system1.decisions.router import router as decisions_router
+from system1.drafting.router import router as drafting_router
 from system1.errors import install_error_handlers
 from system1.gateway.router_app import router as gateway_router
 from system1.gateway.router_public import router as public_router
@@ -93,6 +94,7 @@ def create_app(
     api.include_router(agent_router)
     api.include_router(generation_router)
     api.include_router(jobs_router)
+    api.include_router(drafting_router)
     app.include_router(api)
     app.include_router(public_router)
     return app

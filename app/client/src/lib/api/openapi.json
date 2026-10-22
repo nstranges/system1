@@ -1683,6 +1683,55 @@
         }
       }
     },
+    "/api/projects/{project_id}/draft": {
+      "post": {
+        "summary": "Draft",
+        "operationId": "draft_api_projects__project_id__draft_post",
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Project Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DraftIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DraftOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/v1/systemone": {
       "post": {
         "summary": "Decide",
@@ -2310,6 +2359,51 @@
         },
         "type": "object",
         "title": "DoneEvent"
+      },
+      "DraftIn": {
+        "properties": {
+          "source": {
+            "type": "string",
+            "enum": [
+              "examples",
+              "context"
+            ],
+            "title": "Source"
+          }
+        },
+        "type": "object",
+        "required": [
+          "source"
+        ],
+        "title": "DraftIn"
+      },
+      "DraftOut": {
+        "properties": {
+          "policy": {
+            "$ref": "#/components/schemas/Policy-Output"
+          },
+          "notes": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Notes"
+          },
+          "issues": {
+            "items": {
+              "$ref": "#/components/schemas/PolicyIssue"
+            },
+            "type": "array",
+            "title": "Issues"
+          }
+        },
+        "type": "object",
+        "required": [
+          "policy",
+          "notes",
+          "issues"
+        ],
+        "title": "DraftOut"
       },
       "ErrorEvent": {
         "properties": {
