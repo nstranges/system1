@@ -22,7 +22,10 @@ class Settings(BaseSettings):
     jev_model: str = "jev-1.13.0"
 
     clerk_secret_key: str | None = None
-    client_origins: list[str] = ["http://localhost:5173"]
+    # Browser origins allowed by CORS (and, with clerk_enforce_azp, by the token's azp claim).
+    client_origins: list[str] = ["http://localhost:5173", "http://127.0.0.1:5173"]
+    # We authenticate with a Bearer header, not an ambient cookie, so azp is defence in depth. Enable in production.
+    clerk_enforce_azp: bool = False
 
     database_url: str = "sqlite:///app/server/.data/system1.db"
 

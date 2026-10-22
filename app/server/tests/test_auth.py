@@ -30,7 +30,8 @@ def test_api_without_token_returns_401():
     assert response.json()["detail"]["code"] == "unauthenticated"
 
 
-def test_clerk_verifier_accepts_only_session_tokens():
-    options = ClerkVerifier("sk_test_x", ["http://localhost:5173"]).options()
+@pytest.mark.parametrize("parties", [None, ["http://localhost:5173"]])
+def test_clerk_verifier_accepts_only_session_tokens(parties):
+    options = ClerkVerifier("sk_test_x", parties).options()
     assert options.accepts_token == ["session_token"]
-    assert options.authorized_parties == ["http://localhost:5173"]
+    assert options.authorized_parties == parties

@@ -36,7 +36,9 @@ def create_app(
     app.state.engine = engine or make_engine(settings.database_url)
     if verifier is None:
         if settings.clerk_secret_key:
-            verifier = ClerkVerifier(settings.clerk_secret_key, settings.client_origins)
+            verifier = ClerkVerifier(
+                settings.clerk_secret_key, settings.client_origins if settings.clerk_enforce_azp else None
+            )
         else:
             log.warning("CLERK_SECRET_KEY is not set: every /api request except /api/health will be rejected")
             verifier = RejectAllVerifier()
