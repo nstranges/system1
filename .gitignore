@@ -224,3 +224,8 @@ unsloth_env/
 lora/
 # Prompts for separate agent sessions, kept local
 agent-prompts/
+
+# Product build
+app/server/.data/
+app/client/dist/
+app/client/node_modules/

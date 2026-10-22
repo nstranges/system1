@@ -102,7 +102,7 @@ These apply to the product code in `app/`. The phase 1 scripts at the repo root 
 
 ## Environment and commands
 
-- **Commands:** run `make help` for the list (setup, `check-env`, `jev-check`, `train`, `eval-laya`, `eval-lora`, `eval-jev`). The evals take `LIMIT=50` for smoke tests.
+- **Commands:** run `make help` for the list (setup, `check-env`, `jev-check`, `train`, `eval-laya`, `eval-lora`, `eval-jev`). The evals take `LIMIT=50` for smoke tests. Product commands (delegating to `app/Makefile`): `dev` (server and client), `format`, `check`, `docs` (OpenAPI schema and client types), `verify` (check, test, client build). `test` runs the phase 1 tests and then the server tests.
 - **Environment:** a local `.venv` created with `uv`. Override the location with `VENV=...`. Training and the Laya evals run remotely on Modal. `eval_jev.py` runs locally.
 - **Secrets:** stored in `.env`, which is gitignored. The template is `.env.example`, and `make env` copies it. Never print or commit `.env`.
 - **Agent prompts:** prompts for separate agent sessions live in `agent-prompts/`, which is gitignored and local only. `readback-check.md` is the blind read-back check, which Thomas runs in a fresh session.
