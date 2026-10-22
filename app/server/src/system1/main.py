@@ -7,6 +7,7 @@ from fastapi import APIRouter, Depends, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import Engine
 
+from system1.agent.router import router as agent_router
 from system1.auth.deps import get_principal
 from system1.auth.principal import Principal
 from system1.auth.verifier import ClerkVerifier, RejectAllVerifier, TokenVerifier
@@ -66,6 +67,7 @@ def create_app(
 
     api.include_router(projects_router)
     api.include_router(gateway_router)
+    api.include_router(agent_router)
     app.include_router(api)
     return app
 

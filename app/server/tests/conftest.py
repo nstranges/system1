@@ -17,7 +17,11 @@ def client_for() -> Iterator[Callable[..., TestClient]]:
     stack = ExitStack()
 
     def build(
-        org_id: str | None, user_id: str = "user_1", providers: Providers | None = None, engine=None
+        org_id: str | None,
+        user_id: str = "user_1",
+        providers: Providers | None = None,
+        engine=None,
+        llm_script: list | None = None,
     ) -> TestClient:
         claims: dict = {"sub": user_id}
         if org_id is None:
@@ -27,7 +31,7 @@ def client_for() -> Iterator[Callable[..., TestClient]]:
         providers = providers or Providers(
             jev=FakeDecisionProvider("jev", "jev-fake"),
             sys1=FakeDecisionProvider("sys1", "sys1-fake"),
-            llm=FakeLLM([]),
+            llm=FakeLLM(llm_script or []),
             trainer=FakeTrainer(),
         )
         app = create_app(
