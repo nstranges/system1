@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react"
-import { Link, Navigate, useParams } from "react-router"
+import { Link, Navigate, useNavigate, useParams } from "react-router"
 import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
 import {
@@ -17,25 +17,13 @@ import {
   type PolicyOut,
   type Project,
 } from "@/lib/api/types"
+import { AgentPanel } from "@/features/agent/AgentPanel"
+import type { CanvasEvent } from "@/features/agent/useAgent"
 import { RulesCanvas } from "@/features/rules/RulesCanvas"
 import { TryCanvas } from "@/features/playground/TryCanvas"
 import { UseCaseCanvas } from "@/features/usecase/UseCaseCanvas"
 import { StageRail } from "./StageRail"
 import { STAGES, isStage, type StageId } from "./stages"
-
-function AgentPlaceholder() {
-  return (
-    <Card className="h-full min-h-48">
-      <CardHeader>
-        <CardTitle>Assistant</CardTitle>
-        <CardDescription>
-          Your assistant arrives in the next step.
-        </CardDescription>
-      </CardHeader>
-      <CardContent />
-    </Card>
-  )
-}
 
 function ComingSoon({ stage }: { stage: StageId }) {
   const label = STAGES.find((s) => s.id === stage)?.label
@@ -58,6 +46,7 @@ export function WorkspacePage() {
 function Workspace() {
   const { projectId, stage } = useParams()
   const api = useApi()
+  const navigate = useNavigate()
   const [project, setProject] = useState<Project | null>(null)
   const [policy, setPolicy] = useState<PolicyOut | null>(null)
   const [rulesDraft, setRulesDraft] = useState<PolicyInput | null>(null)
@@ -99,6 +88,35 @@ function Workspace() {
         : d,
     )
   }, [])
+
+  // The assistant's rules replace the saved policy and discard any unsaved
+  // rules draft: merging a half-edited draft into agent changes would be
+  // guesswork. The saved draft was never written, so the PUT path (which
+  // strips the client-only `_new` marker) is unaffected. The event carries no
+  // validation issues, so they are refetched.
+  const onCanvas = useCallback(
+    (e: CanvasEvent) => {
+      setPolicy({ policy: e.policy, version: e.version, issues: [] })
+      setRulesDraft(null)
+      toast("Your assistant updated the rules")
+      if (!projectId) return
+      void api
+        .GET("/api/projects/{project_id}/policy", {
+          params: { path: { project_id: projectId } },
+        })
+        .then(({ data }) => {
+          if (data && data.version >= e.version) setPolicy(data)
+        })
+    },
+    [api, projectId],
+  )
+
+  const onStage = useCallback(
+    (next: string) => {
+      if (isStage(next)) navigate(`/app/p/${projectId}/${next}`)
+    },
+    [navigate, projectId],
+  )
 
   useEffect(() => {
     void load()
@@ -188,7 +206,7 @@ function Workspace() {
 
       <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,2fr)]">
         <div className={panel === "assistant" ? "" : "hidden lg:block"}>
-          <AgentPlaceholder />
+          <AgentPanel project={project} onCanvas={onCanvas} onStage={onStage} />
         </div>
         <div
           className={panel === "canvas" ? "min-w-0" : "hidden min-w-0 lg:block"}

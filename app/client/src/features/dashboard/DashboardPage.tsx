@@ -48,7 +48,11 @@ export function DashboardPage() {
     void load()
   }, [load])
 
-  async function create(name: string, templateId: string | null) {
+  async function create(
+    name: string,
+    templateId: string | null,
+    firstMessage?: string,
+  ) {
     setBusy(true)
     const { data, error } = await api.POST("/api/projects", {
       body: { name, template_id: templateId },
@@ -59,7 +63,9 @@ export function DashboardPage() {
       return
     }
     // A template arrives with rules to look at; a blank project starts at the use case.
-    navigate(`/app/p/${data.id}/${templateId ? "rules" : "usecase"}`)
+    navigate(`/app/p/${data.id}/${templateId ? "rules" : "usecase"}`, {
+      state: firstMessage ? { firstMessage } : null,
+    })
   }
 
   if (loadError) {
@@ -146,7 +152,7 @@ export function DashboardPage() {
         mode={dialog}
         busy={busy}
         onClose={() => setDialog(null)}
-        onCreate={(name) => void create(name, null)}
+        onCreate={(name, first) => void create(name, null, first)}
       />
     </div>
   )
