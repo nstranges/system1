@@ -1,7 +1,8 @@
 import { Check } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { cn } from "@/lib/utils"
-import type { LaneResult } from "@/lib/api/types"
+import { FeedbackControls } from "@/features/improve/FeedbackControls"
+import type { LaneResult, PolicyOption } from "@/lib/api/types"
 
 export const LANE_NAMES: Record<string, string> = {
   jev_labels: "Jev, options only",
@@ -22,11 +23,14 @@ export function ResultRow({
   result,
   recordedAnswer,
   gold,
+  options,
 }: {
   result: LaneResult
   // Offline prediction for this sample; shown in place of a live answer.
   recordedAnswer?: string
   gold: string | null
+  // Without options (e.g. in the assistant's chat card) no feedback buttons show.
+  options?: PolicyOption[]
 }) {
   const isModel = result.lane === "sys1"
   const answer = recordedAnswer ?? result.label
@@ -91,6 +95,14 @@ export function ResultRow({
               ? `${Math.round(result.latency_ms)} ms`
               : ""}
           </div>
+          {result.decision_id && options && !recordedAnswer && (
+            <div className="col-span-2 sm:col-span-4">
+              <FeedbackControls
+                decisionId={result.decision_id}
+                options={options}
+              />
+            </div>
+          )}
         </>
       )}
     </div>

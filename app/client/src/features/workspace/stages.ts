@@ -5,7 +5,7 @@ export const STAGES = [
   { id: "examples", label: "Examples", ready: false },
   { id: "train", label: "Train", ready: false },
   { id: "use", label: "Use", ready: true },
-  { id: "improve", label: "Improve", ready: false },
+  { id: "improve", label: "Improve", ready: true },
 ] as const
 
 export type StageId = (typeof STAGES)[number]["id"]

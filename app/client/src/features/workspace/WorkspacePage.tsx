@@ -25,6 +25,7 @@ import {
 } from "@/lib/api/types"
 import { AgentPanel } from "@/features/agent/AgentPanel"
 import type { CanvasEvent } from "@/features/agent/useAgent"
+import { ImproveCanvas } from "@/features/improve/ImproveCanvas"
 import { RulesCanvas } from "@/features/rules/RulesCanvas"
 import { TryCanvas } from "@/features/playground/TryCanvas"
 import { UseCanvas } from "@/features/use/UseCanvas"
@@ -187,6 +188,8 @@ function Workspace() {
       <TryCanvas project={project} policy={policy} />
     ) : stage === "use" ? (
       <UseCanvas project={project} onProject={setProject} />
+    ) : stage === "improve" ? (
+      <ImproveCanvas project={project} policy={policy} />
     ) : (
       <ComingSoon stage={stage} />
     )

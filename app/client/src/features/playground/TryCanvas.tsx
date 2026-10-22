@@ -178,6 +178,7 @@ export function TryCanvas({
               key={r.lane}
               result={r}
               gold={result.gold ?? null}
+              options={policy.policy.options}
               recordedAnswer={r.lane === "sys1" ? sys1Recorded : undefined}
             />
           ))}
