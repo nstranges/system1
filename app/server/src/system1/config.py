@@ -36,7 +36,7 @@ class Settings(BaseSettings):
     sys1_model: str = "sys1"
     trainer: Literal["none", "fake"] = "none"
 
-    agent_model: str = "claude-opus-5-5"
+    agent_model: str = "claude-sonnet-5-5"
     agent_effort: str = "medium"
 
     org_daily_token_cap: int = 3_000_000

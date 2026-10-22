@@ -36,7 +36,7 @@
   - A decision has 2 to 15 options. Option keys are `snake_case` and unique.
   - Inputs larger than `MAX_INPUT_CHARS = 6000` are rejected with a clear message.
 - **Agent:**
-  - The model is `claude-opus-5-5`, with `output_config.effort` set to `medium`.
+  - The model is `claude-sonnet-5-5` for now (switch back to `claude-opus-5-5` with AGENT_MODEL), with `output_config.effort` set to `medium`.
   - Load the `claude-api` skill before writing any Anthropic code, and enable server-side refusal fallbacks (`fallbacks: "default"` with its beta header, as the skill specifies).
 - **Spending:** generating examples and training happen only after the user clicks a confirmation card. Per-organization daily token cap: `ORG_DAILY_TOKEN_CAP = 3_000_000`.
 - **No model-written code runs on the server.** Rules are data, evaluated by the rules engine.
@@ -78,7 +78,7 @@
     - Clerk and origins: `clerk_secret_key: str | None`, `client_origins: list[str] = ["http://localhost:5173"]`.
     - Storage: `database_url = "sqlite:///app/server/.data/system1.db"`.
     - Provider switches: `llm_provider: Literal["anthropic","fake"] = "anthropic"`, `jev_provider: Literal["typesafe","fake"] = "typesafe"`, `sys1_provider: Literal["none","http","fake"] = "none"`, `sys1_base_url: str | None`, `sys1_model = "sys1"`, `trainer: Literal["none","fake"] = "none"`.
-    - Agent: `agent_model = "claude-opus-5-5"`, `agent_effort = "medium"`.
+    - Agent: `agent_model = "claude-sonnet-5-5"`, `agent_effort = "medium"`.
     - Limits: `org_daily_token_cap = 3_000_000`, `max_input_chars = 6000`, `auto_threshold = 0.8`, `est_cost_per_example_usd = 0.02`.
     - Paths: `playbook_path = ".claude/skills/system1-onboard/playbook.md"` and `static_dir: str | None` (the built client, used when deployed).
   - `python -m system1.openapi_dump <out.json>` writes `create_app().openapi()`.
