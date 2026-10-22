@@ -9,6 +9,7 @@ import {
   type PolicyOut,
   type Project,
 } from "@/lib/api/types"
+import { describeIssue, describeOptionCount } from "./issueText"
 import { unmark } from "./newRow"
 import { InputsPanel } from "./InputsPanel"
 import { OptionsPanel } from "./OptionsPanel"
@@ -29,25 +30,50 @@ function tidy(policy: PolicyInput): PolicyInput {
   }
 }
 
-export function IssueList({ issues }: { issues: PolicyIssue[] }) {
+export function IssueList({
+  issues,
+  policy,
+  title = "Fix these before you save or try it out",
+}: {
+  issues: PolicyIssue[]
+  policy: PolicyInput
+  title?: string
+}) {
   if (issues.length === 0) return null
   return (
     <div
       role="alert"
       className="rounded-lg border border-destructive/40 bg-destructive/5 p-3 text-sm"
     >
-      <p className="font-medium text-destructive">
-        Fix these before you save or try it out
-      </p>
+      <p className="font-medium text-destructive">{title}</p>
       <ul className="mt-1 list-disc space-y-0.5 pl-5">
-        {issues.map((i, n) => (
-          <li key={n}>
-            {i.path ? (
-              <span className="font-mono text-xs">{i.path}: </span>
-            ) : null}
-            {i.message}
-          </li>
-        ))}
+        {issues.map((issue, n) => {
+          const view = describeIssue(issue, policy)
+          const text = describeOptionCount(issue) ?? view.text
+          return (
+            <li key={n}>
+              {view.target ? (
+                <button
+                  type="button"
+                  className="text-left underline-offset-2 hover:underline"
+                  onClick={() => {
+                    const el = document.getElementById(view.target!)
+                    el?.scrollIntoView({ behavior: "smooth", block: "center" })
+                    el?.classList.add("ring-2", "ring-destructive")
+                    setTimeout(
+                      () => el?.classList.remove("ring-2", "ring-destructive"),
+                      2000,
+                    )
+                  }}
+                >
+                  {text}
+                </button>
+              ) : (
+                text
+              )}
+            </li>
+          )
+        })}
       </ul>
     </div>
   )
@@ -120,7 +146,7 @@ export function RulesCanvas({
           </Button>
         </div>
       </div>
-      <IssueList issues={issues} />
+      <IssueList issues={issues} policy={draft} />
       <InputsPanel policy={draft} onChange={change} />
       <OptionsPanel policy={draft} onChange={change} />
       <RulesPanel policy={draft} onChange={change} />

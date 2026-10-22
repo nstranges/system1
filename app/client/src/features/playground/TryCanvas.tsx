@@ -121,7 +121,13 @@ export function TryCanvas({
         )}
       </div>
 
-      {hasIssues && <IssueList issues={policy.issues} />}
+      {hasIssues && (
+        <IssueList
+          issues={policy.issues}
+          policy={policy.policy}
+          title="Fix your rules before trying it out"
+        />
+      )}
 
       <Textarea
         rows={6}

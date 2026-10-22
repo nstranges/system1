@@ -57,7 +57,11 @@ export function OptionsPanel({
       </div>
       <div className="grid gap-3 md:grid-cols-2">
         {options.map((o, i) => (
-          <div key={i} className="space-y-2 rounded-lg border p-3">
+          <div
+            id={`option-${i}`}
+            key={i}
+            className="space-y-2 rounded-lg border p-3"
+          >
             <div className="flex items-end gap-2">
               <div className="flex-1">
                 <FieldLabel>Name</FieldLabel>

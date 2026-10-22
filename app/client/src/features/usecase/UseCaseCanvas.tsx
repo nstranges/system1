@@ -107,7 +107,7 @@ export function UseCaseCanvas({
           placeholder="For example: Which queue should handle this ticket?"
         />
       </label>
-      <IssueList issues={issues} />
+      <IssueList issues={issues} policy={policy.policy} />
       <Button
         disabled={!dirty || saving || !name.trim() || !question.trim()}
         onClick={() => void save()}

@@ -52,7 +52,11 @@ export function RulesPanel({
       </div>
       <ol className="space-y-2">
         {rules.map((r, i) => (
-          <li key={r.id + i} className="flex gap-2 rounded-lg border p-3">
+          <li
+            id={`rule-${i}`}
+            key={r.id + i}
+            className="flex gap-2 rounded-lg border p-3"
+          >
             <div className="flex flex-col items-center gap-1">
               <span className="text-xs font-medium text-muted-foreground">
                 {i + 1}

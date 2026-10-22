@@ -2,6 +2,16 @@ import { Plus, X } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import type { InputField, PolicyInput } from "@/lib/api/types"
+import { useState } from "react"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
+import { rulesUsingInput } from "./issueText"
 import { isNew, markNew } from "./newRow"
 import { FieldLabel, NativeSelect } from "./fields"
 
@@ -28,6 +38,10 @@ export function InputsPanel({
   onChange: (next: PolicyInput) => void
 }) {
   const inputs = policy.inputs ?? []
+  const [blocked, setBlocked] = useState<{
+    label: string
+    rules: string[]
+  } | null>(null)
   const set = (i: number, patch: Partial<InputField>) =>
     onChange({
       ...policy,
@@ -67,7 +81,7 @@ export function InputsPanel({
       </div>
       <div className="space-y-2">
         {inputs.map((f, i) => (
-          <div key={i} className="rounded-lg border p-3">
+          <div id={`input-${i}`} key={i} className="rounded-lg border p-3">
             <div className="grid gap-2 sm:grid-cols-[1fr_1fr_auto]">
               <div>
                 <FieldLabel>Name</FieldLabel>
@@ -102,12 +116,20 @@ export function InputsPanel({
                   size="icon"
                   variant="ghost"
                   aria-label={`Remove ${f.label || "fact"}`}
-                  onClick={() =>
+                  onClick={() => {
+                    const users = rulesUsingInput(policy, f.key)
+                    if (f.key && users.length > 0) {
+                      setBlocked({
+                        label: f.label || f.key,
+                        rules: users.map((r) => r.id),
+                      })
+                      return
+                    }
                     onChange({
                       ...policy,
                       inputs: inputs.filter((_, j) => j !== i),
                     })
-                  }
+                  }}
                 >
                   <X />
                 </Button>
@@ -139,6 +161,25 @@ export function InputsPanel({
           </div>
         ))}
       </div>
+      <Dialog
+        open={blocked !== null}
+        onOpenChange={(o) => !o && setBlocked(null)}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Can't remove "{blocked?.label}" yet</DialogTitle>
+            <DialogDescription>
+              "{blocked?.label}" is used by{" "}
+              {blocked?.rules.length === 1 ? "rule" : "rules"}{" "}
+              {blocked?.rules.join(", ")}. Edit or delete{" "}
+              {blocked?.rules.length === 1 ? "that rule" : "those rules"} first.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button onClick={() => setBlocked(null)}>Got it</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </section>
   )
 }
