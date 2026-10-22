@@ -1,0 +1,1416 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "system1",
+    "version": "0.1.0"
+  },
+  "paths": {
+    "/api/health": {
+      "get": {
+        "summary": "Health",
+        "operationId": "health_api_health_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": {
+                    "type": "string"
+                  },
+                  "type": "object",
+                  "title": "Response Health Api Health Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/me": {
+      "get": {
+        "summary": "Me",
+        "operationId": "me_api_me_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Principal"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/templates": {
+      "get": {
+        "summary": "Templates",
+        "operationId": "templates_api_templates_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/TemplateOut"
+                  },
+                  "type": "array",
+                  "title": "Response Templates Api Templates Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/projects": {
+      "get": {
+        "summary": "List Projects",
+        "operationId": "list_projects_api_projects_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/ProjectOut"
+                  },
+                  "type": "array",
+                  "title": "Response List Projects Api Projects Get"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Create Project",
+        "operationId": "create_project_api_projects_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProjectCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProjectOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/projects/{project_id}": {
+      "get": {
+        "summary": "Get Project",
+        "operationId": "get_project_api_projects__project_id__get",
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Project Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProjectOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "summary": "Patch Project",
+        "operationId": "patch_project_api_projects__project_id__patch",
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Project Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProjectPatch"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProjectOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "summary": "Delete Project",
+        "operationId": "delete_project_api_projects__project_id__delete",
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Project Id"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/projects/{project_id}/policy": {
+      "get": {
+        "summary": "Get Policy",
+        "operationId": "get_policy_api_projects__project_id__policy_get",
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Project Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PolicyOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "summary": "Put Policy",
+        "operationId": "put_policy_api_projects__project_id__policy_put",
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Project Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PolicyIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PolicyOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/projects/{project_id}/samples": {
+      "get": {
+        "summary": "Samples",
+        "operationId": "samples_api_projects__project_id__samples_get",
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Project Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/SampleOut"
+                  },
+                  "title": "Response Samples Api Projects  Project Id  Samples Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/projects/{project_id}/try": {
+      "post": {
+        "summary": "Try It",
+        "operationId": "try_it_api_projects__project_id__try_post",
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Project Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TryIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TryResult"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "AllOf-Input": {
+        "properties": {
+          "all": {
+            "items": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/Leaf"
+                },
+                {
+                  "$ref": "#/components/schemas/AllOf-Input"
+                },
+                {
+                  "$ref": "#/components/schemas/AnyOf-Input"
+                },
+                {
+                  "$ref": "#/components/schemas/NotOf-Input"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "All"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "all"
+        ],
+        "title": "AllOf"
+      },
+      "AllOf-Output": {
+        "properties": {
+          "all": {
+            "items": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/Leaf"
+                },
+                {
+                  "$ref": "#/components/schemas/AllOf-Output"
+                },
+                {
+                  "$ref": "#/components/schemas/AnyOf-Output"
+                },
+                {
+                  "$ref": "#/components/schemas/NotOf-Output"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "All"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "all"
+        ],
+        "title": "AllOf"
+      },
+      "AnyOf-Input": {
+        "properties": {
+          "any": {
+            "items": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/Leaf"
+                },
+                {
+                  "$ref": "#/components/schemas/AllOf-Input"
+                },
+                {
+                  "$ref": "#/components/schemas/AnyOf-Input"
+                },
+                {
+                  "$ref": "#/components/schemas/NotOf-Input"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Any"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "any"
+        ],
+        "title": "AnyOf"
+      },
+      "AnyOf-Output": {
+        "properties": {
+          "any": {
+            "items": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/Leaf"
+                },
+                {
+                  "$ref": "#/components/schemas/AllOf-Output"
+                },
+                {
+                  "$ref": "#/components/schemas/AnyOf-Output"
+                },
+                {
+                  "$ref": "#/components/schemas/NotOf-Output"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Any"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "any"
+        ],
+        "title": "AnyOf"
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "type": "array",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "title": "HTTPValidationError"
+      },
+      "InputField": {
+        "properties": {
+          "key": {
+            "type": "string",
+            "title": "Key"
+          },
+          "label": {
+            "type": "string",
+            "title": "Label"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "enum",
+              "int",
+              "float",
+              "bool",
+              "text"
+            ],
+            "title": "Type"
+          },
+          "values": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Values"
+          },
+          "nullable": {
+            "type": "boolean",
+            "title": "Nullable",
+            "default": true
+          },
+          "description": {
+            "type": "string",
+            "title": "Description",
+            "default": ""
+          }
+        },
+        "type": "object",
+        "required": [
+          "key",
+          "label",
+          "type"
+        ],
+        "title": "InputField"
+      },
+      "LaneResult": {
+        "properties": {
+          "lane": {
+            "type": "string",
+            "enum": [
+              "jev",
+              "jev_labels",
+              "sys1"
+            ],
+            "title": "Lane"
+          },
+          "label": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Label"
+          },
+          "probabilities": {
+            "additionalProperties": {
+              "type": "number"
+            },
+            "type": "object",
+            "title": "Probabilities",
+            "default": {}
+          },
+          "model": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Model"
+          },
+          "latency_ms": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Latency Ms"
+          },
+          "decision_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Decision Id"
+          },
+          "error": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error"
+          }
+        },
+        "type": "object",
+        "required": [
+          "lane"
+        ],
+        "title": "LaneResult"
+      },
+      "Leaf": {
+        "properties": {
+          "field": {
+            "type": "string",
+            "title": "Field"
+          },
+          "op": {
+            "type": "string",
+            "enum": [
+              "eq",
+              "ne",
+              "gt",
+              "gte",
+              "lt",
+              "lte",
+              "in",
+              "is_null"
+            ],
+            "title": "Op"
+          },
+          "value": {
+            "title": "Value"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "field",
+          "op"
+        ],
+        "title": "Leaf"
+      },
+      "NotOf-Input": {
+        "properties": {
+          "not": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Leaf"
+              },
+              {
+                "$ref": "#/components/schemas/AllOf-Input"
+              },
+              {
+                "$ref": "#/components/schemas/AnyOf-Input"
+              },
+              {
+                "$ref": "#/components/schemas/NotOf-Input"
+              }
+            ],
+            "title": "Not"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "not"
+        ],
+        "title": "NotOf"
+      },
+      "NotOf-Output": {
+        "properties": {
+          "not": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Leaf"
+              },
+              {
+                "$ref": "#/components/schemas/AllOf-Output"
+              },
+              {
+                "$ref": "#/components/schemas/AnyOf-Output"
+              },
+              {
+                "$ref": "#/components/schemas/NotOf-Output"
+              }
+            ],
+            "title": "Not"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "not"
+        ],
+        "title": "NotOf"
+      },
+      "Option": {
+        "properties": {
+          "key": {
+            "type": "string",
+            "title": "Key"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "covers": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Covers"
+          },
+          "excludes": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Excludes"
+          },
+          "example": {
+            "type": "string",
+            "title": "Example",
+            "default": ""
+          }
+        },
+        "type": "object",
+        "required": [
+          "key",
+          "name"
+        ],
+        "title": "Option"
+      },
+      "Policy-Input": {
+        "properties": {
+          "decision_question": {
+            "type": "string",
+            "title": "Decision Question"
+          },
+          "question_key": {
+            "type": "string",
+            "title": "Question Key",
+            "default": "decision"
+          },
+          "inputs": {
+            "items": {
+              "$ref": "#/components/schemas/InputField"
+            },
+            "type": "array",
+            "title": "Inputs"
+          },
+          "options": {
+            "items": {
+              "$ref": "#/components/schemas/Option"
+            },
+            "type": "array",
+            "title": "Options"
+          },
+          "rules": {
+            "items": {
+              "$ref": "#/components/schemas/Rule-Input"
+            },
+            "type": "array",
+            "title": "Rules"
+          }
+        },
+        "type": "object",
+        "required": [
+          "decision_question",
+          "options"
+        ],
+        "title": "Policy"
+      },
+      "Policy-Output": {
+        "properties": {
+          "decision_question": {
+            "type": "string",
+            "title": "Decision Question"
+          },
+          "question_key": {
+            "type": "string",
+            "title": "Question Key",
+            "default": "decision"
+          },
+          "inputs": {
+            "items": {
+              "$ref": "#/components/schemas/InputField"
+            },
+            "type": "array",
+            "title": "Inputs"
+          },
+          "options": {
+            "items": {
+              "$ref": "#/components/schemas/Option"
+            },
+            "type": "array",
+            "title": "Options"
+          },
+          "rules": {
+            "items": {
+              "$ref": "#/components/schemas/Rule-Output"
+            },
+            "type": "array",
+            "title": "Rules"
+          }
+        },
+        "type": "object",
+        "required": [
+          "decision_question",
+          "options"
+        ],
+        "title": "Policy"
+      },
+      "PolicyIn": {
+        "properties": {
+          "policy": {
+            "$ref": "#/components/schemas/Policy-Input"
+          }
+        },
+        "type": "object",
+        "required": [
+          "policy"
+        ],
+        "title": "PolicyIn"
+      },
+      "PolicyIssue": {
+        "properties": {
+          "path": {
+            "type": "string",
+            "title": "Path"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message"
+          }
+        },
+        "type": "object",
+        "required": [
+          "path",
+          "message"
+        ],
+        "title": "PolicyIssue"
+      },
+      "PolicyOut": {
+        "properties": {
+          "policy": {
+            "$ref": "#/components/schemas/Policy-Output"
+          },
+          "version": {
+            "type": "integer",
+            "title": "Version"
+          },
+          "issues": {
+            "items": {
+              "$ref": "#/components/schemas/PolicyIssue"
+            },
+            "type": "array",
+            "title": "Issues"
+          }
+        },
+        "type": "object",
+        "required": [
+          "policy",
+          "version",
+          "issues"
+        ],
+        "title": "PolicyOut"
+      },
+      "Principal": {
+        "properties": {
+          "user_id": {
+            "type": "string",
+            "title": "User Id"
+          },
+          "org_id": {
+            "type": "string",
+            "title": "Org Id"
+          },
+          "org_role": {
+            "type": "string",
+            "title": "Org Role"
+          },
+          "org_slug": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Org Slug"
+          }
+        },
+        "type": "object",
+        "required": [
+          "user_id",
+          "org_id",
+          "org_role",
+          "org_slug"
+        ],
+        "title": "Principal"
+      },
+      "ProjectCreate": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "template_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Template Id"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name"
+        ],
+        "title": "ProjectCreate"
+      },
+      "ProjectOut": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "template_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Template Id"
+          },
+          "stage": {
+            "type": "string",
+            "title": "Stage"
+          },
+          "default_lane": {
+            "type": "string",
+            "title": "Default Lane"
+          },
+          "live_model_label": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Live Model Label"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "description",
+          "template_id",
+          "stage",
+          "default_lane",
+          "live_model_label",
+          "created_at"
+        ],
+        "title": "ProjectOut"
+      },
+      "ProjectPatch": {
+        "properties": {
+          "name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "default_lane": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "jev",
+                  "sys1",
+                  "auto"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Default Lane"
+          }
+        },
+        "type": "object",
+        "title": "ProjectPatch"
+      },
+      "Rule-Input": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "text": {
+            "type": "string",
+            "title": "Text"
+          },
+          "label": {
+            "type": "string",
+            "title": "Label"
+          },
+          "when": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Leaf"
+              },
+              {
+                "$ref": "#/components/schemas/AllOf-Input"
+              },
+              {
+                "$ref": "#/components/schemas/AnyOf-Input"
+              },
+              {
+                "$ref": "#/components/schemas/NotOf-Input"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "When"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "text",
+          "label"
+        ],
+        "title": "Rule"
+      },
+      "Rule-Output": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "text": {
+            "type": "string",
+            "title": "Text"
+          },
+          "label": {
+            "type": "string",
+            "title": "Label"
+          },
+          "when": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Leaf"
+              },
+              {
+                "$ref": "#/components/schemas/AllOf-Output"
+              },
+              {
+                "$ref": "#/components/schemas/AnyOf-Output"
+              },
+              {
+                "$ref": "#/components/schemas/NotOf-Output"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "When"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "text",
+          "label"
+        ],
+        "title": "Rule"
+      },
+      "SampleOut": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "state": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "items": {},
+                "type": "array"
+              }
+            ],
+            "title": "State"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "state"
+        ],
+        "title": "SampleOut"
+      },
+      "TemplateOut": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "summary": {
+            "type": "string",
+            "title": "Summary"
+          },
+          "fit": {
+            "type": "string",
+            "title": "Fit"
+          },
+          "fit_reasons": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Fit Reasons"
+          },
+          "sample_inputs": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Sample Inputs"
+          },
+          "flagship": {
+            "type": "boolean",
+            "title": "Flagship"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "summary",
+          "fit",
+          "fit_reasons",
+          "sample_inputs",
+          "flagship"
+        ],
+        "title": "TemplateOut"
+      },
+      "TryIn": {
+        "properties": {
+          "text": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Text"
+          },
+          "sample_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sample Id"
+          }
+        },
+        "type": "object",
+        "title": "TryIn"
+      },
+      "TryResult": {
+        "properties": {
+          "results": {
+            "items": {
+              "$ref": "#/components/schemas/LaneResult"
+            },
+            "type": "array",
+            "title": "Results"
+          },
+          "gold": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Gold"
+          },
+          "rule_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rule Id"
+          },
+          "recorded": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "type": "object",
+            "title": "Recorded",
+            "default": {}
+          }
+        },
+        "type": "object",
+        "required": [
+          "results"
+        ],
+        "title": "TryResult"
+      },
+      "ValidationError": {
+        "properties": {
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Location"
+          },
+          "msg": {
+            "type": "string",
+            "title": "Message"
+          },
+          "type": {
+            "type": "string",
+            "title": "Error Type"
+          },
+          "input": {
+            "title": "Input"
+          },
+          "ctx": {
+            "type": "object",
+            "title": "Context"
+          }
+        },
+        "type": "object",
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError"
+      }
+    }
+  }
+}
