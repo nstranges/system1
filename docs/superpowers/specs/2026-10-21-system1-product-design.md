@@ -574,7 +574,7 @@ Any step that isn't live is labelled as such in the video.
 
 ## Build approach: blocks and gates
 
-Claude builds in blocks on the `product-design` branch, checked out in its own worktree so phase 1 work on `main` isn't disturbed. Every task has an automated check. Thomas comes in only at gates, where a person has to decide something or an account is needed. Each gate takes about 10–20 minutes and comes with a short report and screenshots. This is the high-level plan. The detailed implementation plan gets written with Thomas in a separate session before Block A starts.
+Claude builds in blocks on the `product-design` branch, in the main checkout (no separate worktree). Phase 1 data work happens in the same checkout, so its outputs get committed separately from app code, which keeps them easy to bring into `main` on their own. Every task has an automated check. Thomas comes in only at gates, where a person has to decide something or an account is needed. Each gate takes about 10–20 minutes and comes with a short report and screenshots. This is the high-level plan. The detailed implementation plan gets written with Thomas in a separate session before Block A starts.
 
 | Gate | When | What Thomas does | Time |
 |---|---|---|---|
