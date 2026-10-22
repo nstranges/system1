@@ -31,14 +31,17 @@ def normalize(qtype, result):
     return str(result["answer"]), result["probabilities"]
 
 @app.function(image = image.add_local_python_source("eval_common"), gpu = "L4", timeout = 60 * 60 * 2)
-def evaluate(limit: int = 0):
+def evaluate(limit: int = 0, rows = None):
     """Predict every test row with the untrained Laya model and score it against gold."""
     from eval_common import make_record
 
     model, tokenizer = model_config()
-    test = load_dataset("LocalLLaMA/typed-decisions", "all", split = "test")
-    if limit:
-        test = test.select(range(min(limit, len(test))))
+    if rows is not None:
+        test = rows
+    else:
+        test = load_dataset("LocalLLaMA/typed-decisions", "all", split = "test")
+        if limit:
+            test = test.select(range(min(limit, len(test))))
     tqdm.write(f"Evaluating laya on {len(test)} test rows")
 
     records = []
@@ -54,10 +57,11 @@ def evaluate(limit: int = 0):
     return records, len(test)
 
 @app.local_entrypoint()
-def main(limit: int = 0):
+def main(limit: int = 0, data: str = "", variant: str = "terse"):
     """Run the baseline eval remotely and write results/laya_*."""
-    from eval_common import report
+    from eval_common import load_test_rows, report, result_name
 
-    records, rows = evaluate.remote(limit)
+    rows = load_test_rows(data, variant, limit) if data else None
+    records, rows = evaluate.remote(limit, rows)
     records.sort(key = lambda r: (r["id"], r["question"]))
-    report("laya", records, {"version": "convaiinnovations/laya (untrained)", "rows": rows})
+    report(result_name("laya", data, variant), records, {"version": "convaiinnovations/laya (untrained)", "rows": rows})

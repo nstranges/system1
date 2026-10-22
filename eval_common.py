@@ -11,6 +11,26 @@ from pathlib import Path
 ECE_BINS = 10
 RESULTS_DIR = Path("results")
 
+def load_test_rows(path, variant, limit = 0):
+    """Test-split rows of a build_dataset.py parquet as {id, state, questions, gold} dicts.
+
+    `variant` picks the question set (terse or policy); the other splits are never returned.
+    """
+    import pandas as pd
+
+    df = pd.read_parquet(path)
+    df = df[df["split"] == "test"]
+    if limit:
+        df = df.head(limit)
+    return [
+        {"id": r["id"], "state": r["state"], "questions": r[f"questions_{variant}"], "gold": r["gold"]}
+        for r in df.to_dict("records")
+    ]
+
+def result_name(name, data, variant):
+    """Result file prefix: parquet runs get the variant so they don't overwrite typed-decisions results."""
+    return f"{name}_{variant}" if data else name
+
 def make_record(row_id, question, qtype, probs, gold_label, pred = None):
     """Build one scored record from label probabilities and the gold label.
 

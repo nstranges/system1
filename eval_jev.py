@@ -16,9 +16,17 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 import requests
 from datasets import load_dataset
 
-from eval_common import make_record, report
+from eval_common import load_test_rows, make_record, report, result_name
 
 API_URL = "https://api.typesafe.ai/v1/systemone"
+
+def load_env(path = ".env"):
+    """Export KEY=value lines from .env without overriding variables already set."""
+    if os.path.exists(path):
+        for line in open(path):
+            key, sep, value = line.strip().partition("=")
+            if sep and not key.startswith("#"):
+                os.environ.setdefault(key.strip(), value.strip())
 
 def build_request(row, model):
     """Turn a dataset row into an API payload."""
@@ -67,12 +75,20 @@ def main():
     parser.add_argument("--model", default = "jev-latest")
     parser.add_argument("--limit", type = int, default = None, help = "only evaluate the first N rows")
     parser.add_argument("--workers", type = int, default = 8)
+    parser.add_argument("--data", default = "", help = "build_dataset.py parquet; its test split replaces typed-decisions")
+    parser.add_argument("--variant", default = "terse", help = "question set for --data: terse or policy")
     args = parser.parse_args()
 
-    api_key = os.environ["TYPESAFE_API_KEY"]
-    test = load_dataset("LocalLLaMA/typed-decisions", "all", split = "test")
-    if args.limit:
-        test = test.select(range(min(args.limit, len(test))))
+    load_env()
+    api_key = os.environ.get("TYPESAFE_API_KEY")
+    if not api_key:
+        raise SystemExit("TYPESAFE_API_KEY is not set. Add it to .env or export it.")
+    if args.data:
+        test = load_test_rows(args.data, args.variant, args.limit or 0)
+    else:
+        test = load_dataset("LocalLLaMA/typed-decisions", "all", split = "test")
+        if args.limit:
+            test = test.select(range(min(args.limit, len(test))))
     print(f"Evaluating {args.model} on {len(test)} test rows")
 
     records, versions, failed = [], set(), 0
@@ -91,7 +107,7 @@ def main():
                 print(f"{i}/{len(test)} rows done")
 
     records.sort(key = lambda r: (r["id"], r["question"]))
-    report("jev", records, {"version": ",".join(sorted(versions)), "rows": len(test), "failed_rows": failed})
+    report(result_name("jev", args.data, args.variant), records, {"version": ",".join(sorted(versions)), "rows": len(test), "failed_rows": failed})
 
 if __name__ == "__main__":
     main()

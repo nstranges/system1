@@ -224,3 +224,4 @@ unsloth_env/
 lora/
 # Prompts for separate agent sessions, kept local
 agent-prompts/
+merged/
