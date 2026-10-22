@@ -1,6 +1,7 @@
 import { ClerkProvider } from "@clerk/react"
 import { shadcn } from "@clerk/themes"
 import { useNavigate } from "react-router"
+import { ErrorBoundary } from "@/components/layout/ErrorBoundary"
 import { AppRoutes } from "@/app/routes"
 
 const publishableKey = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY
@@ -31,7 +32,9 @@ export function RootLayout() {
       taskUrls={{ "choose-organization": "/session-tasks/choose-organization" }}
       appearance={{ theme: shadcn }}
     >
-      <AppRoutes />
+      <ErrorBoundary>
+        <AppRoutes />
+      </ErrorBoundary>
     </ClerkProvider>
   )
 }

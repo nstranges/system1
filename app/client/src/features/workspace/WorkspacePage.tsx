@@ -59,6 +59,7 @@ function Workspace() {
   const [policy, setPolicy] = useState<PolicyOut | null>(null)
   const [rulesDraft, setRulesDraft] = useState<PolicyInput | null>(null)
   const [missing, setMissing] = useState(false)
+  const [loadError, setLoadError] = useState<string | null>(null)
   const location = useLocation()
   // A new blank project opens on the assistant, which is about to speak.
   const [panel, setPanel] = useState<"assistant" | "canvas">(
@@ -69,23 +70,29 @@ function Workspace() {
 
   const load = useCallback(async () => {
     if (!projectId) return
-    const [p, pol] = await Promise.all([
-      api.GET("/api/projects/{project_id}", {
-        params: { path: { project_id: projectId } },
-      }),
-      api.GET("/api/projects/{project_id}/policy", {
-        params: { path: { project_id: projectId } },
-      }),
-    ])
-    if (p.response.status === 404) {
-      setMissing(true)
-      return
+    setLoadError(null)
+    try {
+      const [p, pol] = await Promise.all([
+        api.GET("/api/projects/{project_id}", {
+          params: { path: { project_id: projectId } },
+        }),
+        api.GET("/api/projects/{project_id}/policy", {
+          params: { path: { project_id: projectId } },
+        }),
+      ])
+      if (p.response.status === 404) {
+        setMissing(true)
+        return
+      }
+      if (p.data && pol.data) {
+        setProject(p.data)
+        setPolicy(pol.data)
+      } else {
+        setLoadError(readProblem(p.error ?? pol.error).message)
+      }
+    } catch {
+      setLoadError("We couldn't reach the server.")
     }
-    if (p.data) setProject(p.data)
-    else toast.error(readProblem(p.error).message)
-    if (pol.data) setPolicy(pol.data)
-    else if (pol.response.status !== 404)
-      toast.error(readProblem(pol.error).message)
   }, [api, projectId])
 
   // A saved policy becomes the new base: unsaved rules edits stay, but the
@@ -160,6 +167,19 @@ function Workspace() {
           <Button nativeButton={false} render={<Link to="/app" />}>
             Back to projects
           </Button>
+        </CardContent>
+      </Card>
+    )
+  }
+  if (loadError) {
+    return (
+      <Card className="mx-auto max-w-md">
+        <CardHeader>
+          <CardTitle>We couldn't open this project</CardTitle>
+          <CardDescription>{loadError}</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Button onClick={() => void load()}>Retry</Button>
         </CardContent>
       </Card>
     )

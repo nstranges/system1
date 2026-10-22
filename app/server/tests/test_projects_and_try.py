@@ -90,3 +90,22 @@ def test_try_rejects_oversized_input_with_limit_message(client_for):
     detail = res.json()["detail"]
     assert detail["code"] == "input_too_long"
     assert detail["message"] == "This input is 6001 characters. The limit is 6000."
+
+
+def test_blank_project_gets_an_unfinished_starter_policy(client_for):
+    client = client_for("org_a")
+    project_id = client.post("/api/projects", json={"name": "My decision"}).json()["id"]
+
+    res = client.get(f"/api/projects/{project_id}/policy")
+    assert res.status_code == 200
+    body = res.json()
+    assert body["version"] == 1
+    assert body["policy"]["options"] == [] and body["policy"]["decision_question"] == "My decision"
+    assert body["issues"]
+
+    valid = {
+        "decision_question": "Q?",
+        "options": [{"key": "a", "name": "A"}, {"key": "b", "name": "B"}],
+    }
+    put = client.put(f"/api/projects/{project_id}/policy", json={"policy": valid})
+    assert put.status_code == 200 and put.json()["version"] == 2

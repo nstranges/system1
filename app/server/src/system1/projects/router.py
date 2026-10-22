@@ -82,6 +82,7 @@ def delete_project(project_id: str, principal: PrincipalDep, session: SessionDep
 @router.get("/projects/{project_id}/policy")
 def get_policy(project_id: str, principal: PrincipalDep, session: SessionDep) -> PolicyOut:
     project = service.get_project(session, principal, project_id)
+    service.ensure_policy(session, principal, project)
     policy, version = service.current_policy(session, principal, project)
     return PolicyOut(policy=policy, version=version, issues=validate_policy(policy))
 

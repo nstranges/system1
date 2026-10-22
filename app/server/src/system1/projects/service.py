@@ -18,6 +18,23 @@ def _add_version(session: Session, project_id: str, version: int, policy: Policy
     )
 
 
+def _starter_policy(name: str) -> Policy:
+    # Intentionally invalid (no options yet): the canvases show it as "not finished" and Try stays blocked.
+    return Policy(decision_question=name, question_key="decision", inputs=[], options=[], rules=[])
+
+
+def ensure_policy(session: Session, principal: Principal, project: Project) -> None:
+    """Gives a project created before starter policies existed its version 1."""
+    if project.org_id != principal.org_id:
+        raise NotFound("Project not found.")
+    has_any = session.scalar(
+        select(func.count()).select_from(PolicyVersion).where(PolicyVersion.project_id == project.id)
+    )
+    if not has_any:
+        _add_version(session, project.id, 1, _starter_policy(project.name), principal.user_id)
+        session.commit()
+
+
 def create_project(
     session: Session, principal: Principal, name: str, template_id: str | None = None, description: str | None = None
 ) -> Project:
@@ -36,8 +53,7 @@ def create_project(
     )
     session.add(project)
     session.flush()
-    if template is not None:
-        _add_version(session, project.id, 1, template.policy, principal.user_id)
+    _add_version(session, project.id, 1, template.policy if template else _starter_policy(name), principal.user_id)
     session.commit()
     return project
 

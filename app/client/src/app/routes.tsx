@@ -1,4 +1,5 @@
 import { Route, Routes } from "react-router"
+import { ErrorBoundary } from "@/components/layout/ErrorBoundary"
 import { AppShell } from "@/components/layout/AppShell"
 import { RequireOrg } from "@/components/layout/RequireOrg"
 import { ChooseOrganizationPage } from "@/features/auth/ChooseOrganizationPage"
@@ -28,7 +29,14 @@ export function AppRoutes() {
         }
       >
         <Route index element={<DashboardPage />} />
-        <Route path="p/:projectId/:stage" element={<WorkspacePage />} />
+        <Route
+          path="p/:projectId/:stage"
+          element={
+            <ErrorBoundary>
+              <WorkspacePage />
+            </ErrorBoundary>
+          }
+        />
         <Route path="team/*" element={<TeamPage />} />
       </Route>
     </Routes>
