@@ -1,11 +1,12 @@
 import json
 
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from system1.agent.models import AgentTurn, PendingAction
 from system1.config import get_settings
 from system1.contracts.llm import TextDelta, TurnComplete
+from system1.jobs.models import Job
 
 FLAGSHIP = "tallyfern-triage"
 
@@ -98,8 +99,8 @@ def test_request_dataset_creates_pending_action_not_job(client_for):
         actions = session.scalars(select(PendingAction)).all()
         assert [(a.kind, a.status) for a in actions] == [("dataset", "pending")]
 
-    res = client.post(f"/api/projects/{project_id}/actions/{confirm['action_id']}/confirm")
-    assert res.status_code == 409 and res.json()["detail"]["code"] == "not_available"
+    with Session(client.app.state.engine) as session:
+        assert session.scalar(select(func.count()).select_from(Job)) == 0  # proposing starts nothing
     assert client.post(f"/api/projects/{project_id}/actions/{confirm['action_id']}/cancel").status_code == 200
     with Session(client.app.state.engine) as session:
         assert session.scalars(select(PendingAction.status)).one() == "cancelled"

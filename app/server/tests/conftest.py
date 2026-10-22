@@ -7,6 +7,7 @@ from fastapi.testclient import TestClient
 from system1.adapters.fakes import FakeDecisionProvider, FakeLLM, FakeTrainer
 from system1.auth.verifier import FakeVerifier
 from system1.db import make_engine
+from system1.generation.simple import SimpleGenerator
 from system1.main import create_app
 from system1.providers import Providers
 
@@ -28,12 +29,15 @@ def client_for() -> Iterator[Callable[..., TestClient]]:
             claims["sts"] = "pending"
         else:
             claims["o"] = {"id": org_id, "rol": "admin", "slg": org_id}
-        providers = providers or Providers(
-            jev=FakeDecisionProvider("jev", "jev-fake"),
-            sys1=FakeDecisionProvider("sys1", "sys1-fake"),
-            llm=FakeLLM(llm_script or []),
-            trainer=FakeTrainer(),
-        )
+        if providers is None:
+            llm = FakeLLM(llm_script or [])
+            providers = Providers(
+                jev=FakeDecisionProvider("jev", "jev-fake"),
+                sys1=FakeDecisionProvider("sys1", "sys1-fake"),
+                llm=llm,
+                trainer=FakeTrainer(),
+                generator=SimpleGenerator(llm),
+            )
         app = create_app(
             verifier=FakeVerifier(claims), engine=engine or make_engine("sqlite:///:memory:"), providers=providers
         )

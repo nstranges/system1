@@ -9,8 +9,10 @@ from system1.adapters.jev_typesafe import TypeSafeJevProvider
 from system1.adapters.sys1_http import HttpSys1Provider
 from system1.config import Settings
 from system1.contracts.decisions import DecisionProvider
+from system1.contracts.generation import ExampleGenerator
 from system1.contracts.llm import LLM
 from system1.contracts.training import Trainer
+from system1.generation.simple import SimpleGenerator
 
 
 @dataclass
@@ -19,6 +21,7 @@ class Providers:
     sys1: DecisionProvider | None
     llm: LLM
     trainer: Trainer
+    generator: ExampleGenerator
 
 
 def build_providers(settings: Settings) -> Providers:
@@ -44,7 +47,7 @@ def build_providers(settings: Settings) -> Providers:
         "none": UnavailableTrainer,
     }
     trainer = trainers[settings.trainer]()
-    return Providers(jev=jev, sys1=sys1, llm=llm, trainer=trainer)
+    return Providers(jev=jev, sys1=sys1, llm=llm, trainer=trainer, generator=SimpleGenerator(llm))
 
 
 def get_providers(request: Request) -> Providers:

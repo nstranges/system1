@@ -9,6 +9,7 @@ from system1.domain.policy import Policy, validate_policy
 from system1.errors import ApiError, NotFound, PolicyInvalid
 from system1.gateway.keys import ApiKey
 from system1.ingest.models import StagedUpload
+from system1.jobs.models import Job
 from system1.projects.models import PolicyVersion, Project
 from system1.templates.catalog import get_template
 
@@ -87,6 +88,7 @@ def delete_project(session: Session, principal: Principal, project_id: str) -> N
     session.execute(delete(ContextDoc).where(ContextDoc.project_id == project.id))
     session.execute(delete(Example).where(Example.project_id == project.id))
     session.execute(delete(StagedUpload).where(StagedUpload.project_id == project.id))
+    session.execute(delete(Job).where(Job.project_id == project.id))
     session.execute(delete(PolicyVersion).where(PolicyVersion.project_id == project.id))
     session.delete(project)
     session.commit()

@@ -41,6 +41,7 @@ def init_db(engine: Engine) -> None:
     from system1.decisions import models as decision_models  # noqa: F401
     from system1.gateway import keys  # noqa: F401
     from system1.ingest import models as ingest_models  # noqa: F401
+    from system1.jobs import models as job_models  # noqa: F401
     from system1.projects import models as project_models  # noqa: F401
 
     Base.metadata.create_all(engine)

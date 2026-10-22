@@ -4,6 +4,7 @@ from sqlalchemy.orm import Session
 from system1.adapters.fakes import FakeDecisionProvider, FakeLLM, FakeTrainer
 from system1.contracts.decisions import ChoiceAnswer, DecisionRequest, DecisionResponse
 from system1.decisions.models import Decision, Feedback
+from system1.generation.simple import SimpleGenerator
 from system1.providers import Providers
 
 FLAGSHIP = "tallyfern-triage"
@@ -109,7 +110,11 @@ def test_key_for_project_a_cannot_decide_for_project_b(client_for):
 
 def test_auto_falls_back_to_jev_and_flags_review_when_sys1_unsure(client_for):
     providers = Providers(
-        jev=FakeDecisionProvider("jev", "jev-fake"), sys1=UnsureSys1(), llm=FakeLLM([]), trainer=FakeTrainer()
+        jev=FakeDecisionProvider("jev", "jev-fake"),
+        sys1=UnsureSys1(),
+        llm=FakeLLM([]),
+        trainer=FakeTrainer(),
+        generator=SimpleGenerator(FakeLLM([])),
     )
     client = client_for("org_a", providers=providers)
     _, key = _project_and_key(client, default_lane="auto")
@@ -145,7 +150,11 @@ def test_feedback_for_another_projects_or_orgs_decision_gets_404(client_for):
 
 def test_explicit_sys1_without_provider_gets_503(client_for):
     providers = Providers(
-        jev=FakeDecisionProvider("jev", "jev-fake"), sys1=None, llm=FakeLLM([]), trainer=FakeTrainer()
+        jev=FakeDecisionProvider("jev", "jev-fake"),
+        sys1=None,
+        llm=FakeLLM([]),
+        trainer=FakeTrainer(),
+        generator=SimpleGenerator(FakeLLM([])),
     )
     client = client_for("org_a", providers=providers)
     _, key = _project_and_key(client)
