@@ -1,6 +1,6 @@
 import time
 from collections import deque
-from collections.abc import AsyncIterator
+from collections.abc import AsyncIterator, Callable
 from typing import Any
 
 from pydantic import BaseModel
@@ -78,6 +78,37 @@ class FakeTrainer:
         return TrainingJob(
             id=job_id, status="succeeded", message="Done.", adapter_ref=f"fake-adapter/{job_id}", metrics={"loss": 0.1}
         )
+
+
+class PreviewTrainer:
+    """Plays a short, believable training run that ends as `preview`, never as a real model.
+
+    Progress depends on elapsed time (so a page that polls sees stages move); the first poll
+    always reports `running` so callers never skip straight to the end.
+    """
+
+    message = "Real training connects soon."
+    _STAGES = (("preparing", 0.25), ("learning", 0.6), ("checking", 0.85), ("testing", 1.0))
+
+    def __init__(self, duration_s: float = 20.0, clock: Callable[[], float] = time.monotonic) -> None:
+        self._duration_s = duration_s
+        self._clock = clock
+        self._jobs: dict[str, dict[str, float]] = {}
+
+    def start(self, dataset_ref: str, config: dict) -> TrainingJob:
+        job_id = f"preview-job-{len(self._jobs) + 1}"
+        self._jobs[job_id] = {"started": self._clock(), "polls": 0}
+        return TrainingJob(id=job_id, status="queued", message="Queued.")
+
+    def status(self, job_id: str) -> TrainingJob:
+        job = self._jobs.setdefault(job_id, {"started": self._clock(), "polls": 0})
+        job["polls"] += 1
+        elapsed = self._clock() - job["started"]
+        progress = elapsed / self._duration_s if self._duration_s > 0 else 1.0
+        if progress >= 1.0 and job["polls"] > 1:
+            return TrainingJob(id=job_id, status="preview", message=self.message)
+        stage = next(name for name, upto in self._STAGES if progress < upto or name == "testing")
+        return TrainingJob(id=job_id, status="running", message="Training.", metrics={"stage": stage})
 
 
 class UnavailableTrainer:

@@ -34,7 +34,7 @@ class Settings(BaseSettings):
     sys1_provider: Literal["none", "http", "fake"] = "none"
     sys1_base_url: str | None = None
     sys1_model: str = "sys1"
-    trainer: Literal["none", "fake"] = "none"
+    trainer: Literal["none", "fake", "preview"] = "preview"
 
     agent_model: str = "claude-sonnet-5-5"
     agent_effort: str = "medium"

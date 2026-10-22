@@ -1930,6 +1930,20 @@
             },
             "type": "array",
             "title": "Rules"
+          },
+          "guidelines": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Guidelines"
+          },
+          "sample_inputs": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Sample Inputs"
           }
         },
         "type": "object",
@@ -1970,6 +1984,20 @@
             },
             "type": "array",
             "title": "Rules"
+          },
+          "guidelines": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Guidelines"
+          },
+          "sample_inputs": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Sample Inputs"
           }
         },
         "type": "object",

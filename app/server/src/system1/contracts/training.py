@@ -5,7 +5,7 @@ from pydantic import BaseModel
 
 class TrainingJob(BaseModel):
     id: str
-    status: Literal["queued", "running", "succeeded", "failed", "unavailable"]
+    status: Literal["queued", "running", "succeeded", "failed", "unavailable", "preview"]
     message: str
     adapter_ref: str | None = None
     metrics: dict = {}

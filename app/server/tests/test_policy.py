@@ -81,3 +81,39 @@ def test_tallyfern_option_keys_are_snake_case():
 
     labels = {r["label"] for r in json.loads(RULES.read_text())}
     assert len(labels) == 13 and all(SNAKE_CASE.fullmatch(k) for k in labels)
+
+
+def test_guidelines_and_samples_validated():
+    assert validate_policy(make_policy(guidelines=["ok"] * 20, sample_inputs=["hi"] * 3)) == []
+
+    too_many = validate_policy(make_policy(guidelines=["g"] * 21))
+    assert [i.path for i in too_many] == ["guidelines"]
+
+    too_long = validate_policy(make_policy(guidelines=["x" * 301]))
+    assert len(too_long) == 1
+
+    assert [i.path for i in validate_policy(make_policy(sample_inputs=["s"] * 4))] == ["sample_inputs"]
+    assert len(validate_policy(make_policy(sample_inputs=["s" * 6001]))) == 1
+
+
+def test_policy_question_includes_guidelines():
+    p = make_policy(guidelines=["Be kind.", "Prefer b when unsure."])
+    instructions = build_questions(p, "policy")["decision"]["instructions"]
+    assert instructions["guidelines"] == p.guidelines
+    assert instructions["precedence"] == [r.text for r in p.rules]
+
+    bare = build_questions(make_policy(rules=[], guidelines=[]), "policy")["decision"]["instructions"]
+    assert bare == {"question": "Which team?"}
+
+
+def test_preview_trainer_finishes_as_preview():
+    from system1.adapters.fakes import PreviewTrainer
+
+    trainer = PreviewTrainer(duration_s=0)
+    job = trainer.start("dataset-1", {})
+    assert job.status == "queued"
+    assert trainer.status(job.id).status == "running"
+    done = trainer.status(job.id)
+    assert done.status == "preview"
+    assert done.message == "Real training connects soon."
+    assert done.adapter_ref is None

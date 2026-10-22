@@ -685,6 +685,10 @@ export interface components {
             options: components["schemas"]["Option"][];
             /** Rules */
             rules?: components["schemas"]["Rule-Input"][];
+            /** Guidelines */
+            guidelines?: string[];
+            /** Sample Inputs */
+            sample_inputs?: string[];
         };
         /** Policy */
         "Policy-Output": {
@@ -701,6 +705,10 @@ export interface components {
             options: components["schemas"]["Option"][];
             /** Rules */
             rules?: components["schemas"]["Rule-Output"][];
+            /** Guidelines */
+            guidelines?: string[];
+            /** Sample Inputs */
+            sample_inputs?: string[];
         };
         /** PolicyIn */
         PolicyIn: {

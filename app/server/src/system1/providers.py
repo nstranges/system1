@@ -1,9 +1,10 @@
+from collections.abc import Callable
 from dataclasses import dataclass
 
 from fastapi import Request
 
 from system1.adapters.anthropic_llm import AnthropicLLM
-from system1.adapters.fakes import FakeDecisionProvider, FakeLLM, FakeTrainer, UnavailableTrainer
+from system1.adapters.fakes import FakeDecisionProvider, FakeLLM, FakeTrainer, PreviewTrainer, UnavailableTrainer
 from system1.adapters.jev_typesafe import TypeSafeJevProvider
 from system1.adapters.sys1_http import HttpSys1Provider
 from system1.config import Settings
@@ -37,7 +38,12 @@ def build_providers(settings: Settings) -> Providers:
     else:
         llm = AnthropicLLM(settings.anthropic_api_key, settings.agent_model, settings.agent_effort)
 
-    trainer: Trainer = FakeTrainer() if settings.trainer == "fake" else UnavailableTrainer()
+    trainers: dict[str, Callable[[], Trainer]] = {
+        "fake": FakeTrainer,
+        "preview": PreviewTrainer,
+        "none": UnavailableTrainer,
+    }
+    trainer = trainers[settings.trainer]()
     return Providers(jev=jev, sys1=sys1, llm=llm, trainer=trainer)
 
 

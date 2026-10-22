@@ -16,6 +16,11 @@ def build_questions(policy: Policy, variant: Literal["labels", "policy"], order:
         instructions: str | dict = policy.decision_question
         criteria = {k: by_key[k].name for k in keys}
     else:
-        instructions = {"question": policy.decision_question, "precedence": [r.text for r in policy.rules]}
+        instructions = {
+            "question": policy.decision_question,
+            "guidelines": list(policy.guidelines),
+            "precedence": [r.text for r in policy.rules],
+        }
+        instructions = {k: v for k, v in instructions.items() if v}
         criteria = {k: {"covers": by_key[k].covers, "excludes": by_key[k].excludes} for k in keys}
     return {policy.question_key: {"type": "choice", "instructions": instructions, "criteria": criteria}}

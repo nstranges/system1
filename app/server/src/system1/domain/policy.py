@@ -9,6 +9,8 @@ from typing import Any, Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from system1.datasets.constants import MAX_GUIDELINE_CHARS, MAX_GUIDELINES, MAX_SAMPLE_INPUT_CHARS, MAX_SAMPLE_INPUTS
+
 MIN_OPTIONS = 2
 MAX_OPTIONS = 15
 SNAKE_CASE = re.compile(r"[a-z][a-z0-9]*(_[a-z0-9]+)*")
@@ -74,6 +76,9 @@ class Policy(BaseModel):
     inputs: list[InputField] = Field(default_factory=list)
     options: list[Option]
     rules: list[Rule] = Field(default_factory=list)
+    # Plain-language guidance and example inputs; both default empty so stored policies still load.
+    guidelines: list[str] = Field(default_factory=list)
+    sample_inputs: list[str] = Field(default_factory=list)
 
 
 class PolicyIssue(BaseModel):
@@ -117,4 +122,29 @@ def validate_policy(policy: Policy) -> list[PolicyIssue]:
             for name in dict.fromkeys(condition_fields(rule.when)):
                 if name not in input_keys:
                     issues.append(PolicyIssue(path=f"rules[{i}].when", message=f"unknown input '{name}'"))
+
+    if len(policy.guidelines) > MAX_GUIDELINES:
+        issues.append(
+            PolicyIssue(path="guidelines", message=f"at most {MAX_GUIDELINES} guidelines, got {len(policy.guidelines)}")
+        )
+    for i, text in enumerate(policy.guidelines):
+        if len(text) > MAX_GUIDELINE_CHARS:
+            issues.append(
+                PolicyIssue(path=f"guidelines[{i}]", message=f"guideline is over {MAX_GUIDELINE_CHARS} characters")
+            )
+
+    if len(policy.sample_inputs) > MAX_SAMPLE_INPUTS:
+        issues.append(
+            PolicyIssue(
+                path="sample_inputs",
+                message=f"at most {MAX_SAMPLE_INPUTS} sample inputs, got {len(policy.sample_inputs)}",
+            )
+        )
+    for i, text in enumerate(policy.sample_inputs):
+        if len(text) > MAX_SAMPLE_INPUT_CHARS:
+            issues.append(
+                PolicyIssue(
+                    path=f"sample_inputs[{i}]", message=f"sample input is over {MAX_SAMPLE_INPUT_CHARS} characters"
+                )
+            )
     return issues
