@@ -6,12 +6,12 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, Request, Response
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, TypeAdapter, ValidationError
-from sqlalchemy import delete, select, update
+from sqlalchemy import select, update
 from sqlalchemy.orm import Session
 
 from system1.agent.context import AgentContext, get_action_handler
 from system1.agent.events import AgentEvent
-from system1.agent.loop import run_agent_turn
+from system1.agent.loop import clear_thread, run_agent_turn
 from system1.agent.models import AgentTurn, PendingAction
 from system1.auth.deps import get_principal
 from system1.auth.principal import Principal
@@ -98,11 +98,9 @@ def history(project_id: str, principal: PrincipalDep, session: SessionDep) -> li
 
 
 @router.delete("/{project_id}/agent/history", status_code=204)
-def start_over(project_id: str, principal: PrincipalDep, session: SessionDep) -> Response:
+def start_over(project_id: str, principal: PrincipalDep, session: SessionDep, providers: ProvidersDep) -> Response:
     project = get_project(session, principal, project_id)
-    session.execute(delete(AgentTurn).where(AgentTurn.project_id == project.id))
-    session.execute(delete(PendingAction).where(PendingAction.project_id == project.id))
-    session.commit()
+    clear_thread(AgentContext(session, principal, providers, get_settings(), project))
     return Response(status_code=204)
 
 

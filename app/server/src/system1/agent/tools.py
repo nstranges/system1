@@ -1,3 +1,4 @@
+import re
 from typing import Annotated, Literal
 
 from pydantic import BaseModel, Field, ValidationError
@@ -26,9 +27,22 @@ from system1.templates.catalog import load_templates
 from system1.usage import check_budget, record_usage
 
 STAGES = ("define", "data", "review", "train", "use", "improve")
+# Projects made before the six steps were stored a stage under the old names.
+LEGACY_STAGES = {"usecase": "define", "rules": "define", "examples": "data", "try": "use"}
+
+
+def step_name(stage: str) -> str | None:
+    """The current name of a stored stage, or None when it isn't one the assistant knows."""
+    stage = LEGACY_STAGES.get(stage, stage)
+    return stage if stage in STAGES else None
+
+
+def tool_names() -> set[str]:
+    return set(_TOOLS)
+
+
 Stage = Literal["define", "data", "review", "train", "use", "improve"]
 TRAINING_ESTIMATE_MINUTES = 15.0
-MAX_USE_WHEN = 5
 
 
 class ShowChoices(BaseModel):
@@ -52,10 +66,10 @@ class SearchUseCases(BaseModel):
 
 
 class BucketIn(BaseModel):
-    key: str = Field(description="Short snake_case name, for example billing.")
-    name: str
-    use_when: list[str] = Field(
-        default_factory=list, max_length=MAX_USE_WHEN, description="Short 'use this when...' lines."
+    key: str = Field(max_length=drafting.MAX_KEY_CHARS, description="Short snake_case name, for example billing.")
+    name: str = Field(max_length=drafting.MAX_NAME_CHARS)
+    use_when: list[Annotated[str, Field(max_length=drafting.MAX_LINE_CHARS)]] = Field(
+        default_factory=list, max_length=drafting.MAX_USE_WHEN, description="Short 'use this when...' lines."
     )
     example: str | None = Field(default=None, description="One sample input that belongs here.")
 
@@ -153,10 +167,15 @@ def _policy(ctx: AgentContext) -> tuple[Policy, int | None]:
         return _blank_policy(), None
 
 
+def _plain(text: str) -> str:
+    """The checks speak in the code's words; the assistant and the person hear buckets."""
+    return re.sub(r"\boptions?\b", lambda m: "buckets" if m.group().endswith("s") else "bucket", text)
+
+
 def _save(ctx: AgentContext, policy: Policy, changed: list[str]) -> tuple[str, list[AgentEvent]]:
     issues = validate_policy(policy)
     if issues:
-        listing = "\n".join(f"- {i.path}: {i.message}" for i in issues)
+        listing = "\n".join(f"- {_plain(i.path)}: {_plain(i.message)}" for i in issues)
         raise ToolError(f"The policy was not changed. Fix these problems and try again:\n{listing}")
     version = save_policy(ctx.session, ctx.principal, ctx.project, policy)
     return f"Saved as version {version}.", [CanvasEvent(policy=policy, version=version, changed=changed)]
@@ -195,7 +214,15 @@ async def _run(name: str, args: BaseModel, ctx: AgentContext) -> tuple[str, list
         update: dict = {"options": options}
         if args.decision_question is not None:
             update["decision_question"] = args.decision_question
-        return _save(ctx, policy.model_copy(update=update), ["buckets"])
+        # Conditions that point at a removed bucket would fail the check and nothing else here can fix them.
+        # Removing a bucket that has examples is still refused when the policy is saved.
+        keys = {o.key for o in options}
+        update["rules"] = [r for r in policy.rules if r.label in keys]
+        dropped = len(policy.rules) - len(update["rules"])
+        text, events = _save(ctx, policy.model_copy(update=update), ["buckets"])
+        if dropped:
+            text += f" Also removed {dropped} advanced condition(s) that pointed at removed buckets."
+        return text, events
     if isinstance(args, SetGuidelines):
         policy, _ = _policy(ctx)
         return _save(ctx, policy.model_copy(update={"guidelines": args.guidelines}), ["guidelines"])

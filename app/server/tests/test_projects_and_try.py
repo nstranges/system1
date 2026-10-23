@@ -16,7 +16,7 @@ def test_project_from_template_gets_policy_v1(client_for):
     created = client.post("/api/projects", json={"name": "Triage", "template_id": FLAGSHIP})
     assert created.status_code == 200
     project = created.json()
-    assert project["stage"] == "usecase" and project["default_lane"] == "jev"
+    assert project["stage"] == "define" and project["default_lane"] == "jev"
 
     got = client.get(f"/api/projects/{project['id']}/policy").json()
     assert got["version"] == 1

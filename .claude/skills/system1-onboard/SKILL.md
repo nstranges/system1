@@ -13,7 +13,7 @@ Follow [playbook.md](playbook.md) for the early steps (define the buckets and gu
 
 - **Write the examples in this session.** Do not call the Anthropic API or any paid service. Write the input text for each example yourself, as the repo's phase 1 did, from sampled facts. Labels come from running the rules in code, never from your own judgment of the text.
 - **The read-back check runs in a separate session.** Produce the blind file (examples with the answers removed), then ask the user to run the read-back prompt in a fresh session. Do not read the answers while writing, and do not run the read-back yourself.
-- **Never use Jev's answers as labels** or to choose which examples to make. The quick Jev check in stage 3 is for the user's confidence only.
+- **Never use Jev's answers as labels** or to choose which examples to make. The Quick check in the Define step is for the user's confidence only.
 - **Adapt, do not edit Tallyfern.** Copy the scripts into the new project's folder and change the copies. Tallyfern's files stay as they are.
 
 ## Worked example: Tallyfern (support-ticket triage)

@@ -70,6 +70,7 @@ def record_feedback(
 # Margins are computed in Python from stored probabilities, so only the newest answers are considered.
 INBOX_SCAN = 1000
 INBOX_LIMIT = 100
+INBOX_FLAGGED_RESERVE = 20
 
 
 def margin(decision: Decision) -> float:
@@ -100,9 +101,15 @@ def inbox(session: Session, project: Project) -> list[tuple[Decision, float | No
     flagged = session.scalars(
         base.where(Decision.needs_review.is_(True)).order_by(Decision.created_at.desc()).limit(INBOX_LIMIT)
     )
-    seen = {d.id for d, _ in ranked}
-    out: list[tuple[Decision, float | None]] = [*ranked, *((d, None) for d in flagged if d.id not in seen)]
-    return out[:INBOX_LIMIT]
+    # Room is kept for flagged items so a long run of unsure answers can't push them out of the list.
+    kept = ranked[: INBOX_LIMIT - INBOX_FLAGGED_RESERVE]
+    kept_ids = {d.id for d, _ in kept}
+    out: list[tuple[Decision, float | None]] = [*kept]
+    out += [(d, None) for d in flagged if d.id not in kept_ids][: INBOX_LIMIT - len(out)]
+    if len(out) < INBOX_LIMIT:
+        shown = {d.id for d, _ in out}
+        out += [pair for pair in ranked[len(kept) :] if pair[0].id not in shown][: INBOX_LIMIT - len(out)]
+    return out
 
 
 def training_pool_count(session: Session, project: Project) -> int:

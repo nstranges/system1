@@ -1,9 +1,21 @@
 from pathlib import Path
 
 from system1.config import Settings
-from system1.datasets.constants import REVIEW_CARDS
+from system1.datasets.constants import (
+    CONTEXT_MAX_FILES,
+    MAX_GUIDELINES,
+    MAX_SAMPLE_INPUTS,
+    REVIEW_CARDS,
+)
 from system1.datasets.service import Health
-from system1.domain.policy import Policy
+from system1.domain.policy import MAX_OPTIONS, Policy
+from system1.drafting.service import (
+    MAX_KEY_CHARS as KEY_CHARS,
+)
+from system1.drafting.service import MAX_LINE_CHARS as LINE_CHARS
+from system1.drafting.service import MAX_NAME_CHARS as NAME_CHARS
+from system1.drafting.service import MAX_QUESTION_CHARS as QUESTION_CHARS
+from system1.drafting.service import MAX_USE_WHEN
 from system1.llm_prompts import data_block
 
 DEFAULT_PROMPT = (
@@ -28,6 +40,13 @@ def system_blocks(settings: Settings) -> list[dict]:
 
 
 SAMPLE_CHARS = 200
+MAX_BUCKETS = MAX_OPTIONS
+MAX_CONTEXT_FILES = CONTEXT_MAX_FILES
+DATA_CHARS = 12_000
+
+
+def _cut(text: str, limit: int) -> str:
+    return text if len(text) <= limit else text[: limit - 1] + "…"
 
 
 # Snapshots stay in the replayed history so the cached prefix is stable; each names its version and the
@@ -49,26 +68,37 @@ def canvas_message(
     label = f"policy version {version}" if policy is not None else "now"
     header = f"[Canvas as of {label}" + (f", step: {step}" if step else "") + "]"
     lines: list[str] = []
+    hints: list[str] = []
     if policy is None or not policy.options:
-        lines.append("No buckets yet. Draft them with set_buckets.")
+        hints.append("No buckets yet. Draft them with set_buckets.")
     if policy is not None:
-        lines.append(f"Decision: {policy.decision_question or '(not set)'}")
-        for option in policy.options:
-            use = f": {'; '.join(option.covers)}" if option.covers else ""
-            lines.append(f"- {option.key} ({option.name}){use}")
+        lines.append(f"Decision: {_cut(policy.decision_question, QUESTION_CHARS) or '(not set)'}")
+        for option in policy.options[:MAX_BUCKETS]:
+            use = "; ".join(_cut(line, LINE_CHARS) for line in option.covers[:MAX_USE_WHEN])
+            lines.append(
+                f"- {_cut(option.key, KEY_CHARS)} ({_cut(option.name, NAME_CHARS)})" + (f": {use}" if use else "")
+            )
         if policy.guidelines:
             lines.append("Guidelines:")
-            lines.extend(f"{n}. {g}" for n, g in enumerate(policy.guidelines, 1))
+            lines.extend(f"{n}. {_cut(g, LINE_CHARS)}" for n, g in enumerate(policy.guidelines[:MAX_GUIDELINES], 1))
         if policy.sample_inputs:
             lines.append("What comes in (samples):")
-            lines.extend(f"- {sample[:SAMPLE_CHARS]}" for sample in policy.sample_inputs)
-    lines.append("Context files: " + (", ".join(context_files) if context_files else "none"))
-    out = [header, data_block("\n".join(lines))]
+            lines.extend(f"- {_cut(sample, SAMPLE_CHARS)}" for sample in policy.sample_inputs[:MAX_SAMPLE_INPUTS])
+    names = ", ".join(_cut(n, NAME_CHARS) for n in (context_files or [])[:MAX_CONTEXT_FILES])
+    lines.append("Context files: " + (names or "none"))
+    # Whatever the person wrote is bounded here because this block is saved in every turn and replayed each time.
+    body = "\n".join(lines)
+    if len(body) > DATA_CHARS:
+        body = body[: DATA_CHARS - 1] + "…"
+    hints_text = "\n".join(hints)
+    out = [header, *([hints_text] if hints_text else []), data_block(body)]
     if health is not None:
-        counts = ", ".join(f"{key} {c['total']}" for key, c in health.per_bucket.items()) or "no buckets"
+        counts = (
+            ", ".join(f"{_cut(key, KEY_CHARS)} {c['total']}" for key, c in health.per_bucket.items()) or "no buckets"
+        )
         test = "frozen" if health.frozen else "not frozen yet"
         short = (
-            f"under the minimum: {', '.join(health.below_minimum)}"
+            f"under the minimum: {', '.join(_cut(k, KEY_CHARS) for k in health.below_minimum)}"
             if health.below_minimum
             else "every bucket has enough"
         )

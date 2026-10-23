@@ -2,7 +2,7 @@ import logging
 from collections.abc import AsyncIterator
 
 import anthropic
-from sqlalchemy import func, select
+from sqlalchemy import delete, func, select
 
 from system1.agent.context import AgentContext
 from system1.agent.events import (
@@ -14,9 +14,9 @@ from system1.agent.events import (
     TextEvent,
     UserEvent,
 )
-from system1.agent.models import AgentTurn
+from system1.agent.models import AgentTurn, PendingAction
 from system1.agent.prompts import canvas_message, system_blocks
-from system1.agent.tools import STAGES, execute_tool, tool_definitions
+from system1.agent.tools import STAGES, execute_tool, step_name, tool_definitions, tool_names
 from system1.context.service import list_docs
 from system1.contracts.decisions import ProviderError
 from system1.contracts.llm import TextDelta, TurnComplete
@@ -66,7 +66,7 @@ def _canvas_block(ctx: AgentContext) -> dict:
         policy, version = latest_policy(ctx.session, ctx.project)
     except NotFound:
         policy, version = None, None
-    step = ctx.project.stage if ctx.project.stage in STAGES else None  # older projects hold a retired stage name
+    step = step_name(ctx.project.stage)
     return canvas_message(
         policy,
         version,
@@ -78,8 +78,32 @@ def _canvas_block(ctx: AgentContext) -> dict:
     )
 
 
+def clear_thread(ctx: AgentContext) -> None:
+    """Start over: forget the conversation and any card still waiting for an answer."""
+    ctx.session.execute(delete(AgentTurn).where(AgentTurn.project_id == ctx.project.id))
+    ctx.session.execute(delete(PendingAction).where(PendingAction.project_id == ctx.project.id))
+    ctx.session.commit()
+
+
+def _drop_retired_thread(ctx: AgentContext) -> None:
+    """A thread that called a tool this version no longer has would be replayed to the model with that tool
+    missing from its tool list, so start it fresh."""
+    known = tool_names()
+    turns = ctx.session.scalars(
+        select(AgentTurn.api_content_json).where(AgentTurn.project_id == ctx.project.id, AgentTurn.role == "assistant")
+    )
+    for content in turns:
+        if isinstance(content, list) and any(
+            b.get("type") == "tool_use" and b.get("name") not in known for b in content
+        ):
+            log.warning("clearing project %s's assistant thread: it uses a tool that no longer exists", ctx.project.id)
+            clear_thread(ctx)
+            return
+
+
 async def _run(ctx: AgentContext, user_text: str, stage: str | None) -> AsyncIterator[AgentEvent]:
     check_budget(ctx.session, ctx.principal.org_id)
+    _drop_retired_thread(ctx)
     if stage in STAGES and ctx.project.stage != stage:
         ctx.project.stage = stage  # the step the person is looking at; an unknown value is ignored
         ctx.session.commit()

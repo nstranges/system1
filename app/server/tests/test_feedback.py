@@ -140,3 +140,18 @@ def test_inbox_ranks_sys1_by_margin_and_never_jev(client_for):
     assert [i["how_sure"] for i in items[:3]] == [pytest.approx(0.05), pytest.approx(0.4), pytest.approx(0.8)]
     assert items[3]["how_sure"] == 1.0 and items[4]["how_sure"] is None
     assert ids["jev"] not in {i["decision_id"] for i in items}
+
+
+def test_inbox_caps_at_100_and_keeps_room_for_flagged(client_for):
+    client = client_for("org_a")
+    project_id, _ = _setup(client)
+    with Session(client.app.state.engine) as session:
+        session.add_all([_decision(project_id, "sys1", {"a": 0.5 + i / 1000, "b": 0.5 - i / 1000}) for i in range(130)])
+        session.add_all([_decision(project_id, "jev", {"a": 0.6, "b": 0.4}, needs_review=True) for _ in range(30)])
+        session.commit()
+
+    items = client.get(f"/api/projects/{project_id}/inbox").json()["items"]
+
+    assert len(items) == 100
+    assert sum(i["how_sure"] is None for i in items) == 20  # the reserve
+    assert all(i["lane"] == "sys1" for i in items[:80])

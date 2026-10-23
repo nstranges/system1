@@ -23,7 +23,7 @@ class Project(Base):
     name: Mapped[str]
     description: Mapped[str | None] = mapped_column(default=None)
     template_id: Mapped[str | None] = mapped_column(default=None)
-    stage: Mapped[str] = mapped_column(default="usecase")
+    stage: Mapped[str] = mapped_column(default="define")
     default_lane: Mapped[str] = mapped_column(default="jev")  # jev | sys1 | auto
     live_model_label: Mapped[str | None] = mapped_column(default=None)
     # Set at the first training job. Afterwards test examples never move.
