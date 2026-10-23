@@ -4,3010 +4,3072 @@
  */
 
 export interface paths {
-    "/api/health": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Health */
-        get: operations["health_api_health_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/me": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Me */
-        get: operations["me_api_me_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/config": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Config */
-        get: operations["config_api_config_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/templates": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Templates */
-        get: operations["templates_api_templates_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/projects": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** List Projects */
-        get: operations["list_projects_api_projects_get"];
-        put?: never;
-        /** Create Project */
-        post: operations["create_project_api_projects_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/projects/{project_id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Get Project */
-        get: operations["get_project_api_projects__project_id__get"];
-        put?: never;
-        post?: never;
-        /** Delete Project */
-        delete: operations["delete_project_api_projects__project_id__delete"];
-        options?: never;
-        head?: never;
-        /** Patch Project */
-        patch: operations["patch_project_api_projects__project_id__patch"];
-        trace?: never;
-    };
-    "/api/projects/{project_id}/policy": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Get Policy */
-        get: operations["get_policy_api_projects__project_id__policy_get"];
-        /** Put Policy */
-        put: operations["put_policy_api_projects__project_id__policy_put"];
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/projects/{project_id}/context": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** List Context */
-        get: operations["list_context_api_projects__project_id__context_get"];
-        put?: never;
-        /** Upload Context */
-        post: operations["upload_context_api_projects__project_id__context_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/projects/{project_id}/context/paste": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Paste Context */
-        post: operations["paste_context_api_projects__project_id__context_paste_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/projects/{project_id}/context/{doc_id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post?: never;
-        /** Delete Context */
-        delete: operations["delete_context_api_projects__project_id__context__doc_id__delete"];
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/projects/{project_id}/examples/health": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Examples Health */
-        get: operations["examples_health_api_projects__project_id__examples_health_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/projects/{project_id}/examples": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** List Examples */
-        get: operations["list_examples_api_projects__project_id__examples_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/projects/{project_id}/review": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Review Queue */
-        get: operations["review_queue_api_projects__project_id__review_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/examples/{example_id}/review": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Review Example */
-        post: operations["review_example_api_examples__example_id__review_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/projects/{project_id}/buckets/{key}/delete": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Delete Bucket */
-        post: operations["delete_bucket_api_projects__project_id__buckets__key__delete_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/projects/{project_id}/uploads": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Upload Examples */
-        post: operations["upload_examples_api_projects__project_id__uploads_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/projects/{project_id}/uploads/{upload_id}/labels": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Upload Labels */
-        get: operations["upload_labels_api_projects__project_id__uploads__upload_id__labels_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/projects/{project_id}/uploads/{upload_id}/import": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Import Examples */
-        post: operations["import_examples_api_projects__project_id__uploads__upload_id__import_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/projects/{project_id}/samples": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Samples */
-        get: operations["samples_api_projects__project_id__samples_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/projects/{project_id}/try": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Try It */
-        post: operations["try_it_api_projects__project_id__try_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/projects/{project_id}/keys": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** List Keys */
-        get: operations["list_keys_api_projects__project_id__keys_get"];
-        put?: never;
-        /** Create Key */
-        post: operations["create_key_api_projects__project_id__keys_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/projects/{project_id}/keys/{key_id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post?: never;
-        /** Revoke Key */
-        delete: operations["revoke_key_api_projects__project_id__keys__key_id__delete"];
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/decisions/{decision_id}/feedback": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Post Feedback */
-        post: operations["post_feedback_api_decisions__decision_id__feedback_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/projects/{project_id}/inbox": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Get Inbox */
-        get: operations["get_inbox_api_projects__project_id__inbox_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/projects/{project_id}/training-pool": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Get Training Pool */
-        get: operations["get_training_pool_api_projects__project_id__training_pool_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/projects/{project_id}/agent/messages": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Send Message */
-        post: operations["send_message_api_projects__project_id__agent_messages_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/projects/{project_id}/agent/history": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** History */
-        get: operations["history_api_projects__project_id__agent_history_get"];
-        put?: never;
-        post?: never;
-        /** Start Over */
-        delete: operations["start_over_api_projects__project_id__agent_history_delete"];
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/projects/{project_id}/actions/{action_id}/confirm": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Confirm */
-        post: operations["confirm_api_projects__project_id__actions__action_id__confirm_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/projects/{project_id}/actions/{action_id}/cancel": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Cancel */
-        post: operations["cancel_api_projects__project_id__actions__action_id__cancel_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/projects/{project_id}/generate/estimate": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Estimate */
-        post: operations["estimate_api_projects__project_id__generate_estimate_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/projects/{project_id}/generate": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Generate */
-        post: operations["generate_api_projects__project_id__generate_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/jobs/{job_id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Get Job */
-        get: operations["get_job_api_jobs__job_id__get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/projects/{project_id}/draft": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Draft */
-        post: operations["draft_api_projects__project_id__draft_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/projects/{project_id}/training": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Train */
-        post: operations["train_api_projects__project_id__training_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/projects/{project_id}/report": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Get Report */
-        get: operations["get_report_api_projects__project_id__report_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/v1/systemone": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Decide */
-        post: operations["decide_v1_systemone_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/v1/feedback": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Feedback */
-        post: operations["feedback_v1_feedback_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
+  "/api/health": {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /** Health */
+    get: operations["health_api_health_get"]
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  "/api/me": {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /** Me */
+    get: operations["me_api_me_get"]
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  "/api/config": {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /** Config */
+    get: operations["config_api_config_get"]
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  "/api/templates": {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /** Templates */
+    get: operations["templates_api_templates_get"]
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  "/api/projects": {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /** List Projects */
+    get: operations["list_projects_api_projects_get"]
+    put?: never
+    /** Create Project */
+    post: operations["create_project_api_projects_post"]
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  "/api/projects/{project_id}": {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /** Get Project */
+    get: operations["get_project_api_projects__project_id__get"]
+    put?: never
+    post?: never
+    /** Delete Project */
+    delete: operations["delete_project_api_projects__project_id__delete"]
+    options?: never
+    head?: never
+    /** Patch Project */
+    patch: operations["patch_project_api_projects__project_id__patch"]
+    trace?: never
+  }
+  "/api/projects/{project_id}/policy": {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /** Get Policy */
+    get: operations["get_policy_api_projects__project_id__policy_get"]
+    /** Put Policy */
+    put: operations["put_policy_api_projects__project_id__policy_put"]
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  "/api/projects/{project_id}/context": {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /** List Context */
+    get: operations["list_context_api_projects__project_id__context_get"]
+    put?: never
+    /** Upload Context */
+    post: operations["upload_context_api_projects__project_id__context_post"]
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  "/api/projects/{project_id}/context/paste": {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    /** Paste Context */
+    post: operations["paste_context_api_projects__project_id__context_paste_post"]
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  "/api/projects/{project_id}/context/{doc_id}": {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post?: never
+    /** Delete Context */
+    delete: operations["delete_context_api_projects__project_id__context__doc_id__delete"]
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  "/api/projects/{project_id}/examples/health": {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /** Examples Health */
+    get: operations["examples_health_api_projects__project_id__examples_health_get"]
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  "/api/projects/{project_id}/examples": {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /** List Examples */
+    get: operations["list_examples_api_projects__project_id__examples_get"]
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  "/api/projects/{project_id}/review": {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /** Review Queue */
+    get: operations["review_queue_api_projects__project_id__review_get"]
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  "/api/examples/{example_id}/review": {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    /** Review Example */
+    post: operations["review_example_api_examples__example_id__review_post"]
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  "/api/projects/{project_id}/buckets/{key}/delete": {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    /** Delete Bucket */
+    post: operations["delete_bucket_api_projects__project_id__buckets__key__delete_post"]
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  "/api/projects/{project_id}/uploads": {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    /** Upload Examples */
+    post: operations["upload_examples_api_projects__project_id__uploads_post"]
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  "/api/projects/{project_id}/uploads/{upload_id}/labels": {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /** Upload Labels */
+    get: operations["upload_labels_api_projects__project_id__uploads__upload_id__labels_get"]
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  "/api/projects/{project_id}/uploads/{upload_id}/import": {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    /** Import Examples */
+    post: operations["import_examples_api_projects__project_id__uploads__upload_id__import_post"]
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  "/api/projects/{project_id}/samples": {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /** Samples */
+    get: operations["samples_api_projects__project_id__samples_get"]
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  "/api/projects/{project_id}/try": {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    /** Try It */
+    post: operations["try_it_api_projects__project_id__try_post"]
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  "/api/projects/{project_id}/keys": {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /** List Keys */
+    get: operations["list_keys_api_projects__project_id__keys_get"]
+    put?: never
+    /** Create Key */
+    post: operations["create_key_api_projects__project_id__keys_post"]
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  "/api/projects/{project_id}/keys/{key_id}": {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post?: never
+    /** Revoke Key */
+    delete: operations["revoke_key_api_projects__project_id__keys__key_id__delete"]
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  "/api/decisions/{decision_id}/feedback": {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    /** Post Feedback */
+    post: operations["post_feedback_api_decisions__decision_id__feedback_post"]
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  "/api/projects/{project_id}/inbox": {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /** Get Inbox */
+    get: operations["get_inbox_api_projects__project_id__inbox_get"]
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  "/api/projects/{project_id}/training-pool": {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /** Get Training Pool */
+    get: operations["get_training_pool_api_projects__project_id__training_pool_get"]
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  "/api/projects/{project_id}/agent/messages": {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    /** Send Message */
+    post: operations["send_message_api_projects__project_id__agent_messages_post"]
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  "/api/projects/{project_id}/agent/history": {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /** History */
+    get: operations["history_api_projects__project_id__agent_history_get"]
+    put?: never
+    post?: never
+    /** Start Over */
+    delete: operations["start_over_api_projects__project_id__agent_history_delete"]
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  "/api/projects/{project_id}/actions/{action_id}/confirm": {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    /** Confirm */
+    post: operations["confirm_api_projects__project_id__actions__action_id__confirm_post"]
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  "/api/projects/{project_id}/actions/{action_id}/cancel": {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    /** Cancel */
+    post: operations["cancel_api_projects__project_id__actions__action_id__cancel_post"]
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  "/api/projects/{project_id}/generate/estimate": {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    /** Estimate */
+    post: operations["estimate_api_projects__project_id__generate_estimate_post"]
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  "/api/projects/{project_id}/generate": {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    /** Generate */
+    post: operations["generate_api_projects__project_id__generate_post"]
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  "/api/jobs/{job_id}": {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /** Get Job */
+    get: operations["get_job_api_jobs__job_id__get"]
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  "/api/projects/{project_id}/draft": {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    /** Draft */
+    post: operations["draft_api_projects__project_id__draft_post"]
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  "/api/projects/{project_id}/training": {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    /** Train */
+    post: operations["train_api_projects__project_id__training_post"]
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  "/api/projects/{project_id}/report": {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /** Get Report */
+    get: operations["get_report_api_projects__project_id__report_get"]
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  "/v1/systemone": {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    /** Decide */
+    post: operations["decide_v1_systemone_post"]
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  "/v1/feedback": {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    /** Feedback */
+    post: operations["feedback_v1_feedback_post"]
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
 }
-export type webhooks = Record<string, never>;
+export type webhooks = Record<string, never>
 export interface components {
-    schemas: {
-        /** AllOf */
-        "AllOf-Input": {
-            /** All */
-            all: (components["schemas"]["Leaf"] | components["schemas"]["AllOf-Input"] | components["schemas"]["AnyOf-Input"] | components["schemas"]["NotOf-Input"])[];
-        };
-        /** AllOf */
-        "AllOf-Output": {
-            /** All */
-            all: (components["schemas"]["Leaf"] | components["schemas"]["AllOf-Output"] | components["schemas"]["AnyOf-Output"] | components["schemas"]["NotOf-Output"])[];
-        };
-        /** AnyOf */
-        "AnyOf-Input": {
-            /** Any */
-            any: (components["schemas"]["Leaf"] | components["schemas"]["AllOf-Input"] | components["schemas"]["AnyOf-Input"] | components["schemas"]["NotOf-Input"])[];
-        };
-        /** AnyOf */
-        "AnyOf-Output": {
-            /** Any */
-            any: (components["schemas"]["Leaf"] | components["schemas"]["AllOf-Output"] | components["schemas"]["AnyOf-Output"] | components["schemas"]["NotOf-Output"])[];
-        };
-        /** Body_upload_context_api_projects__project_id__context_post */
-        Body_upload_context_api_projects__project_id__context_post: {
-            /** File */
-            file: string;
-        };
-        /** Body_upload_examples_api_projects__project_id__uploads_post */
-        Body_upload_examples_api_projects__project_id__uploads_post: {
-            /** File */
-            file: string;
-        };
-        /** CanvasEvent */
-        CanvasEvent: {
-            /**
-             * @description discriminator enum property added by openapi-typescript
-             * @enum {string}
-             */
-            type: "canvas";
-            policy: components["schemas"]["Policy-Output"];
-            /** Version */
-            version: number;
-            /** Changed */
-            changed: string[];
-        };
-        /**
-         * CanvasProposalEvent
-         * @description A draft the person can apply or ignore; nothing is saved until they do.
-         */
-        CanvasProposalEvent: {
-            /**
-             * @description discriminator enum property added by openapi-typescript
-             * @enum {string}
-             */
-            type: "canvas_proposal";
-            policy: components["schemas"]["Policy-Output"];
-            /** Notes */
-            notes: string[];
-            /** Issues */
-            issues: components["schemas"]["PolicyIssue"][];
-        };
-        /** ChoiceAnswer */
-        ChoiceAnswer: {
-            /**
-             * Type
-             * @constant
-             */
-            type: "choice";
-            /** Choice */
-            choice: string;
-            /** Confidence */
-            confidence?: number | null;
-            /** Probabilities */
-            probabilities: {
-                [key: string]: number;
-            };
-        };
-        /** ChoicesEvent */
-        ChoicesEvent: {
-            /**
-             * @description discriminator enum property added by openapi-typescript
-             * @enum {string}
-             */
-            type: "choices";
-            /** Question */
-            question: string;
-            /** Options */
-            options: string[];
-        };
-        /** ConfigOut */
-        ConfigOut: {
-            /** Sys1 Available */
-            sys1_available: boolean;
-        };
-        /** ConfirmEvent */
-        ConfirmEvent: {
-            /**
-             * @description discriminator enum property added by openapi-typescript
-             * @enum {string}
-             */
-            type: "confirm";
-            /** Action Id */
-            action_id: string;
-            /**
-             * Kind
-             * @enum {string}
-             */
-            kind: "dataset" | "generation" | "training";
-            /** Title */
-            title: string;
-            /** Detail */
-            detail: string;
-            /** Est Minutes */
-            est_minutes: number;
-            /** Est Cost Usd */
-            est_cost_usd: number;
-            /** Examples */
-            examples?: number | null;
-        };
-        /** ConfirmOut */
-        ConfirmOut: {
-            /** Status */
-            status: string;
-            /** Result */
-            result: {
-                [key: string]: unknown;
-            };
-        };
-        /** Confusion */
-        Confusion: {
-            /** Gold */
-            gold: string;
-            /** Pred */
-            pred: string;
-            /** Count */
-            count: number;
-        };
-        /** ContextDocOut */
-        ContextDocOut: {
-            /** Id */
-            id: string;
-            /** Name */
-            name: string;
-            /** Kind */
-            kind: string;
-            /** Chars */
-            chars: number;
-            /**
-             * Created At
-             * Format: date-time
-             */
-            created_at: string;
-        };
-        /** DecideIn */
-        DecideIn: {
-            /** Model */
-            model?: string | null;
-            /** State */
-            state: string | {
-                [key: string]: unknown;
-            } | unknown[];
-            /** Questions */
-            questions?: {
-                [key: string]: unknown;
-            } | null;
-        };
-        /** DecideOut */
-        DecideOut: {
-            /** Model */
-            model: string;
-            /** Answers */
-            answers: {
-                [key: string]: components["schemas"]["ChoiceAnswer"];
-            };
-            /** Usage */
-            usage?: {
-                [key: string]: unknown;
-            } | null;
-            system1: components["schemas"]["Sys1Block"];
-        };
-        /** DeleteBucketIn */
-        DeleteBucketIn: {
-            /**
-             * Mode
-             * @enum {string}
-             */
-            mode: "drop" | "move";
-            /** To */
-            to?: string | null;
-            /**
-             * Reset Test
-             * @default false
-             */
-            reset_test: boolean;
-        };
-        /** DeleteBucketResult */
-        DeleteBucketResult: {
-            /** Policy Version */
-            policy_version: number;
-            /** Examples Affected */
-            examples_affected: number;
-            /** Test Set Version */
-            test_set_version: number;
-        };
-        /** DoneEvent */
-        DoneEvent: {
-            /**
-             * @description discriminator enum property added by openapi-typescript
-             * @enum {string}
-             */
-            type: "done";
-        };
-        /** DraftIn */
-        DraftIn: {
-            /**
-             * Source
-             * @enum {string}
-             */
-            source: "examples" | "context";
-        };
-        /** DraftOut */
-        DraftOut: {
-            policy: components["schemas"]["Policy-Output"];
-            /** Notes */
-            notes: string[];
-            /** Issues */
-            issues: components["schemas"]["PolicyIssue"][];
-        };
-        /** ErrorEvent */
-        ErrorEvent: {
-            /**
-             * @description discriminator enum property added by openapi-typescript
-             * @enum {string}
-             */
-            type: "error";
-            /** Message */
-            message: string;
-        };
-        /** Estimate */
-        Estimate: {
-            /** Examples */
-            examples: number;
-            /** Est Minutes */
-            est_minutes: number;
-            /** Est Cost Usd */
-            est_cost_usd: number;
-        };
-        /** ExampleOut */
-        ExampleOut: {
-            /** Id */
-            id: string;
-            /** Input */
-            input: string | {
-                [key: string]: unknown;
-            };
-            /** Label */
-            label: string;
-            /** Source */
-            source: string;
-            /** Split */
-            split: string;
-            /** How Sure */
-            how_sure: number | null;
-            /** Review */
-            review: string | null;
-        };
-        /** FeedbackOut */
-        FeedbackOut: {
-            /**
-             * Status
-             * @default recorded
-             */
-            status: string;
-        };
-        /** FitEvent */
-        FitEvent: {
-            /**
-             * @description discriminator enum property added by openapi-typescript
-             * @enum {string}
-             */
-            type: "fit";
-            /**
-             * Rating
-             * @enum {string}
-             */
-            rating: "good" | "workable" | "poor";
-            /** Reasons */
-            reasons: string[];
-        };
-        /** GenerateIn */
-        GenerateIn: {
-            /** Targets */
-            targets?: {
-                [key: string]: number;
-            } | null;
-        };
-        /** HTTPValidationError */
-        HTTPValidationError: {
-            /** Detail */
-            detail?: components["schemas"]["ValidationError"][];
-        };
-        /** Health */
-        Health: {
-            /** Per Bucket */
-            per_bucket: {
-                [key: string]: {
-                    [key: string]: number;
-                };
-            };
-            /** Sources */
-            sources: {
-                [key: string]: number;
-            };
-            /** Below Minimum */
-            below_minimum: string[];
-            /** Synthetic Test */
-            synthetic_test: boolean;
-            /** Frozen */
-            frozen: boolean;
-            /** Test Set Version */
-            test_set_version: number;
-            /** Dataset Version */
-            dataset_version: number;
-        };
-        /** ImportMapping */
-        ImportMapping: {
-            /** Input Columns */
-            input_columns: string[];
-            /** Label Column */
-            label_column: string;
-            /** Label Map */
-            label_map?: {
-                [key: string]: string | null;
-            };
-            /**
-             * Create Buckets
-             * @default false
-             */
-            create_buckets: boolean;
-        };
-        /** ImportResult */
-        ImportResult: {
-            /** Added */
-            added: number;
-            /** Skipped Duplicates */
-            skipped_duplicates: number;
-            /** Dropped Rows */
-            dropped_rows: number;
-            /** Too Long */
-            too_long: number;
-            /** Created Buckets */
-            created_buckets: string[];
-        };
-        /** InboxItem */
-        InboxItem: {
-            /** Decision Id */
-            decision_id: string;
-            /** State */
-            state: string | {
-                [key: string]: unknown;
-            } | unknown[];
-            /** Answer */
-            answer: string | null;
-            /** Lane */
-            lane: string;
-            /**
-             * Created At
-             * Format: date-time
-             */
-            created_at: string;
-            /** How Sure */
-            how_sure?: number | null;
-        };
-        /** InboxOut */
-        InboxOut: {
-            /** Items */
-            items: components["schemas"]["InboxItem"][];
-        };
-        /** InputField */
-        InputField: {
-            /** Key */
-            key: string;
-            /** Label */
-            label: string;
-            /**
-             * Type
-             * @enum {string}
-             */
-            type: "enum" | "int" | "float" | "bool" | "text";
-            /** Values */
-            values?: string[] | null;
-            /**
-             * Nullable
-             * @default true
-             */
-            nullable: boolean;
-            /**
-             * Description
-             * @default
-             */
-            description: string;
-        };
-        /** JobOut */
-        JobOut: {
-            /** Id */
-            id: string;
-            /** Project Id */
-            project_id: string;
-            /** Kind */
-            kind: string;
-            /** Status */
-            status: string;
-            /** Progress */
-            progress: number;
-            /** Stage */
-            stage: string | null;
-            /** Message */
-            message: string | null;
-            /** Result */
-            result: {
-                [key: string]: unknown;
-            } | null;
-            /**
-             * Created At
-             * Format: date-time
-             */
-            created_at: string;
-            /** Finished At */
-            finished_at: string | null;
-        };
-        /** JobStarted */
-        JobStarted: {
-            /** Job Id */
-            job_id: string;
-        };
-        /** KeyCreated */
-        KeyCreated: {
-            /** Id */
-            id: string;
-            /** Prefix */
-            prefix: string;
-            /**
-             * Created At
-             * Format: date-time
-             */
-            created_at: string;
-            /** Key */
-            key: string;
-        };
-        /** KeyOut */
-        KeyOut: {
-            /** Id */
-            id: string;
-            /** Prefix */
-            prefix: string;
-            /**
-             * Created At
-             * Format: date-time
-             */
-            created_at: string;
-        };
-        /** LabelCount */
-        LabelCount: {
-            /** Value */
-            value: string;
-            /** Count */
-            count: number;
-        };
-        /** LabelCounts */
-        LabelCounts: {
-            /** Column */
-            column: string;
-            /** Values */
-            values: components["schemas"]["LabelCount"][];
-        };
-        /** LaneResult */
-        LaneResult: {
-            /**
-             * Lane
-             * @enum {string}
-             */
-            lane: "jev" | "jev_labels" | "sys1";
-            /** Label */
-            label?: string | null;
-            /**
-             * Probabilities
-             * @default {}
-             */
-            probabilities: {
-                [key: string]: number;
-            };
-            /** Model */
-            model?: string | null;
-            /** Latency Ms */
-            latency_ms?: number | null;
-            /** Decision Id */
-            decision_id?: string | null;
-            /** Error */
-            error?: string | null;
-            /**
-             * Retryable
-             * @default false
-             */
-            retryable: boolean;
-        };
-        /** Leaf */
-        Leaf: {
-            /** Field */
-            field: string;
-            /**
-             * Op
-             * @enum {string}
-             */
-            op: "eq" | "ne" | "gt" | "gte" | "lt" | "lte" | "in" | "is_null";
-            /** Value */
-            value?: unknown;
-        };
-        /** MessageIn */
-        MessageIn: {
-            /** Text */
-            text: string;
-            /** Stage */
-            stage?: string | null;
-        };
-        /** NotOf */
-        "NotOf-Input": {
-            /** Not */
-            not: components["schemas"]["Leaf"] | components["schemas"]["AllOf-Input"] | components["schemas"]["AnyOf-Input"] | components["schemas"]["NotOf-Input"];
-        };
-        /** NotOf */
-        "NotOf-Output": {
-            /** Not */
-            not: components["schemas"]["Leaf"] | components["schemas"]["AllOf-Output"] | components["schemas"]["AnyOf-Output"] | components["schemas"]["NotOf-Output"];
-        };
-        /** Option */
-        Option: {
-            /** Key */
-            key: string;
-            /** Name */
-            name: string;
-            /** Covers */
-            covers?: string[];
-            /** Excludes */
-            excludes?: string[];
-            /**
-             * Example
-             * @default
-             */
-            example: string;
-        };
-        /** PasteIn */
-        PasteIn: {
-            /**
-             * Name
-             * @default Pasted text
-             */
-            name: string;
-            /** Text */
-            text: string;
-        };
-        /** Policy */
-        "Policy-Input": {
-            /** Decision Question */
-            decision_question: string;
-            /**
-             * Question Key
-             * @default decision
-             */
-            question_key: string;
-            /** Inputs */
-            inputs?: components["schemas"]["InputField"][];
-            /** Options */
-            options: components["schemas"]["Option"][];
-            /** Rules */
-            rules?: components["schemas"]["Rule-Input"][];
-            /** Guidelines */
-            guidelines?: string[];
-            /** Sample Inputs */
-            sample_inputs?: string[];
-        };
-        /** Policy */
-        "Policy-Output": {
-            /** Decision Question */
-            decision_question: string;
-            /**
-             * Question Key
-             * @default decision
-             */
-            question_key: string;
-            /** Inputs */
-            inputs?: components["schemas"]["InputField"][];
-            /** Options */
-            options: components["schemas"]["Option"][];
-            /** Rules */
-            rules?: components["schemas"]["Rule-Output"][];
-            /** Guidelines */
-            guidelines?: string[];
-            /** Sample Inputs */
-            sample_inputs?: string[];
-        };
-        /** PolicyIn */
-        PolicyIn: {
-            policy: components["schemas"]["Policy-Input"];
-        };
-        /** PolicyIssue */
-        PolicyIssue: {
-            /** Path */
-            path: string;
-            /** Message */
-            message: string;
-        };
-        /** PolicyOut */
-        PolicyOut: {
-            policy: components["schemas"]["Policy-Output"];
-            /** Version */
-            version: number;
-            /** Issues */
-            issues: components["schemas"]["PolicyIssue"][];
-        };
-        /** PoolOut */
-        PoolOut: {
-            /** Count */
-            count: number;
-        };
-        /** Principal */
-        Principal: {
-            /** User Id */
-            user_id: string;
-            /** Org Id */
-            org_id: string;
-            /** Org Role */
-            org_role: string;
-            /** Org Slug */
-            org_slug: string | null;
-        };
-        /** ProjectCreate */
-        ProjectCreate: {
-            /** Name */
-            name: string;
-            /** Template Id */
-            template_id?: string | null;
-            /** Description */
-            description?: string | null;
-        };
-        /** ProjectOut */
-        ProjectOut: {
-            /** Id */
-            id: string;
-            /** Name */
-            name: string;
-            /** Description */
-            description: string | null;
-            /** Template Id */
-            template_id: string | null;
-            /** Stage */
-            stage: string;
-            /** Default Lane */
-            default_lane: string;
-            /** Live Model Label */
-            live_model_label: string | null;
-            /**
-             * Created At
-             * Format: date-time
-             */
-            created_at: string;
-        };
-        /** ProjectPatch */
-        ProjectPatch: {
-            /** Name */
-            name?: string | null;
-            /** Description */
-            description?: string | null;
-            /** Default Lane */
-            default_lane?: ("jev" | "sys1" | "auto") | null;
-        };
-        /** Report */
-        Report: {
-            /** Available */
-            available: boolean;
-            /** Rows */
-            rows?: components["schemas"]["ReportRow"][];
-            verdict?: components["schemas"]["Verdict"] | null;
-            details?: components["schemas"]["ReportDetails"];
-            /**
-             * Is Preview
-             * @default false
-             */
-            is_preview: boolean;
-            /**
-             * Is Fixture
-             * @default false
-             */
-            is_fixture: boolean;
-            /** Test Set Version */
-            test_set_version?: number | null;
-            /**
-             * Too Few Test
-             * @default false
-             */
-            too_few_test: boolean;
-            /** Job Id */
-            job_id?: string | null;
-        };
-        /** ReportDetails */
-        ReportDetails: {
-            /** Per Bucket */
-            per_bucket?: {
-                [key: string]: {
-                    [key: string]: number;
-                };
-            };
-            /** Confusions */
-            confusions?: {
-                [key: string]: components["schemas"]["Confusion"][];
-            };
-            /** Test Per Bucket */
-            test_per_bucket?: {
-                [key: string]: number;
-            };
-            /** Trainer */
-            trainer?: string | null;
-            /** Adapter Ref */
-            adapter_ref?: string | null;
-        };
-        /** ReportRow */
-        ReportRow: {
-            /**
-             * Key
-             * @enum {string}
-             */
-            key: "sys1" | "jev" | "jev_labels" | "base";
-            /** Label */
-            label: string;
-            /**
-             * Status
-             * @enum {string}
-             */
-            status: "ok" | "preview" | "unavailable" | "errored";
-            /** Message */
-            message?: string | null;
-            /** Accuracy */
-            accuracy?: number | null;
-            /** Ci Low */
-            ci_low?: number | null;
-            /** Ci High */
-            ci_high?: number | null;
-            /** N */
-            n?: number | null;
-            /**
-             * Errors
-             * @default 0
-             */
-            errors: number;
-            /** Median Latency Ms */
-            median_latency_ms?: number | null;
-        };
-        /** ReviewIn */
-        ReviewIn: {
-            /**
-             * Action
-             * @enum {string}
-             */
-            action: "agree" | "move";
-            /** To */
-            to?: string | null;
-        };
-        /** Rule */
-        "Rule-Input": {
-            /** Id */
-            id: string;
-            /** Text */
-            text: string;
-            /** Label */
-            label: string;
-            /** When */
-            when?: components["schemas"]["Leaf"] | components["schemas"]["AllOf-Input"] | components["schemas"]["AnyOf-Input"] | components["schemas"]["NotOf-Input"] | null;
-        };
-        /** Rule */
-        "Rule-Output": {
-            /** Id */
-            id: string;
-            /** Text */
-            text: string;
-            /** Label */
-            label: string;
-            /** When */
-            when?: components["schemas"]["Leaf"] | components["schemas"]["AllOf-Output"] | components["schemas"]["AnyOf-Output"] | components["schemas"]["NotOf-Output"] | null;
-        };
-        /** SampleOut */
-        SampleOut: {
-            /** Id */
-            id: string;
-            /** State */
-            state: string | {
-                [key: string]: unknown;
-            } | unknown[];
-        };
-        /** StageEvent */
-        StageEvent: {
-            /**
-             * @description discriminator enum property added by openapi-typescript
-             * @enum {string}
-             */
-            type: "stage";
-            /** Stage */
-            stage: string;
-        };
-        /** Staged */
-        Staged: {
-            /** Upload Id */
-            upload_id: string;
-            /** Columns */
-            columns: string[];
-            /** Preview */
-            preview: {
-                [key: string]: string;
-            }[];
-            /** Row Count */
-            row_count: number;
-            /** Label Values */
-            label_values?: {
-                [key: string]: number;
-            };
-        };
-        /** Sys1Block */
-        Sys1Block: {
-            /** Decision Id */
-            decision_id: string;
-            /** Routed To */
-            routed_to: string;
-            /** Policy Version */
-            policy_version: number;
-            /** Latency Ms */
-            latency_ms: number;
-        };
-        /** TemplateOut */
-        TemplateOut: {
-            /** Id */
-            id: string;
-            /** Name */
-            name: string;
-            /** Summary */
-            summary: string;
-            /** Fit */
-            fit: string;
-            /** Fit Reasons */
-            fit_reasons: string[];
-            /** Sample Inputs */
-            sample_inputs: string[];
-            /** Flagship */
-            flagship: boolean;
-        };
-        /** TextEvent */
-        TextEvent: {
-            /**
-             * @description discriminator enum property added by openapi-typescript
-             * @enum {string}
-             */
-            type: "text";
-            /** Delta */
-            delta: string;
-        };
-        /** ToolEvent */
-        ToolEvent: {
-            /**
-             * @description discriminator enum property added by openapi-typescript
-             * @enum {string}
-             */
-            type: "tool";
-            /** Name */
-            name: string;
-            /**
-             * Status
-             * @enum {string}
-             */
-            status: "started" | "done" | "error";
-            /**
-             * Summary
-             * @default
-             */
-            summary: string;
-        };
-        /** TryIn */
-        TryIn: {
-            /** Text */
-            text?: string | null;
-            /** Sample Id */
-            sample_id?: string | null;
-        };
-        /** TryResult */
-        TryResult: {
-            /** Results */
-            results: components["schemas"]["LaneResult"][];
-            /** Gold */
-            gold?: string | null;
-            /** Rule Id */
-            rule_id?: string | null;
-            /**
-             * Recorded
-             * @default {}
-             */
-            recorded: {
-                [key: string]: string;
-            };
-            /**
-             * Recorded Is Fixture
-             * @default false
-             */
-            recorded_is_fixture: boolean;
-        };
-        /** TryResultEvent */
-        TryResultEvent: {
-            /**
-             * @description discriminator enum property added by openapi-typescript
-             * @enum {string}
-             */
-            type: "try_result";
-            /** Input */
-            input: string;
-            result: components["schemas"]["TryResult"];
-        };
-        /** UserEvent */
-        UserEvent: {
-            /**
-             * @description discriminator enum property added by openapi-typescript
-             * @enum {string}
-             */
-            type: "user";
-            /** Text */
-            text: string;
-        };
-        /** ValidationError */
-        ValidationError: {
-            /** Location */
-            loc: (string | number)[];
-            /** Message */
-            msg: string;
-            /** Error Type */
-            type: string;
-            /** Input */
-            input?: unknown;
-            /** Context */
-            ctx?: Record<string, never>;
-        };
-        /** Verdict */
-        Verdict: {
-            /**
-             * Winner
-             * @enum {string}
-             */
-            winner: "sys1" | "jev" | "inconclusive" | "none";
-            /** Diff */
-            diff?: number | null;
-            /** Ci Low */
-            ci_low?: number | null;
-            /** Ci High */
-            ci_high?: number | null;
-            /** Sentence */
-            sentence: string;
-        };
-        /** FeedbackIn */
-        system1__decisions__router__FeedbackIn: {
-            /**
-             * Kind
-             * @enum {string}
-             */
-            kind: "confirm" | "correction";
-            /** Correct Label */
-            correct_label?: string | null;
-        };
-        /** FeedbackIn */
-        system1__gateway__router_public__FeedbackIn: {
-            /** Decision Id */
-            decision_id: string;
-            /** Correct */
-            correct: {
-                [key: string]: string;
-            };
-        };
-    };
-    responses: never;
-    parameters: never;
-    requestBodies: never;
-    headers: never;
-    pathItems: never;
+  schemas: {
+    /** AllOf */
+    "AllOf-Input": {
+      /** All */
+      all: (
+        | components["schemas"]["Leaf"]
+        | components["schemas"]["AllOf-Input"]
+        | components["schemas"]["AnyOf-Input"]
+        | components["schemas"]["NotOf-Input"]
+      )[]
+    }
+    /** AllOf */
+    "AllOf-Output": {
+      /** All */
+      all: (
+        | components["schemas"]["Leaf"]
+        | components["schemas"]["AllOf-Output"]
+        | components["schemas"]["AnyOf-Output"]
+        | components["schemas"]["NotOf-Output"]
+      )[]
+    }
+    /** AnyOf */
+    "AnyOf-Input": {
+      /** Any */
+      any: (
+        | components["schemas"]["Leaf"]
+        | components["schemas"]["AllOf-Input"]
+        | components["schemas"]["AnyOf-Input"]
+        | components["schemas"]["NotOf-Input"]
+      )[]
+    }
+    /** AnyOf */
+    "AnyOf-Output": {
+      /** Any */
+      any: (
+        | components["schemas"]["Leaf"]
+        | components["schemas"]["AllOf-Output"]
+        | components["schemas"]["AnyOf-Output"]
+        | components["schemas"]["NotOf-Output"]
+      )[]
+    }
+    /** Body_upload_context_api_projects__project_id__context_post */
+    Body_upload_context_api_projects__project_id__context_post: {
+      /** File */
+      file: string
+    }
+    /** Body_upload_examples_api_projects__project_id__uploads_post */
+    Body_upload_examples_api_projects__project_id__uploads_post: {
+      /** File */
+      file: string
+    }
+    /** CanvasEvent */
+    CanvasEvent: {
+      /**
+       * @description discriminator enum property added by openapi-typescript
+       * @enum {string}
+       */
+      type: "canvas"
+      policy: components["schemas"]["Policy-Output"]
+      /** Version */
+      version: number
+      /** Changed */
+      changed: string[]
+    }
+    /**
+     * CanvasProposalEvent
+     * @description A draft the person can apply or ignore; nothing is saved until they do.
+     */
+    CanvasProposalEvent: {
+      /**
+       * @description discriminator enum property added by openapi-typescript
+       * @enum {string}
+       */
+      type: "canvas_proposal"
+      policy: components["schemas"]["Policy-Output"]
+      /** Notes */
+      notes: string[]
+      /** Issues */
+      issues: components["schemas"]["PolicyIssue"][]
+    }
+    /** ChoiceAnswer */
+    ChoiceAnswer: {
+      /**
+       * Type
+       * @constant
+       */
+      type: "choice"
+      /** Choice */
+      choice: string
+      /** Confidence */
+      confidence?: number | null
+      /** Probabilities */
+      probabilities: {
+        [key: string]: number
+      }
+    }
+    /** ChoicesEvent */
+    ChoicesEvent: {
+      /**
+       * @description discriminator enum property added by openapi-typescript
+       * @enum {string}
+       */
+      type: "choices"
+      /** Question */
+      question: string
+      /** Options */
+      options: string[]
+    }
+    /** ConfigOut */
+    ConfigOut: {
+      /** Sys1 Available */
+      sys1_available: boolean
+    }
+    /** ConfirmEvent */
+    ConfirmEvent: {
+      /**
+       * @description discriminator enum property added by openapi-typescript
+       * @enum {string}
+       */
+      type: "confirm"
+      /** Action Id */
+      action_id: string
+      /**
+       * Kind
+       * @enum {string}
+       */
+      kind: "dataset" | "generation" | "training"
+      /** Title */
+      title: string
+      /** Detail */
+      detail: string
+      /** Est Minutes */
+      est_minutes: number
+      /** Est Cost Usd */
+      est_cost_usd: number
+      /** Examples */
+      examples?: number | null
+    }
+    /** ConfirmOut */
+    ConfirmOut: {
+      /** Status */
+      status: string
+      /** Result */
+      result: {
+        [key: string]: unknown
+      }
+    }
+    /** Confusion */
+    Confusion: {
+      /** Gold */
+      gold: string
+      /** Pred */
+      pred: string
+      /** Count */
+      count: number
+    }
+    /** ContextDocOut */
+    ContextDocOut: {
+      /** Id */
+      id: string
+      /** Name */
+      name: string
+      /** Kind */
+      kind: string
+      /** Chars */
+      chars: number
+      /**
+       * Created At
+       * Format: date-time
+       */
+      created_at: string
+    }
+    /** DecideIn */
+    DecideIn: {
+      /** Model */
+      model?: string | null
+      /** State */
+      state:
+        | string
+        | {
+            [key: string]: unknown
+          }
+        | unknown[]
+      /** Questions */
+      questions?: {
+        [key: string]: unknown
+      } | null
+    }
+    /** DecideOut */
+    DecideOut: {
+      /** Model */
+      model: string
+      /** Answers */
+      answers: {
+        [key: string]: components["schemas"]["ChoiceAnswer"]
+      }
+      /** Usage */
+      usage?: {
+        [key: string]: unknown
+      } | null
+      system1: components["schemas"]["Sys1Block"]
+    }
+    /** DeleteBucketIn */
+    DeleteBucketIn: {
+      /**
+       * Mode
+       * @enum {string}
+       */
+      mode: "drop" | "move"
+      /** To */
+      to?: string | null
+      /**
+       * Reset Test
+       * @default false
+       */
+      reset_test: boolean
+    }
+    /** DeleteBucketResult */
+    DeleteBucketResult: {
+      /** Policy Version */
+      policy_version: number
+      /** Examples Affected */
+      examples_affected: number
+      /** Test Set Version */
+      test_set_version: number
+    }
+    /** DoneEvent */
+    DoneEvent: {
+      /**
+       * @description discriminator enum property added by openapi-typescript
+       * @enum {string}
+       */
+      type: "done"
+    }
+    /** DraftIn */
+    DraftIn: {
+      /**
+       * Source
+       * @enum {string}
+       */
+      source: "examples" | "context"
+    }
+    /** DraftOut */
+    DraftOut: {
+      policy: components["schemas"]["Policy-Output"]
+      /** Notes */
+      notes: string[]
+      /** Issues */
+      issues: components["schemas"]["PolicyIssue"][]
+    }
+    /** ErrorEvent */
+    ErrorEvent: {
+      /**
+       * @description discriminator enum property added by openapi-typescript
+       * @enum {string}
+       */
+      type: "error"
+      /** Message */
+      message: string
+    }
+    /** Estimate */
+    Estimate: {
+      /** Examples */
+      examples: number
+      /** Est Minutes */
+      est_minutes: number
+      /** Est Cost Usd */
+      est_cost_usd: number
+    }
+    /** ExampleOut */
+    ExampleOut: {
+      /** Id */
+      id: string
+      /** Input */
+      input:
+        | string
+        | {
+            [key: string]: unknown
+          }
+      /** Label */
+      label: string
+      /** Source */
+      source: string
+      /** Split */
+      split: string
+      /** How Sure */
+      how_sure: number | null
+      /** Review */
+      review: string | null
+    }
+    /** FeedbackOut */
+    FeedbackOut: {
+      /**
+       * Status
+       * @default recorded
+       */
+      status: string
+    }
+    /** FitEvent */
+    FitEvent: {
+      /**
+       * @description discriminator enum property added by openapi-typescript
+       * @enum {string}
+       */
+      type: "fit"
+      /**
+       * Rating
+       * @enum {string}
+       */
+      rating: "good" | "workable" | "poor"
+      /** Reasons */
+      reasons: string[]
+    }
+    /** GenerateIn */
+    GenerateIn: {
+      /** Targets */
+      targets?: {
+        [key: string]: number
+      } | null
+    }
+    /** HTTPValidationError */
+    HTTPValidationError: {
+      /** Detail */
+      detail?: components["schemas"]["ValidationError"][]
+    }
+    /** Health */
+    Health: {
+      /** Per Bucket */
+      per_bucket: {
+        [key: string]: {
+          [key: string]: number
+        }
+      }
+      /** Sources */
+      sources: {
+        [key: string]: number
+      }
+      /** Below Minimum */
+      below_minimum: string[]
+      /** Synthetic Test */
+      synthetic_test: boolean
+      /** Frozen */
+      frozen: boolean
+      /** Test Set Version */
+      test_set_version: number
+      /** Dataset Version */
+      dataset_version: number
+    }
+    /** ImportMapping */
+    ImportMapping: {
+      /** Input Columns */
+      input_columns: string[]
+      /** Label Column */
+      label_column: string
+      /** Label Map */
+      label_map?: {
+        [key: string]: string | null
+      }
+      /**
+       * Create Buckets
+       * @default false
+       */
+      create_buckets: boolean
+    }
+    /** ImportResult */
+    ImportResult: {
+      /** Added */
+      added: number
+      /** Skipped Duplicates */
+      skipped_duplicates: number
+      /** Dropped Rows */
+      dropped_rows: number
+      /** Too Long */
+      too_long: number
+      /** Created Buckets */
+      created_buckets: string[]
+    }
+    /** InboxItem */
+    InboxItem: {
+      /** Decision Id */
+      decision_id: string
+      /** State */
+      state:
+        | string
+        | {
+            [key: string]: unknown
+          }
+        | unknown[]
+      /** Answer */
+      answer: string | null
+      /** Lane */
+      lane: string
+      /**
+       * Created At
+       * Format: date-time
+       */
+      created_at: string
+      /** How Sure */
+      how_sure?: number | null
+    }
+    /** InboxOut */
+    InboxOut: {
+      /** Items */
+      items: components["schemas"]["InboxItem"][]
+    }
+    /** InputField */
+    InputField: {
+      /** Key */
+      key: string
+      /** Label */
+      label: string
+      /**
+       * Type
+       * @enum {string}
+       */
+      type: "enum" | "int" | "float" | "bool" | "text"
+      /** Values */
+      values?: string[] | null
+      /**
+       * Nullable
+       * @default true
+       */
+      nullable: boolean
+      /**
+       * Description
+       * @default
+       */
+      description: string
+    }
+    /** JobOut */
+    JobOut: {
+      /** Id */
+      id: string
+      /** Project Id */
+      project_id: string
+      /** Kind */
+      kind: string
+      /** Status */
+      status: string
+      /** Progress */
+      progress: number
+      /** Stage */
+      stage: string | null
+      /** Message */
+      message: string | null
+      /** Result */
+      result: {
+        [key: string]: unknown
+      } | null
+      /**
+       * Created At
+       * Format: date-time
+       */
+      created_at: string
+      /** Finished At */
+      finished_at: string | null
+    }
+    /** JobStarted */
+    JobStarted: {
+      /** Job Id */
+      job_id: string
+    }
+    /** KeyCreated */
+    KeyCreated: {
+      /** Id */
+      id: string
+      /** Prefix */
+      prefix: string
+      /**
+       * Created At
+       * Format: date-time
+       */
+      created_at: string
+      /** Key */
+      key: string
+    }
+    /** KeyOut */
+    KeyOut: {
+      /** Id */
+      id: string
+      /** Prefix */
+      prefix: string
+      /**
+       * Created At
+       * Format: date-time
+       */
+      created_at: string
+    }
+    /** LabelCount */
+    LabelCount: {
+      /** Value */
+      value: string
+      /** Count */
+      count: number
+    }
+    /** LabelCounts */
+    LabelCounts: {
+      /** Column */
+      column: string
+      /** Values */
+      values: components["schemas"]["LabelCount"][]
+    }
+    /** LaneResult */
+    LaneResult: {
+      /**
+       * Lane
+       * @enum {string}
+       */
+      lane: "jev" | "jev_labels" | "sys1"
+      /** Label */
+      label?: string | null
+      /**
+       * Probabilities
+       * @default {}
+       */
+      probabilities: {
+        [key: string]: number
+      }
+      /** Model */
+      model?: string | null
+      /** Latency Ms */
+      latency_ms?: number | null
+      /** Decision Id */
+      decision_id?: string | null
+      /** Error */
+      error?: string | null
+      /**
+       * Retryable
+       * @default false
+       */
+      retryable: boolean
+    }
+    /** Leaf */
+    Leaf: {
+      /** Field */
+      field: string
+      /**
+       * Op
+       * @enum {string}
+       */
+      op: "eq" | "ne" | "gt" | "gte" | "lt" | "lte" | "in" | "is_null"
+      /** Value */
+      value?: unknown
+    }
+    /** MessageIn */
+    MessageIn: {
+      /** Text */
+      text: string
+      /** Stage */
+      stage?: string | null
+    }
+    /** NotOf */
+    "NotOf-Input": {
+      /** Not */
+      not:
+        | components["schemas"]["Leaf"]
+        | components["schemas"]["AllOf-Input"]
+        | components["schemas"]["AnyOf-Input"]
+        | components["schemas"]["NotOf-Input"]
+    }
+    /** NotOf */
+    "NotOf-Output": {
+      /** Not */
+      not:
+        | components["schemas"]["Leaf"]
+        | components["schemas"]["AllOf-Output"]
+        | components["schemas"]["AnyOf-Output"]
+        | components["schemas"]["NotOf-Output"]
+    }
+    /** Option */
+    Option: {
+      /** Key */
+      key: string
+      /** Name */
+      name: string
+      /** Covers */
+      covers?: string[]
+      /** Excludes */
+      excludes?: string[]
+      /**
+       * Example
+       * @default
+       */
+      example: string
+    }
+    /** PasteIn */
+    PasteIn: {
+      /**
+       * Name
+       * @default Pasted text
+       */
+      name: string
+      /** Text */
+      text: string
+    }
+    /** Policy */
+    "Policy-Input": {
+      /** Decision Question */
+      decision_question: string
+      /**
+       * Question Key
+       * @default decision
+       */
+      question_key: string
+      /** Inputs */
+      inputs?: components["schemas"]["InputField"][]
+      /** Options */
+      options: components["schemas"]["Option"][]
+      /** Rules */
+      rules?: components["schemas"]["Rule-Input"][]
+      /** Guidelines */
+      guidelines?: string[]
+      /** Sample Inputs */
+      sample_inputs?: string[]
+    }
+    /** Policy */
+    "Policy-Output": {
+      /** Decision Question */
+      decision_question: string
+      /**
+       * Question Key
+       * @default decision
+       */
+      question_key: string
+      /** Inputs */
+      inputs?: components["schemas"]["InputField"][]
+      /** Options */
+      options: components["schemas"]["Option"][]
+      /** Rules */
+      rules?: components["schemas"]["Rule-Output"][]
+      /** Guidelines */
+      guidelines?: string[]
+      /** Sample Inputs */
+      sample_inputs?: string[]
+    }
+    /** PolicyIn */
+    PolicyIn: {
+      policy: components["schemas"]["Policy-Input"]
+    }
+    /** PolicyIssue */
+    PolicyIssue: {
+      /** Path */
+      path: string
+      /** Message */
+      message: string
+    }
+    /** PolicyOut */
+    PolicyOut: {
+      policy: components["schemas"]["Policy-Output"]
+      /** Version */
+      version: number
+      /** Issues */
+      issues: components["schemas"]["PolicyIssue"][]
+    }
+    /** PoolOut */
+    PoolOut: {
+      /** Count */
+      count: number
+    }
+    /** Principal */
+    Principal: {
+      /** User Id */
+      user_id: string
+      /** Org Id */
+      org_id: string
+      /** Org Role */
+      org_role: string
+      /** Org Slug */
+      org_slug: string | null
+    }
+    /** ProjectCreate */
+    ProjectCreate: {
+      /** Name */
+      name: string
+      /** Template Id */
+      template_id?: string | null
+      /** Description */
+      description?: string | null
+    }
+    /** ProjectOut */
+    ProjectOut: {
+      /** Id */
+      id: string
+      /** Name */
+      name: string
+      /** Description */
+      description: string | null
+      /** Template Id */
+      template_id: string | null
+      /** Stage */
+      stage: string
+      /** Default Lane */
+      default_lane: string
+      /** Live Model Label */
+      live_model_label: string | null
+      /**
+       * Created At
+       * Format: date-time
+       */
+      created_at: string
+    }
+    /** ProjectPatch */
+    ProjectPatch: {
+      /** Name */
+      name?: string | null
+      /** Description */
+      description?: string | null
+      /** Default Lane */
+      default_lane?: ("jev" | "sys1" | "auto") | null
+    }
+    /** Report */
+    Report: {
+      /** Available */
+      available: boolean
+      /** Rows */
+      rows?: components["schemas"]["ReportRow"][]
+      verdict?: components["schemas"]["Verdict"] | null
+      details?: components["schemas"]["ReportDetails"]
+      /**
+       * Is Preview
+       * @default false
+       */
+      is_preview: boolean
+      /**
+       * Is Fixture
+       * @default false
+       */
+      is_fixture: boolean
+      /** Test Set Version */
+      test_set_version?: number | null
+      /**
+       * Too Few Test
+       * @default false
+       */
+      too_few_test: boolean
+      /** Job Id */
+      job_id?: string | null
+    }
+    /** ReportDetails */
+    ReportDetails: {
+      /** Per Bucket */
+      per_bucket?: {
+        [key: string]: {
+          [key: string]: number
+        }
+      }
+      /** Confusions */
+      confusions?: {
+        [key: string]: components["schemas"]["Confusion"][]
+      }
+      /** Test Per Bucket */
+      test_per_bucket?: {
+        [key: string]: number
+      }
+      /** Trainer */
+      trainer?: string | null
+      /** Adapter Ref */
+      adapter_ref?: string | null
+    }
+    /** ReportRow */
+    ReportRow: {
+      /**
+       * Key
+       * @enum {string}
+       */
+      key: "sys1" | "jev" | "jev_labels" | "base"
+      /** Label */
+      label: string
+      /**
+       * Status
+       * @enum {string}
+       */
+      status: "ok" | "preview" | "unavailable" | "errored"
+      /** Message */
+      message?: string | null
+      /** Accuracy */
+      accuracy?: number | null
+      /** Ci Low */
+      ci_low?: number | null
+      /** Ci High */
+      ci_high?: number | null
+      /** N */
+      n?: number | null
+      /**
+       * Errors
+       * @default 0
+       */
+      errors: number
+      /** Median Latency Ms */
+      median_latency_ms?: number | null
+    }
+    /** ReviewIn */
+    ReviewIn: {
+      /**
+       * Action
+       * @enum {string}
+       */
+      action: "agree" | "move"
+      /** To */
+      to?: string | null
+    }
+    /** Rule */
+    "Rule-Input": {
+      /** Id */
+      id: string
+      /** Text */
+      text: string
+      /** Label */
+      label: string
+      /** When */
+      when?:
+        | components["schemas"]["Leaf"]
+        | components["schemas"]["AllOf-Input"]
+        | components["schemas"]["AnyOf-Input"]
+        | components["schemas"]["NotOf-Input"]
+        | null
+    }
+    /** Rule */
+    "Rule-Output": {
+      /** Id */
+      id: string
+      /** Text */
+      text: string
+      /** Label */
+      label: string
+      /** When */
+      when?:
+        | components["schemas"]["Leaf"]
+        | components["schemas"]["AllOf-Output"]
+        | components["schemas"]["AnyOf-Output"]
+        | components["schemas"]["NotOf-Output"]
+        | null
+    }
+    /** SampleOut */
+    SampleOut: {
+      /** Id */
+      id: string
+      /** State */
+      state:
+        | string
+        | {
+            [key: string]: unknown
+          }
+        | unknown[]
+    }
+    /** StageEvent */
+    StageEvent: {
+      /**
+       * @description discriminator enum property added by openapi-typescript
+       * @enum {string}
+       */
+      type: "stage"
+      /** Stage */
+      stage: string
+    }
+    /** Staged */
+    Staged: {
+      /** Upload Id */
+      upload_id: string
+      /** Columns */
+      columns: string[]
+      /** Preview */
+      preview: {
+        [key: string]: string
+      }[]
+      /** Row Count */
+      row_count: number
+      /** Label Values */
+      label_values?: {
+        [key: string]: number
+      }
+    }
+    /** Sys1Block */
+    Sys1Block: {
+      /** Decision Id */
+      decision_id: string
+      /** Routed To */
+      routed_to: string
+      /** Policy Version */
+      policy_version: number
+      /** Latency Ms */
+      latency_ms: number
+    }
+    /** TemplateOut */
+    TemplateOut: {
+      /** Id */
+      id: string
+      /** Name */
+      name: string
+      /** Summary */
+      summary: string
+      /** Fit */
+      fit: string
+      /** Fit Reasons */
+      fit_reasons: string[]
+      /** Sample Inputs */
+      sample_inputs: string[]
+      /** Flagship */
+      flagship: boolean
+    }
+    /** TextEvent */
+    TextEvent: {
+      /**
+       * @description discriminator enum property added by openapi-typescript
+       * @enum {string}
+       */
+      type: "text"
+      /** Delta */
+      delta: string
+    }
+    /** ToolEvent */
+    ToolEvent: {
+      /**
+       * @description discriminator enum property added by openapi-typescript
+       * @enum {string}
+       */
+      type: "tool"
+      /** Name */
+      name: string
+      /**
+       * Status
+       * @enum {string}
+       */
+      status: "started" | "done" | "error"
+      /**
+       * Summary
+       * @default
+       */
+      summary: string
+    }
+    /** TryIn */
+    TryIn: {
+      /** Text */
+      text?: string | null
+      /** Sample Id */
+      sample_id?: string | null
+    }
+    /** TryResult */
+    TryResult: {
+      /** Results */
+      results: components["schemas"]["LaneResult"][]
+      /** Gold */
+      gold?: string | null
+      /** Rule Id */
+      rule_id?: string | null
+      /**
+       * Recorded
+       * @default {}
+       */
+      recorded: {
+        [key: string]: string
+      }
+      /**
+       * Recorded Is Fixture
+       * @default false
+       */
+      recorded_is_fixture: boolean
+    }
+    /** TryResultEvent */
+    TryResultEvent: {
+      /**
+       * @description discriminator enum property added by openapi-typescript
+       * @enum {string}
+       */
+      type: "try_result"
+      /** Input */
+      input: string
+      result: components["schemas"]["TryResult"]
+    }
+    /** UserEvent */
+    UserEvent: {
+      /**
+       * @description discriminator enum property added by openapi-typescript
+       * @enum {string}
+       */
+      type: "user"
+      /** Text */
+      text: string
+    }
+    /** ValidationError */
+    ValidationError: {
+      /** Location */
+      loc: (string | number)[]
+      /** Message */
+      msg: string
+      /** Error Type */
+      type: string
+      /** Input */
+      input?: unknown
+      /** Context */
+      ctx?: Record<string, never>
+    }
+    /** Verdict */
+    Verdict: {
+      /**
+       * Winner
+       * @enum {string}
+       */
+      winner: "sys1" | "jev" | "inconclusive" | "none"
+      /** Diff */
+      diff?: number | null
+      /** Ci Low */
+      ci_low?: number | null
+      /** Ci High */
+      ci_high?: number | null
+      /** Sentence */
+      sentence: string
+    }
+    /** FeedbackIn */
+    system1__decisions__router__FeedbackIn: {
+      /**
+       * Kind
+       * @enum {string}
+       */
+      kind: "confirm" | "correction"
+      /** Correct Label */
+      correct_label?: string | null
+    }
+    /** FeedbackIn */
+    system1__gateway__router_public__FeedbackIn: {
+      /** Decision Id */
+      decision_id: string
+      /** Correct */
+      correct: {
+        [key: string]: string
+      }
+    }
+  }
+  responses: never
+  parameters: never
+  requestBodies: never
+  headers: never
+  pathItems: never
 }
-export type $defs = Record<string, never>;
+export type $defs = Record<string, never>
 export interface operations {
-    health_api_health_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        [key: string]: string;
-                    };
-                };
-            };
-        };
-    };
-    me_api_me_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Principal"];
-                };
-            };
-        };
-    };
-    config_api_config_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ConfigOut"];
-                };
-            };
-        };
-    };
-    templates_api_templates_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["TemplateOut"][];
-                };
-            };
-        };
-    };
-    list_projects_api_projects_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ProjectOut"][];
-                };
-            };
-        };
-    };
-    create_project_api_projects_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["ProjectCreate"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ProjectOut"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    get_project_api_projects__project_id__get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                project_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ProjectOut"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    delete_project_api_projects__project_id__delete: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                project_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            204: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    patch_project_api_projects__project_id__patch: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                project_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["ProjectPatch"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ProjectOut"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    get_policy_api_projects__project_id__policy_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                project_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["PolicyOut"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    put_policy_api_projects__project_id__policy_put: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                project_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["PolicyIn"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["PolicyOut"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    list_context_api_projects__project_id__context_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                project_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ContextDocOut"][];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    upload_context_api_projects__project_id__context_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                project_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "multipart/form-data": components["schemas"]["Body_upload_context_api_projects__project_id__context_post"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ContextDocOut"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    paste_context_api_projects__project_id__context_paste_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                project_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["PasteIn"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ContextDocOut"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    delete_context_api_projects__project_id__context__doc_id__delete: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                project_id: string;
-                doc_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            204: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    examples_health_api_projects__project_id__examples_health_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                project_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Health"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    list_examples_api_projects__project_id__examples_get: {
-        parameters: {
-            query?: {
-                split?: ("train" | "cal" | "test") | null;
-                source?: ("uploaded" | "generated" | "corrected") | null;
-                limit?: number;
-            };
-            header?: never;
-            path: {
-                project_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ExampleOut"][];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    review_queue_api_projects__project_id__review_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                project_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ExampleOut"][];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    review_example_api_examples__example_id__review_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                example_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["ReviewIn"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ExampleOut"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    delete_bucket_api_projects__project_id__buckets__key__delete_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                project_id: string;
-                key: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["DeleteBucketIn"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["DeleteBucketResult"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    upload_examples_api_projects__project_id__uploads_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                project_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "multipart/form-data": components["schemas"]["Body_upload_examples_api_projects__project_id__uploads_post"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Staged"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    upload_labels_api_projects__project_id__uploads__upload_id__labels_get: {
-        parameters: {
-            query: {
-                column: string;
-            };
-            header?: never;
-            path: {
-                project_id: string;
-                upload_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["LabelCounts"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    import_examples_api_projects__project_id__uploads__upload_id__import_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                project_id: string;
-                upload_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["ImportMapping"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ImportResult"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    samples_api_projects__project_id__samples_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                project_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["SampleOut"][];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    try_it_api_projects__project_id__try_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                project_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["TryIn"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["TryResult"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    list_keys_api_projects__project_id__keys_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                project_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["KeyOut"][];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    create_key_api_projects__project_id__keys_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                project_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["KeyCreated"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    revoke_key_api_projects__project_id__keys__key_id__delete: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                project_id: string;
-                key_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            204: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    post_feedback_api_decisions__decision_id__feedback_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                decision_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["system1__decisions__router__FeedbackIn"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["FeedbackOut"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    get_inbox_api_projects__project_id__inbox_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                project_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["InboxOut"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    get_training_pool_api_projects__project_id__training_pool_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                project_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["PoolOut"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    send_message_api_projects__project_id__agent_messages_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                project_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["MessageIn"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    history_api_projects__project_id__agent_history_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                project_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": (components["schemas"]["UserEvent"] | components["schemas"]["TextEvent"] | components["schemas"]["ToolEvent"] | components["schemas"]["ChoicesEvent"] | components["schemas"]["FitEvent"] | components["schemas"]["CanvasEvent"] | components["schemas"]["CanvasProposalEvent"] | components["schemas"]["TryResultEvent"] | components["schemas"]["ConfirmEvent"] | components["schemas"]["StageEvent"] | components["schemas"]["ErrorEvent"] | components["schemas"]["DoneEvent"])[];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    start_over_api_projects__project_id__agent_history_delete: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                project_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            204: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    confirm_api_projects__project_id__actions__action_id__confirm_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                project_id: string;
-                action_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ConfirmOut"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    cancel_api_projects__project_id__actions__action_id__cancel_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                project_id: string;
-                action_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ConfirmOut"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    estimate_api_projects__project_id__generate_estimate_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                project_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["GenerateIn"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Estimate"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    generate_api_projects__project_id__generate_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                project_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["GenerateIn"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["JobStarted"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    get_job_api_jobs__job_id__get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                job_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["JobOut"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    draft_api_projects__project_id__draft_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                project_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["DraftIn"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["DraftOut"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    train_api_projects__project_id__training_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                project_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["JobStarted"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    get_report_api_projects__project_id__report_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                project_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Report"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    decide_v1_systemone_post: {
-        parameters: {
-            query?: never;
-            header?: {
-                authorization?: string | null;
-            };
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["DecideIn"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["DecideOut"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    feedback_v1_feedback_post: {
-        parameters: {
-            query?: never;
-            header?: {
-                authorization?: string | null;
-            };
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["system1__gateway__router_public__FeedbackIn"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["FeedbackOut"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
+  health_api_health_get: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": {
+            [key: string]: string
+          }
+        }
+      }
+    }
+  }
+  me_api_me_get: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["Principal"]
+        }
+      }
+    }
+  }
+  config_api_config_get: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["ConfigOut"]
+        }
+      }
+    }
+  }
+  templates_api_templates_get: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["TemplateOut"][]
+        }
+      }
+    }
+  }
+  list_projects_api_projects_get: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["ProjectOut"][]
+        }
+      }
+    }
+  }
+  create_project_api_projects_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["ProjectCreate"]
+      }
+    }
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["ProjectOut"]
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"]
+        }
+      }
+    }
+  }
+  get_project_api_projects__project_id__get: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        project_id: string
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["ProjectOut"]
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"]
+        }
+      }
+    }
+  }
+  delete_project_api_projects__project_id__delete: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        project_id: string
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      204: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"]
+        }
+      }
+    }
+  }
+  patch_project_api_projects__project_id__patch: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        project_id: string
+      }
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["ProjectPatch"]
+      }
+    }
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["ProjectOut"]
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"]
+        }
+      }
+    }
+  }
+  get_policy_api_projects__project_id__policy_get: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        project_id: string
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["PolicyOut"]
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"]
+        }
+      }
+    }
+  }
+  put_policy_api_projects__project_id__policy_put: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        project_id: string
+      }
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["PolicyIn"]
+      }
+    }
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["PolicyOut"]
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"]
+        }
+      }
+    }
+  }
+  list_context_api_projects__project_id__context_get: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        project_id: string
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["ContextDocOut"][]
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"]
+        }
+      }
+    }
+  }
+  upload_context_api_projects__project_id__context_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        project_id: string
+      }
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        "multipart/form-data": components["schemas"]["Body_upload_context_api_projects__project_id__context_post"]
+      }
+    }
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["ContextDocOut"]
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"]
+        }
+      }
+    }
+  }
+  paste_context_api_projects__project_id__context_paste_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        project_id: string
+      }
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["PasteIn"]
+      }
+    }
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["ContextDocOut"]
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"]
+        }
+      }
+    }
+  }
+  delete_context_api_projects__project_id__context__doc_id__delete: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        project_id: string
+        doc_id: string
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      204: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"]
+        }
+      }
+    }
+  }
+  examples_health_api_projects__project_id__examples_health_get: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        project_id: string
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["Health"]
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"]
+        }
+      }
+    }
+  }
+  list_examples_api_projects__project_id__examples_get: {
+    parameters: {
+      query?: {
+        split?: ("train" | "cal" | "test") | null
+        source?: ("uploaded" | "generated" | "corrected") | null
+        limit?: number
+      }
+      header?: never
+      path: {
+        project_id: string
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["ExampleOut"][]
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"]
+        }
+      }
+    }
+  }
+  review_queue_api_projects__project_id__review_get: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        project_id: string
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["ExampleOut"][]
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"]
+        }
+      }
+    }
+  }
+  review_example_api_examples__example_id__review_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        example_id: string
+      }
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["ReviewIn"]
+      }
+    }
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["ExampleOut"]
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"]
+        }
+      }
+    }
+  }
+  delete_bucket_api_projects__project_id__buckets__key__delete_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        project_id: string
+        key: string
+      }
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["DeleteBucketIn"]
+      }
+    }
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["DeleteBucketResult"]
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"]
+        }
+      }
+    }
+  }
+  upload_examples_api_projects__project_id__uploads_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        project_id: string
+      }
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        "multipart/form-data": components["schemas"]["Body_upload_examples_api_projects__project_id__uploads_post"]
+      }
+    }
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["Staged"]
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"]
+        }
+      }
+    }
+  }
+  upload_labels_api_projects__project_id__uploads__upload_id__labels_get: {
+    parameters: {
+      query: {
+        column: string
+      }
+      header?: never
+      path: {
+        project_id: string
+        upload_id: string
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["LabelCounts"]
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"]
+        }
+      }
+    }
+  }
+  import_examples_api_projects__project_id__uploads__upload_id__import_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        project_id: string
+        upload_id: string
+      }
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["ImportMapping"]
+      }
+    }
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["ImportResult"]
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"]
+        }
+      }
+    }
+  }
+  samples_api_projects__project_id__samples_get: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        project_id: string
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["SampleOut"][]
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"]
+        }
+      }
+    }
+  }
+  try_it_api_projects__project_id__try_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        project_id: string
+      }
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["TryIn"]
+      }
+    }
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["TryResult"]
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"]
+        }
+      }
+    }
+  }
+  list_keys_api_projects__project_id__keys_get: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        project_id: string
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["KeyOut"][]
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"]
+        }
+      }
+    }
+  }
+  create_key_api_projects__project_id__keys_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        project_id: string
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["KeyCreated"]
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"]
+        }
+      }
+    }
+  }
+  revoke_key_api_projects__project_id__keys__key_id__delete: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        project_id: string
+        key_id: string
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      204: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"]
+        }
+      }
+    }
+  }
+  post_feedback_api_decisions__decision_id__feedback_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        decision_id: string
+      }
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["system1__decisions__router__FeedbackIn"]
+      }
+    }
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["FeedbackOut"]
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"]
+        }
+      }
+    }
+  }
+  get_inbox_api_projects__project_id__inbox_get: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        project_id: string
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["InboxOut"]
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"]
+        }
+      }
+    }
+  }
+  get_training_pool_api_projects__project_id__training_pool_get: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        project_id: string
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["PoolOut"]
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"]
+        }
+      }
+    }
+  }
+  send_message_api_projects__project_id__agent_messages_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        project_id: string
+      }
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["MessageIn"]
+      }
+    }
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"]
+        }
+      }
+    }
+  }
+  history_api_projects__project_id__agent_history_get: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        project_id: string
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": (
+            | components["schemas"]["UserEvent"]
+            | components["schemas"]["TextEvent"]
+            | components["schemas"]["ToolEvent"]
+            | components["schemas"]["ChoicesEvent"]
+            | components["schemas"]["FitEvent"]
+            | components["schemas"]["CanvasEvent"]
+            | components["schemas"]["CanvasProposalEvent"]
+            | components["schemas"]["TryResultEvent"]
+            | components["schemas"]["ConfirmEvent"]
+            | components["schemas"]["StageEvent"]
+            | components["schemas"]["ErrorEvent"]
+            | components["schemas"]["DoneEvent"]
+          )[]
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"]
+        }
+      }
+    }
+  }
+  start_over_api_projects__project_id__agent_history_delete: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        project_id: string
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      204: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"]
+        }
+      }
+    }
+  }
+  confirm_api_projects__project_id__actions__action_id__confirm_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        project_id: string
+        action_id: string
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["ConfirmOut"]
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"]
+        }
+      }
+    }
+  }
+  cancel_api_projects__project_id__actions__action_id__cancel_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        project_id: string
+        action_id: string
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["ConfirmOut"]
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"]
+        }
+      }
+    }
+  }
+  estimate_api_projects__project_id__generate_estimate_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        project_id: string
+      }
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["GenerateIn"]
+      }
+    }
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["Estimate"]
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"]
+        }
+      }
+    }
+  }
+  generate_api_projects__project_id__generate_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        project_id: string
+      }
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["GenerateIn"]
+      }
+    }
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["JobStarted"]
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"]
+        }
+      }
+    }
+  }
+  get_job_api_jobs__job_id__get: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        job_id: string
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["JobOut"]
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"]
+        }
+      }
+    }
+  }
+  draft_api_projects__project_id__draft_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        project_id: string
+      }
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["DraftIn"]
+      }
+    }
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["DraftOut"]
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"]
+        }
+      }
+    }
+  }
+  train_api_projects__project_id__training_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        project_id: string
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["JobStarted"]
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"]
+        }
+      }
+    }
+  }
+  get_report_api_projects__project_id__report_get: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        project_id: string
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["Report"]
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"]
+        }
+      }
+    }
+  }
+  decide_v1_systemone_post: {
+    parameters: {
+      query?: never
+      header?: {
+        authorization?: string | null
+      }
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["DecideIn"]
+      }
+    }
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["DecideOut"]
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"]
+        }
+      }
+    }
+  }
+  feedback_v1_feedback_post: {
+    parameters: {
+      query?: never
+      header?: {
+        authorization?: string | null
+      }
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["system1__gateway__router_public__FeedbackIn"]
+      }
+    }
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["FeedbackOut"]
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"]
+        }
+      }
+    }
+  }
 }

@@ -66,6 +66,11 @@ export function ConfirmCard({
     <div className="space-y-2 rounded-lg border bg-card p-3">
       <p className="text-sm font-medium">{event.title}</p>
       <p className="text-sm text-muted-foreground">{event.detail}</p>
+      {event.examples != null && (
+        <p className="text-xs text-muted-foreground">
+          {event.examples} examples
+        </p>
+      )}
       <p className="text-xs text-muted-foreground">
         Takes {minutes(event.est_minutes)} and costs about $
         {event.est_cost_usd.toFixed(2)}.

@@ -12,11 +12,11 @@ import type { AgentEvent } from "./useAgent"
 // rest get a fixed plain-words line when the tool starts.
 const TOOL_WORDS: Record<string, string> = {
   search_use_cases: "Looking through example decisions…",
-  set_inputs: "Updating what your decision looks at…",
-  set_options: "Updating the possible answers…",
-  set_rules: "Updating your rules…",
-  try_decision: "Trying it on an example…",
-  request_dataset: "Preparing the examples plan…",
+  set_buckets: "Updating your buckets…",
+  set_guidelines: "Updating your guidelines…",
+  draft_from_examples: "Drafting from your data…",
+  draft_from_context: "Drafting from your data…",
+  quick_check: "Checking with a quick test…",
   request_training: "Preparing the training plan…",
 }
 
@@ -81,7 +81,8 @@ export function MessageList({
               e.status === "done" ||
               e.name === "show_choices" ||
               e.name === "show_fit" ||
-              e.name === "go_to_stage"
+              e.name === "go_to_stage" ||
+              e.name === "request_generation"
             ) {
               if (e.status !== "error") return null
             }
@@ -119,6 +120,13 @@ export function MessageList({
             return <FitCard key={i} event={e} />
           case "canvas":
             return <CanvasChangeCard key={i} event={e} projectId={projectId} />
+          case "canvas_proposal":
+            return (
+              <p key={i} className="text-xs text-muted-foreground">
+                Your assistant drafted new buckets — the review card arrives
+                soon.
+              </p>
+            )
           case "try_result":
             return <TryResultCard key={i} event={e} />
           case "confirm":

@@ -11,6 +11,7 @@ export type AgentEvent =
   | components["schemas"]["ChoicesEvent"]
   | components["schemas"]["FitEvent"]
   | components["schemas"]["CanvasEvent"]
+  | components["schemas"]["CanvasProposalEvent"]
   | components["schemas"]["TryResultEvent"]
   | components["schemas"]["ConfirmEvent"]
   | components["schemas"]["StageEvent"]

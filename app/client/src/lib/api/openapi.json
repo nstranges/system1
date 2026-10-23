@@ -585,11 +585,7 @@
             "schema": {
               "anyOf": [
                 {
-                  "enum": [
-                    "train",
-                    "cal",
-                    "test"
-                  ],
+                  "enum": ["train", "cal", "test"],
                   "type": "string"
                 },
                 {
@@ -606,11 +602,7 @@
             "schema": {
               "anyOf": [
                 {
-                  "enum": [
-                    "uploaded",
-                    "generated",
-                    "corrected"
-                  ],
+                  "enum": ["uploaded", "generated", "corrected"],
                   "type": "string"
                 },
                 {
@@ -1984,9 +1976,7 @@
         },
         "additionalProperties": false,
         "type": "object",
-        "required": [
-          "all"
-        ],
+        "required": ["all"],
         "title": "AllOf"
       },
       "AllOf-Output": {
@@ -2014,9 +2004,7 @@
         },
         "additionalProperties": false,
         "type": "object",
-        "required": [
-          "all"
-        ],
+        "required": ["all"],
         "title": "AllOf"
       },
       "AnyOf-Input": {
@@ -2044,9 +2032,7 @@
         },
         "additionalProperties": false,
         "type": "object",
-        "required": [
-          "any"
-        ],
+        "required": ["any"],
         "title": "AnyOf"
       },
       "AnyOf-Output": {
@@ -2074,9 +2060,7 @@
         },
         "additionalProperties": false,
         "type": "object",
-        "required": [
-          "any"
-        ],
+        "required": ["any"],
         "title": "AnyOf"
       },
       "Body_upload_context_api_projects__project_id__context_post": {
@@ -2088,9 +2072,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "file"
-        ],
+        "required": ["file"],
         "title": "Body_upload_context_api_projects__project_id__context_post"
       },
       "Body_upload_examples_api_projects__project_id__uploads_post": {
@@ -2102,9 +2084,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "file"
-        ],
+        "required": ["file"],
         "title": "Body_upload_examples_api_projects__project_id__uploads_post"
       },
       "CanvasEvent": {
@@ -2131,11 +2111,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "policy",
-          "version",
-          "changed"
-        ],
+        "required": ["policy", "version", "changed"],
         "title": "CanvasEvent"
       },
       "CanvasProposalEvent": {
@@ -2165,11 +2141,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "policy",
-          "notes",
-          "issues"
-        ],
+        "required": ["policy", "notes", "issues"],
         "title": "CanvasProposalEvent",
         "description": "A draft the person can apply or ignore; nothing is saved until they do."
       },
@@ -2204,11 +2176,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "type",
-          "choice",
-          "probabilities"
-        ],
+        "required": ["type", "choice", "probabilities"],
         "title": "ChoiceAnswer"
       },
       "ChoicesEvent": {
@@ -2234,10 +2202,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "question",
-          "options"
-        ],
+        "required": ["question", "options"],
         "title": "ChoicesEvent"
       },
       "ConfigOut": {
@@ -2248,9 +2213,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "sys1_available"
-        ],
+        "required": ["sys1_available"],
         "title": "ConfigOut"
       },
       "ConfirmEvent": {
@@ -2267,11 +2230,7 @@
           },
           "kind": {
             "type": "string",
-            "enum": [
-              "dataset",
-              "generation",
-              "training"
-            ],
+            "enum": ["dataset", "generation", "training"],
             "title": "Kind"
           },
           "title": {
@@ -2326,10 +2285,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "status",
-          "result"
-        ],
+        "required": ["status", "result"],
         "title": "ConfirmOut"
       },
       "Confusion": {
@@ -2348,11 +2304,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "gold",
-          "pred",
-          "count"
-        ],
+        "required": ["gold", "pred", "count"],
         "title": "Confusion"
       },
       "ContextDocOut": {
@@ -2380,13 +2332,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "id",
-          "name",
-          "kind",
-          "chars",
-          "created_at"
-        ],
+        "required": ["id", "name", "kind", "chars", "created_at"],
         "title": "ContextDocOut"
       },
       "DecideIn": {
@@ -2432,9 +2378,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "state"
-        ],
+        "required": ["state"],
         "title": "DecideIn"
       },
       "DecideOut": {
@@ -2467,21 +2411,14 @@
           }
         },
         "type": "object",
-        "required": [
-          "model",
-          "answers",
-          "system1"
-        ],
+        "required": ["model", "answers", "system1"],
         "title": "DecideOut"
       },
       "DeleteBucketIn": {
         "properties": {
           "mode": {
             "type": "string",
-            "enum": [
-              "drop",
-              "move"
-            ],
+            "enum": ["drop", "move"],
             "title": "Mode"
           },
           "to": {
@@ -2502,9 +2439,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "mode"
-        ],
+        "required": ["mode"],
         "title": "DeleteBucketIn"
       },
       "DeleteBucketResult": {
@@ -2523,11 +2458,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "policy_version",
-          "examples_affected",
-          "test_set_version"
-        ],
+        "required": ["policy_version", "examples_affected", "test_set_version"],
         "title": "DeleteBucketResult"
       },
       "DoneEvent": {
@@ -2546,17 +2477,12 @@
         "properties": {
           "source": {
             "type": "string",
-            "enum": [
-              "examples",
-              "context"
-            ],
+            "enum": ["examples", "context"],
             "title": "Source"
           }
         },
         "type": "object",
-        "required": [
-          "source"
-        ],
+        "required": ["source"],
         "title": "DraftIn"
       },
       "DraftOut": {
@@ -2580,11 +2506,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "policy",
-          "notes",
-          "issues"
-        ],
+        "required": ["policy", "notes", "issues"],
         "title": "DraftOut"
       },
       "ErrorEvent": {
@@ -2601,9 +2523,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "message"
-        ],
+        "required": ["message"],
         "title": "ErrorEvent"
       },
       "Estimate": {
@@ -2622,11 +2542,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "examples",
-          "est_minutes",
-          "est_cost_usd"
-        ],
+        "required": ["examples", "est_minutes", "est_cost_usd"],
         "title": "Estimate"
       },
       "ExampleOut": {
@@ -2715,11 +2631,7 @@
           },
           "rating": {
             "type": "string",
-            "enum": [
-              "good",
-              "workable",
-              "poor"
-            ],
+            "enum": ["good", "workable", "poor"],
             "title": "Rating"
           },
           "reasons": {
@@ -2731,10 +2643,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "rating",
-          "reasons"
-        ],
+        "required": ["rating", "reasons"],
         "title": "FitEvent"
       },
       "GenerateIn": {
@@ -2860,10 +2769,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "input_columns",
-          "label_column"
-        ],
+        "required": ["input_columns", "label_column"],
         "title": "ImportMapping"
       },
       "ImportResult": {
@@ -2957,13 +2863,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "decision_id",
-          "state",
-          "answer",
-          "lane",
-          "created_at"
-        ],
+        "required": ["decision_id", "state", "answer", "lane", "created_at"],
         "title": "InboxItem"
       },
       "InboxOut": {
@@ -2977,9 +2877,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "items"
-        ],
+        "required": ["items"],
         "title": "InboxOut"
       },
       "InputField": {
@@ -2994,13 +2892,7 @@
           },
           "type": {
             "type": "string",
-            "enum": [
-              "enum",
-              "int",
-              "float",
-              "bool",
-              "text"
-            ],
+            "enum": ["enum", "int", "float", "bool", "text"],
             "title": "Type"
           },
           "values": {
@@ -3029,11 +2921,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "key",
-          "label",
-          "type"
-        ],
+        "required": ["key", "label", "type"],
         "title": "InputField"
       },
       "JobOut": {
@@ -3133,9 +3021,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "job_id"
-        ],
+        "required": ["job_id"],
         "title": "JobStarted"
       },
       "KeyCreated": {
@@ -3159,12 +3045,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "id",
-          "prefix",
-          "created_at",
-          "key"
-        ],
+        "required": ["id", "prefix", "created_at", "key"],
         "title": "KeyCreated"
       },
       "KeyOut": {
@@ -3184,11 +3065,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "id",
-          "prefix",
-          "created_at"
-        ],
+        "required": ["id", "prefix", "created_at"],
         "title": "KeyOut"
       },
       "LabelCount": {
@@ -3203,10 +3080,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "value",
-          "count"
-        ],
+        "required": ["value", "count"],
         "title": "LabelCount"
       },
       "LabelCounts": {
@@ -3224,21 +3098,14 @@
           }
         },
         "type": "object",
-        "required": [
-          "column",
-          "values"
-        ],
+        "required": ["column", "values"],
         "title": "LabelCounts"
       },
       "LaneResult": {
         "properties": {
           "lane": {
             "type": "string",
-            "enum": [
-              "jev",
-              "jev_labels",
-              "sys1"
-            ],
+            "enum": ["jev", "jev_labels", "sys1"],
             "title": "Lane"
           },
           "label": {
@@ -3311,9 +3178,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "lane"
-        ],
+        "required": ["lane"],
         "title": "LaneResult"
       },
       "Leaf": {
@@ -3324,16 +3189,7 @@
           },
           "op": {
             "type": "string",
-            "enum": [
-              "eq",
-              "ne",
-              "gt",
-              "gte",
-              "lt",
-              "lte",
-              "in",
-              "is_null"
-            ],
+            "enum": ["eq", "ne", "gt", "gte", "lt", "lte", "in", "is_null"],
             "title": "Op"
           },
           "value": {
@@ -3342,10 +3198,7 @@
         },
         "additionalProperties": false,
         "type": "object",
-        "required": [
-          "field",
-          "op"
-        ],
+        "required": ["field", "op"],
         "title": "Leaf"
       },
       "MessageIn": {
@@ -3367,9 +3220,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "text"
-        ],
+        "required": ["text"],
         "title": "MessageIn"
       },
       "NotOf-Input": {
@@ -3394,9 +3245,7 @@
         },
         "additionalProperties": false,
         "type": "object",
-        "required": [
-          "not"
-        ],
+        "required": ["not"],
         "title": "NotOf"
       },
       "NotOf-Output": {
@@ -3421,9 +3270,7 @@
         },
         "additionalProperties": false,
         "type": "object",
-        "required": [
-          "not"
-        ],
+        "required": ["not"],
         "title": "NotOf"
       },
       "Option": {
@@ -3457,10 +3304,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "key",
-          "name"
-        ],
+        "required": ["key", "name"],
         "title": "Option"
       },
       "PasteIn": {
@@ -3477,9 +3321,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "text"
-        ],
+        "required": ["text"],
         "title": "PasteIn"
       },
       "Policy-Input": {
@@ -3530,10 +3372,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "decision_question",
-          "options"
-        ],
+        "required": ["decision_question", "options"],
         "title": "Policy"
       },
       "Policy-Output": {
@@ -3584,10 +3423,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "decision_question",
-          "options"
-        ],
+        "required": ["decision_question", "options"],
         "title": "Policy"
       },
       "PolicyIn": {
@@ -3597,9 +3433,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "policy"
-        ],
+        "required": ["policy"],
         "title": "PolicyIn"
       },
       "PolicyIssue": {
@@ -3614,10 +3448,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "path",
-          "message"
-        ],
+        "required": ["path", "message"],
         "title": "PolicyIssue"
       },
       "PolicyOut": {
@@ -3638,11 +3469,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "policy",
-          "version",
-          "issues"
-        ],
+        "required": ["policy", "version", "issues"],
         "title": "PolicyOut"
       },
       "PoolOut": {
@@ -3653,9 +3480,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "count"
-        ],
+        "required": ["count"],
         "title": "PoolOut"
       },
       "Principal": {
@@ -3685,12 +3510,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "user_id",
-          "org_id",
-          "org_role",
-          "org_slug"
-        ],
+        "required": ["user_id", "org_id", "org_role", "org_slug"],
         "title": "Principal"
       },
       "ProjectCreate": {
@@ -3723,9 +3543,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "name"
-        ],
+        "required": ["name"],
         "title": "ProjectCreate"
       },
       "ProjectOut": {
@@ -3826,11 +3644,7 @@
             "anyOf": [
               {
                 "type": "string",
-                "enum": [
-                  "jev",
-                  "sys1",
-                  "auto"
-                ]
+                "enum": ["jev", "sys1", "auto"]
               },
               {
                 "type": "null"
@@ -3907,9 +3721,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "available"
-        ],
+        "required": ["available"],
         "title": "Report"
       },
       "ReportDetails": {
@@ -3971,12 +3783,7 @@
         "properties": {
           "key": {
             "type": "string",
-            "enum": [
-              "sys1",
-              "jev",
-              "jev_labels",
-              "base"
-            ],
+            "enum": ["sys1", "jev", "jev_labels", "base"],
             "title": "Key"
           },
           "label": {
@@ -3985,12 +3792,7 @@
           },
           "status": {
             "type": "string",
-            "enum": [
-              "ok",
-              "preview",
-              "unavailable",
-              "errored"
-            ],
+            "enum": ["ok", "preview", "unavailable", "errored"],
             "title": "Status"
           },
           "message": {
@@ -4066,21 +3868,14 @@
           }
         },
         "type": "object",
-        "required": [
-          "key",
-          "label",
-          "status"
-        ],
+        "required": ["key", "label", "status"],
         "title": "ReportRow"
       },
       "ReviewIn": {
         "properties": {
           "action": {
             "type": "string",
-            "enum": [
-              "agree",
-              "move"
-            ],
+            "enum": ["agree", "move"],
             "title": "Action"
           },
           "to": {
@@ -4096,9 +3891,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "action"
-        ],
+        "required": ["action"],
         "title": "ReviewIn"
       },
       "Rule-Input": {
@@ -4137,11 +3930,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "id",
-          "text",
-          "label"
-        ],
+        "required": ["id", "text", "label"],
         "title": "Rule"
       },
       "Rule-Output": {
@@ -4180,11 +3969,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "id",
-          "text",
-          "label"
-        ],
+        "required": ["id", "text", "label"],
         "title": "Rule"
       },
       "SampleOut": {
@@ -4211,10 +3996,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "id",
-          "state"
-        ],
+        "required": ["id", "state"],
         "title": "SampleOut"
       },
       "StageEvent": {
@@ -4231,9 +4013,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "stage"
-        ],
+        "required": ["stage"],
         "title": "StageEvent"
       },
       "Staged": {
@@ -4272,12 +4052,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "upload_id",
-          "columns",
-          "preview",
-          "row_count"
-        ],
+        "required": ["upload_id", "columns", "preview", "row_count"],
         "title": "Staged"
       },
       "Sys1Block": {
@@ -4371,9 +4146,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "delta"
-        ],
+        "required": ["delta"],
         "title": "TextEvent"
       },
       "ToolEvent": {
@@ -4390,11 +4163,7 @@
           },
           "status": {
             "type": "string",
-            "enum": [
-              "started",
-              "done",
-              "error"
-            ],
+            "enum": ["started", "done", "error"],
             "title": "Status"
           },
           "summary": {
@@ -4404,10 +4173,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "name",
-          "status"
-        ],
+        "required": ["name", "status"],
         "title": "ToolEvent"
       },
       "TryIn": {
@@ -4484,9 +4250,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "results"
-        ],
+        "required": ["results"],
         "title": "TryResult"
       },
       "TryResultEvent": {
@@ -4506,10 +4270,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "input",
-          "result"
-        ],
+        "required": ["input", "result"],
         "title": "TryResultEvent"
       },
       "UserEvent": {
@@ -4526,9 +4287,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "text"
-        ],
+        "required": ["text"],
         "title": "UserEvent"
       },
       "ValidationError": {
@@ -4564,23 +4323,14 @@
           }
         },
         "type": "object",
-        "required": [
-          "loc",
-          "msg",
-          "type"
-        ],
+        "required": ["loc", "msg", "type"],
         "title": "ValidationError"
       },
       "Verdict": {
         "properties": {
           "winner": {
             "type": "string",
-            "enum": [
-              "sys1",
-              "jev",
-              "inconclusive",
-              "none"
-            ],
+            "enum": ["sys1", "jev", "inconclusive", "none"],
             "title": "Winner"
           },
           "diff": {
@@ -4622,20 +4372,14 @@
           }
         },
         "type": "object",
-        "required": [
-          "winner",
-          "sentence"
-        ],
+        "required": ["winner", "sentence"],
         "title": "Verdict"
       },
       "system1__decisions__router__FeedbackIn": {
         "properties": {
           "kind": {
             "type": "string",
-            "enum": [
-              "confirm",
-              "correction"
-            ],
+            "enum": ["confirm", "correction"],
             "title": "Kind"
           },
           "correct_label": {
@@ -4651,9 +4395,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "kind"
-        ],
+        "required": ["kind"],
         "title": "FeedbackIn"
       },
       "system1__gateway__router_public__FeedbackIn": {
@@ -4671,10 +4413,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "decision_id",
-          "correct"
-        ],
+        "required": ["decision_id", "correct"],
         "title": "FeedbackIn"
       }
     }
