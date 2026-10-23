@@ -195,9 +195,9 @@ function Workspace() {
         onPolicy={rebase}
       />
     ) : stage === "data" ? (
-      <DataCanvas />
+      <DataCanvas project={project} policy={policy} onPolicy={rebase} />
     ) : stage === "review" ? (
-      <ReviewCanvas />
+      <ReviewCanvas project={project} policy={policy} />
     ) : stage === "train" ? (
       <TrainCanvas />
     ) : stage === "use" ? (
