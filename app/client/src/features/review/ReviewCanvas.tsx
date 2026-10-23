@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react"
+import { useCallback, useEffect, useRef, useState } from "react"
 import { toast } from "sonner"
 import {
   Card,
@@ -64,6 +64,16 @@ function Queue({ project, policy }: { project: Project; policy: PolicyOut }) {
     void load()
   }, [load])
 
+  // The queue is capped, so after an action empties it more may be waiting.
+  const acted = useRef(false)
+  const emptied = cards !== null && cards.length === 0
+  useEffect(() => {
+    if (emptied && acted.current) {
+      acted.current = false
+      void load()
+    }
+  }, [emptied, load])
+
   async function act(ex: ReviewExample, action: "agree" | "move", to?: string) {
     if (busyId) return
     setBusyId(ex.id)
@@ -77,9 +87,8 @@ function Queue({ project, policy }: { project: Project; policy: PolicyOut }) {
       )
       if (response.ok) {
         // The queue is capped, so an emptied list may hide more behind it.
-        const left = (cards ?? []).filter((c) => c.id !== ex.id)
-        setCards(left)
-        if (left.length === 0) void load()
+        setCards((cs) => cs?.filter((c) => c.id !== ex.id) ?? cs)
+        acted.current = true
         void reload()
         const name = policy.policy.options.find((o) => o.key === to)?.name
         toast.success(

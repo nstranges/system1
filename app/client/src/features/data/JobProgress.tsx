@@ -67,10 +67,15 @@ export function JobProgress({
     async function tick() {
       let ok = false
       try {
-        const { data } = await api.GET("/api/jobs/{job_id}", {
+        const { data, response } = await api.GET("/api/jobs/{job_id}", {
           params: { path: { job_id: jobId } },
         })
         if (!live) return
+        // An unknown job will never appear; retrying would only spin.
+        if (response.status === 404) {
+          gone.current?.()
+          return
+        }
         if (data) {
           ok = true
           failures = 0
@@ -90,6 +95,8 @@ export function JobProgress({
         if (failures >= MAX_FAILURES) {
           setError("We lost track of this job. Refresh to check.")
           setLost(true)
+          // Release the buttons and the stored id; the message stays up.
+          done.current()
           return
         }
         setError("We couldn't reach the server. Trying again…")

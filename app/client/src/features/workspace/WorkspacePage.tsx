@@ -91,12 +91,21 @@ function Workspace() {
   // Buckets the server added (an upload can create them) are appended to an
   // unsaved draft so a later Save doesn't try to drop buckets that now hold
   // examples; the draft's own edits are kept.
+  const savedRef = useRef<PolicyOut | null>(null)
   const rebase = useCallback((saved: PolicyOut) => {
+    // Only buckets the server newly created come back; one the person removed
+    // from the draft stays removed.
+    const before = new Set(
+      savedRef.current?.policy.options.map((o) => o.key) ?? [],
+    )
+    savedRef.current = saved
     setPolicy(saved)
     setRulesDraft((d) => {
       if (!d) return d
       const have = new Set(d.options.map((o) => o.key))
-      const added = saved.policy.options.filter((o) => !have.has(o.key))
+      const added = saved.policy.options.filter(
+        (o) => !have.has(o.key) && !before.has(o.key),
+      )
       return {
         ...d,
         decision_question: saved.policy.decision_question,
@@ -138,6 +147,11 @@ function Workspace() {
   useEffect(() => {
     void load()
   }, [load])
+
+  // Every path that replaces the policy (load, agent edit) must count as "before".
+  useEffect(() => {
+    savedRef.current = policy
+  }, [policy])
 
   // Unsaved rule edits survive switching stages; leaving the page asks first.
   useEffect(() => {
