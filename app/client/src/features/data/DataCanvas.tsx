@@ -5,6 +5,7 @@ import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
 import {
   Card,
+  CardAction,
   CardContent,
   CardDescription,
   CardHeader,
@@ -41,6 +42,8 @@ export function DataCanvas({
     recalledJob(project.id),
   )
   const [resumed, setResumed] = useState(jobId !== null)
+  // True while a job is still going; a finished one stays on screen only as a message.
+  const [running, setRunning] = useState(jobId !== null)
   const flagship = project.template_id === FLAGSHIP_TEMPLATE
 
   // The dashboard asks for the upload through router state; clear only that
@@ -67,9 +70,8 @@ export function DataCanvas({
         <CardHeader>
           <CardTitle>Built with exact rules</CardTitle>
           <CardDescription>
-            This example was built with our rules-based pipeline: 550 tickets
-            across {policy.policy.options.length} buckets, labelled by exact
-            rules.
+            This example was built with our rules-based pipeline: across{" "}
+            {policy.policy.options.length} buckets, labelled by exact rules.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -86,6 +88,7 @@ export function DataCanvas({
         params: { path: { project_id: project.id } },
       })
       if (data) onPolicy(data)
+      else toast.error("Imported, but we couldn't refresh the buckets. Reload.")
     } catch {
       toast.error("Imported, but we couldn't refresh the buckets. Reload.")
     }
@@ -95,12 +98,14 @@ export function DataCanvas({
   function startJob(id: string) {
     rememberJob(project.id, id)
     setResumed(false)
+    setRunning(true)
     setJobId(id)
     setGenerating(false)
   }
 
   function endJob() {
     rememberJob(project.id, null)
+    setRunning(false)
     setJobId(null)
   }
 
@@ -109,7 +114,10 @@ export function DataCanvas({
       title: "Upload examples",
       text: "Bring past decisions from a spreadsheet.",
       icon: Upload,
-      go: () => setUploading(true),
+      go: () => {
+        setThenGenerate(false)
+        setUploading(true)
+      },
     },
     {
       title: "Generate examples",
@@ -146,7 +154,7 @@ export function DataCanvas({
               <Button
                 variant="outline"
                 size="sm"
-                disabled={jobId !== null && c.title !== "Upload examples"}
+                disabled={running && c.title !== "Upload examples"}
                 onClick={c.go}
               >
                 {c.title}
@@ -160,6 +168,13 @@ export function DataCanvas({
         <Card size="sm">
           <CardHeader>
             <CardTitle>Generating examples</CardTitle>
+            {!running && (
+              <CardAction>
+                <Button size="sm" variant="ghost" onClick={endJob}>
+                  Dismiss
+                </Button>
+              </CardAction>
+            )}
           </CardHeader>
           <CardContent>
             <JobProgress
@@ -168,6 +183,8 @@ export function DataCanvas({
               resumed={resumed}
               onGone={endJob}
               onDone={() => {
+                rememberJob(project.id, null)
+                setRunning(false)
                 void reload()
               }}
               onRetry={() => {
@@ -186,10 +203,7 @@ export function DataCanvas({
         open={uploading}
         projectId={project.id}
         policy={policy.policy}
-        onClose={() => {
-          setUploading(false)
-          setThenGenerate(false)
-        }}
+        onClose={() => setUploading(false)}
         onImported={refreshAfterImport}
         onDone={(result) => {
           setUploading(false)

@@ -1,5 +1,5 @@
 import { Upload } from "lucide-react"
-import { useRef, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
@@ -107,6 +107,23 @@ function Body({
   const [busy, setBusy] = useState(false)
   const [over, setOver] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  // Closing at the result step (Esc, X) runs the same follow-up as Done.
+  const finished = useRef<ImportResult | null>(null)
+  const doneRef = useRef(onDone)
+  useEffect(() => {
+    doneRef.current = onDone
+    finished.current = result
+  })
+  useEffect(
+    () => () => {
+      const r = finished.current
+      if (r) {
+        finished.current = null
+        doneRef.current(r)
+      }
+    },
+    [],
+  )
 
   async function stage(file: File | undefined) {
     if (!file || busy) return
@@ -425,9 +442,7 @@ function Body({
 
       <DialogFooter>
         {step === 4 ? (
-          <Button onClick={() => (result ? onDone(result) : onClose())}>
-            Done
-          </Button>
+          <Button onClick={onClose}>Done</Button>
         ) : (
           <>
             {step === 0 ? (

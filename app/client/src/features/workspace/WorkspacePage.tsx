@@ -88,17 +88,22 @@ function Workspace() {
 
   // A saved policy becomes the new base: unsaved rules edits stay, but the
   // saved decision question wins so a later rules save can't revert it.
+  // Buckets the server added (an upload can create them) are appended to an
+  // unsaved draft so a later Save doesn't try to drop buckets that now hold
+  // examples; the draft's own edits are kept.
   const rebase = useCallback((saved: PolicyOut) => {
     setPolicy(saved)
-    setRulesDraft((d) =>
-      d
-        ? {
-            ...d,
-            decision_question: saved.policy.decision_question,
-            question_key: saved.policy.question_key,
-          }
-        : d,
-    )
+    setRulesDraft((d) => {
+      if (!d) return d
+      const have = new Set(d.options.map((o) => o.key))
+      const added = saved.policy.options.filter((o) => !have.has(o.key))
+      return {
+        ...d,
+        decision_question: saved.policy.decision_question,
+        question_key: saved.policy.question_key,
+        options: added.length > 0 ? [...d.options, ...added] : d.options,
+      }
+    })
   }, [])
 
   // The assistant's rules replace the saved policy and discard any unsaved

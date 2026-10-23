@@ -6,6 +6,13 @@ import type { components } from "@/lib/api/schema"
 type Job = components["schemas"]["JobOut"]
 
 const POLL_MS = 1500
+const MAX_MS = 10_000
+const MAX_FAILURES = 20
+const STAGES: Record<string, string> = { writing: "Writing examples" }
+
+function stageName(stage: string): string {
+  return STAGES[stage] ?? stage.charAt(0).toUpperCase() + stage.slice(1)
+}
 const ACTIVE = ["queued", "running"]
 
 const jobKey = (projectId: string) => `system1:job:${projectId}`
@@ -44,6 +51,7 @@ export function JobProgress({
   const api = useApi()
   const [job, setJob] = useState<Job | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [lost, setLost] = useState(false)
   const done = useRef(onDone)
   const gone = useRef(onGone)
   useEffect(() => {
@@ -55,30 +63,40 @@ export function JobProgress({
     let live = true
     let timer: ReturnType<typeof setTimeout> | undefined
     let first = resumed
+    let failures = 0
     async function tick() {
+      let ok = false
       try {
         const { data } = await api.GET("/api/jobs/{job_id}", {
           params: { path: { job_id: jobId } },
         })
         if (!live) return
-        if (!data) {
-          setError("We couldn't check on the job.")
-          if (first) gone.current?.()
-          return
-        }
-        setError(null)
-        setJob(data)
-        if (!ACTIVE.includes(data.status)) {
-          if (first) gone.current?.()
-          else done.current()
-          return
+        if (data) {
+          ok = true
+          failures = 0
+          setError(null)
+          setJob(data)
+          if (!ACTIVE.includes(data.status)) {
+            if (first) gone.current?.()
+            else done.current()
+            return
+          }
         }
       } catch {
         if (!live) return
+      }
+      if (!ok) {
+        failures += 1
+        if (failures >= MAX_FAILURES) {
+          setError("We lost track of this job. Refresh to check.")
+          setLost(true)
+          return
+        }
         setError("We couldn't reach the server. Trying again…")
       }
       first = false
-      timer = setTimeout(() => void tick(), POLL_MS)
+      const wait = Math.min(MAX_MS, POLL_MS * 1.5 ** failures)
+      timer = setTimeout(() => void tick(), wait)
     }
     void tick()
     return () => {
@@ -87,6 +105,13 @@ export function JobProgress({
     }
   }, [api, jobId, resumed])
 
+  if (lost) {
+    return (
+      <p role="alert" className="text-sm text-destructive">
+        {error}
+      </p>
+    )
+  }
   if (!job) {
     return (
       <p className="text-sm text-muted-foreground">{error ?? "Starting…"}</p>
@@ -99,7 +124,7 @@ export function JobProgress({
       {active ? (
         <>
           <p className="text-sm">
-            {job.stage ??
+            {(job.stage ? stageName(job.stage) : null) ??
               (job.status === "queued" ? "Waiting to start" : "Working")}
             … {pct}%
           </p>

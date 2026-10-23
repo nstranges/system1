@@ -42,7 +42,7 @@ export function ReviewCanvas({
 
 function Queue({ project, policy }: { project: Project; policy: PolicyOut }) {
   const api = useApi()
-  const { health, failed } = useHealth(project.id)
+  const { health, failed, reload } = useHealth(project.id)
   const [cards, setCards] = useState<ReviewExample[] | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [busyId, setBusyId] = useState<string | null>(null)
@@ -76,7 +76,11 @@ function Queue({ project, policy }: { project: Project; policy: PolicyOut }) {
         },
       )
       if (response.ok) {
-        setCards((cs) => cs?.filter((c) => c.id !== ex.id) ?? cs)
+        // The queue is capped, so an emptied list may hide more behind it.
+        const left = (cards ?? []).filter((c) => c.id !== ex.id)
+        setCards(left)
+        if (left.length === 0) void load()
+        void reload()
         const name = policy.policy.options.find((o) => o.key === to)?.name
         toast.success(
           action === "agree" ? "Marked as right" : `Moved to ${name ?? to}`,
