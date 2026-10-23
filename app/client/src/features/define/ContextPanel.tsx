@@ -279,7 +279,10 @@ export function ContextPanel({
   // A file dropped outside the zone would make the browser navigate away and
   // lose unsaved edits.
   useEffect(() => {
-    const stop = (e: DragEvent) => e.preventDefault()
+    const stop = (e: DragEvent) => {
+      // Only file drags; text drags inside textareas must keep working.
+      if (e.dataTransfer?.types.includes("Files")) e.preventDefault()
+    }
     window.addEventListener("dragover", stop)
     window.addEventListener("drop", stop)
     return () => {

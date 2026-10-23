@@ -14,6 +14,7 @@ import { describeIssue } from "@/features/rules/issueText"
 import { IssueList } from "@/features/rules/IssueList"
 import { InputsPanel } from "@/features/rules/InputsPanel"
 import { RulesPanel } from "@/features/rules/RulesPanel"
+import { markNew } from "@/features/rules/newRow"
 import { tidy } from "@/features/rules/tidy"
 import { useApi } from "@/lib/api/client"
 import {
@@ -294,7 +295,13 @@ export function DefineCanvas({
         hasUnsaved={dirty}
         onLoad={(proposed, found) => {
           setDrafting(null)
-          onDraft(proposed)
+          const saved = new Set(policy.policy.options.map((o) => o.key))
+          onDraft({
+            ...proposed,
+            options: proposed.options.map((o) =>
+              saved.has(o.key) ? o : markNew(o),
+            ),
+          })
           setOverride({ base: policy, issues: found })
           if (
             found.some((i) =>

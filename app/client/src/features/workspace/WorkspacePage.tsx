@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react"
+import { useCallback, useEffect, useRef, useState } from "react"
 import {
   Link,
   Navigate,
@@ -269,6 +269,7 @@ function ProjectName({
   const [editing, setEditing] = useState(false)
   const [name, setName] = useState(project.name)
   const [saving, setSaving] = useState(false)
+  const cancelled = useRef(false)
 
   async function save() {
     const next = name.trim()
@@ -298,6 +299,7 @@ function ProjectName({
         className="truncate text-left text-lg font-semibold hover:underline"
         onClick={() => {
           setName(project.name)
+          cancelled.current = false
           setEditing(true)
         }}
       >
@@ -316,9 +318,12 @@ function ProjectName({
       onChange={(e) => setName(e.target.value)}
       onKeyDown={(e) => {
         if (e.key === "Enter") void save()
-        if (e.key === "Escape") setEditing(false)
+        if (e.key === "Escape") {
+          cancelled.current = true
+          setEditing(false)
+        }
       }}
-      onBlur={() => !saving && setEditing(false)}
+      onBlur={() => !saving && !cancelled.current && void save()}
     />
   )
 }

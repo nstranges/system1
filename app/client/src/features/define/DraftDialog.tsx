@@ -125,19 +125,24 @@ function Body({
     if (!draft) return
     setApplying(true)
     setApplyError(null)
-    const { data, error: err } = await api.PUT(
-      "/api/projects/{project_id}/policy",
-      {
-        params: { path: { project_id: projectId } },
-        body: { policy: draft.policy },
-      },
-    )
-    setApplying(false)
-    if (data) {
-      onApplied(data)
-      return
+    try {
+      const { data, error: err } = await api.PUT(
+        "/api/projects/{project_id}/policy",
+        {
+          params: { path: { project_id: projectId } },
+          body: { policy: draft.policy },
+        },
+      )
+      if (data) {
+        onApplied(data)
+        return
+      }
+      setApplyError(readProblem(err).message)
+    } catch {
+      setApplyError("We couldn't reach the server.")
+    } finally {
+      setApplying(false)
     }
-    setApplyError(readProblem(err).message)
   }
 
   const proposed = draft?.policy as PolicyInput | undefined
