@@ -2,7 +2,7 @@ import { useEffect, useState } from "react"
 import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
-import { IssueList } from "@/features/rules/RulesCanvas"
+import { IssueList } from "@/features/rules/IssueList"
 import { NativeSelect } from "@/features/rules/fields"
 import { useApi } from "@/lib/api/client"
 import {

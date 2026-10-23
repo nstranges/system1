@@ -30,6 +30,21 @@ export function describeIssue(
   issue: PolicyIssue,
   policy: PolicyInput,
 ): IssueView {
+  if (issue.path === "guidelines" || /^guidelines\[\d+\]$/.test(issue.path)) {
+    const n = /\[(\d+)\]/.exec(issue.path)
+    return {
+      text: n
+        ? `Guideline ${Number(n[1]) + 1}: ${issue.message}`
+        : `Guidelines: ${issue.message}`,
+      target: "define-guidelines",
+    }
+  }
+  if (/^sample_inputs(\[\d+\])?$/.test(issue.path)) {
+    return {
+      text: `What comes in: ${issue.message}`,
+      target: "define-samples",
+    }
+  }
   const m = /^(rules|options|inputs)\[(\d+)\]\.?(\w*)$/.exec(issue.path)
   if (!m) return { text: issue.message }
   const [, kind, idx, field] = m
@@ -41,7 +56,7 @@ export function describeIssue(
       : `Rule ${i + 1}`
     const target = `rule-${i}`
     if (field === "label") {
-      return { text: `${who} points to an option that doesn't exist.`, target }
+      return { text: `${who} points to a bucket that doesn't exist.`, target }
     }
     const unknown = /^unknown input '(.+)'$/.exec(issue.message)
     if (field === "when" && unknown) {
@@ -56,12 +71,12 @@ export function describeIssue(
   }
   if (kind === "options") {
     const o = policy.options[i]
-    const who = `Option ${i + 1}${o?.name ? ` (${o.name})` : ""}`
+    const who = `Bucket ${i + 1}${o?.name ? ` (${o.name})` : ""}`
     if (field === "key") {
       return {
         text: /duplicate/.test(issue.message)
-          ? `${who} has the same short name as another option.`
-          : `${who} needs a short name with only lowercase letters, numbers and underscores.`,
+          ? `${who} has the same key as another bucket.`
+          : `${who} needs a key with only lowercase letters, numbers and underscores.`,
         target: `option-${i}`,
       }
     }
@@ -75,5 +90,5 @@ export function describeIssue(
 }
 
 export function describeOptionCount(issue: PolicyIssue): string | null {
-  return issue.path === "options" ? "Pick between 2 and 15 options." : null
+  return issue.path === "options" ? "Pick between 2 and 15 buckets." : null
 }

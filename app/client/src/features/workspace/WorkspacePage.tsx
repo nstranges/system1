@@ -26,13 +26,12 @@ import {
 import { AgentPanel } from "@/features/agent/AgentPanel"
 import type { CanvasEvent } from "@/features/agent/useAgent"
 import { ImproveCanvas } from "@/features/improve/ImproveCanvas"
-import { RulesCanvas } from "@/features/rules/RulesCanvas"
+import { DefineCanvas } from "@/features/define/DefineCanvas"
 import { DataCanvas } from "@/features/data/DataCanvas"
 import { ReviewCanvas } from "@/features/review/ReviewCanvas"
 import { TrainCanvas } from "@/features/train/TrainCanvas"
 import { StepHeader } from "@/components/StepHeader"
 import { UseCanvas } from "@/features/use/UseCanvas"
-import { UseCaseCanvas } from "@/features/usecase/UseCaseCanvas"
 import { StageRail } from "./StageRail"
 import { STAGES, isStage, normalizeStage, stageHint } from "./stages"
 
@@ -185,25 +184,15 @@ function Workspace() {
     return <Skeleton className="h-96 w-full" />
   }
 
-  // Until the Define step has its own canvas it stacks the earlier use case
-  // and rules canvases.
   const canvas =
     stage === "define" ? (
-      <div className="space-y-6">
-        <UseCaseCanvas
-          project={project}
-          policy={policy}
-          onProject={setProject}
-          onPolicy={rebase}
-        />
-        <RulesCanvas
-          project={project}
-          policy={policy}
-          draft={rulesDraft}
-          onDraft={setRulesDraft}
-          onPolicy={rebase}
-        />
-      </div>
+      <DefineCanvas
+        project={project}
+        policy={policy}
+        draft={rulesDraft}
+        onDraft={setRulesDraft}
+        onPolicy={rebase}
+      />
     ) : stage === "data" ? (
       <DataCanvas />
     ) : stage === "review" ? (
