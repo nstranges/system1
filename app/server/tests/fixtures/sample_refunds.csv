@@ -1,0 +1,21 @@
+text,decision
+"Hi, I was charged $45 yesterday for a plan I cancelled last week. Can I get that back?",approve
+"Please refund the $29 charge from 3 days ago, I signed up by mistake.",approve
+"I was billed twice for the same invoice this month, $60 each. Refund one please.",approve
+Our team never used the add-on and it renewed today ($38). Can you reverse it?,approve
+"Cancelled on the 1st but still billed on the 3rd, $52. Requesting a refund.",approve
+"I'd like my $19 refunded, the export feature didn't work as described.",approve
+"We need a refund of our annual plan, $1,800, we are shutting down the project.",escalate
+"Please refund the $2,400 enterprise renewal, it was approved by the wrong person.",escalate
+Refund request for $950: procurement says the PO was cancelled before renewal.,escalate
+"Annual upgrade of $1,200 charged yesterday. We downgraded the same day. Refund?",escalate
+"I want my money back for the three months I wasn't using it, about $270.",deny
+You charged me 14 months ago and I only noticed now. Refund $35 please.,deny
+"Refund me, I just don't like the product anymore. It's been 8 months, $140.",deny
+"The service was fine but my boss wants the budget back, six months ago, $90.",deny
+Someone used my card to sign up. I didn't make this $75 purchase!,fraud_review
+"There are 3 charges I don't recognise on my statement from your company, $210 total.",fraud_review
+My account was hacked and an upgrade was bought for $499. Please reverse it.,fraud_review
+"A person who left our company created a team plan on our card, $320. Not authorised.",fraud_review
+Charged $55 two days ago after I cancelled. Please refund.,approve
+"We need $3,100 back for the premium tier, it was bought in error by finance.",escalate
