@@ -44,7 +44,7 @@ function failureText(err: unknown): string {
   return "We lost the connection to your assistant."
 }
 
-export function useAgent(projectId: string, handlers: Handlers) {
+export function useAgent(projectId: string, handlers: Handlers, stage: string) {
   const api = useApi()
   const { getToken } = useAuth()
   const [events, setEvents] = useState<AgentEvent[]>([])
@@ -115,7 +115,7 @@ export function useAgent(projectId: string, handlers: Handlers) {
         if (!token) throw new Error("signed out")
         await streamEvents(
           `/api/projects/${projectId}/agent/messages`,
-          { text: trimmed },
+          { text: trimmed, stage },
           token,
           ({ data }) => {
             const e = data as AgentEvent
@@ -141,7 +141,7 @@ export function useAgent(projectId: string, handlers: Handlers) {
         }
       }
     },
-    [getToken, projectId],
+    [getToken, projectId, stage],
   )
 
   return { events, loaded, loadError, reload, busy, send }

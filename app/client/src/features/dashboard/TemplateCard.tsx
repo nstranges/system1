@@ -47,7 +47,7 @@ export function TemplateCard({
       </CardContent>
       <CardFooter className="mt-auto">
         <Button variant="outline" disabled={busy} onClick={onUse}>
-          Use this template
+          Start from this
         </Button>
       </CardFooter>
     </Card>

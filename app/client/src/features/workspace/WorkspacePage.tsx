@@ -27,23 +27,14 @@ import { AgentPanel } from "@/features/agent/AgentPanel"
 import type { CanvasEvent } from "@/features/agent/useAgent"
 import { ImproveCanvas } from "@/features/improve/ImproveCanvas"
 import { RulesCanvas } from "@/features/rules/RulesCanvas"
-import { TryCanvas } from "@/features/playground/TryCanvas"
+import { DataCanvas } from "@/features/data/DataCanvas"
+import { ReviewCanvas } from "@/features/review/ReviewCanvas"
+import { TrainCanvas } from "@/features/train/TrainCanvas"
+import { StepHeader } from "@/components/StepHeader"
 import { UseCanvas } from "@/features/use/UseCanvas"
 import { UseCaseCanvas } from "@/features/usecase/UseCaseCanvas"
 import { StageRail } from "./StageRail"
-import { STAGES, isStage, type StageId } from "./stages"
-
-function ComingSoon({ stage }: { stage: StageId }) {
-  const label = STAGES.find((s) => s.id === stage)?.label
-  return (
-    <Card>
-      <CardHeader>
-        <CardTitle>{label}</CardTitle>
-        <CardDescription>This step isn't ready yet.</CardDescription>
-      </CardHeader>
-    </Card>
-  )
-}
+import { STAGES, isStage, normalizeStage, stageHint } from "./stages"
 
 // Keyed on the project so nothing from the previous one leaks across.
 export function WorkspacePage() {
@@ -152,7 +143,13 @@ function Workspace() {
   }, [rulesDraft])
 
   if (!isStage(stage)) {
-    return <Navigate to={`/app/p/${projectId}/usecase`} replace />
+    return (
+      <Navigate
+        to={`/app/p/${projectId}/${normalizeStage(stage ?? "") ?? "define"}`}
+        replace
+        state={location.state}
+      />
+    )
   }
   if (missing) {
     return (
@@ -188,31 +185,37 @@ function Workspace() {
     return <Skeleton className="h-96 w-full" />
   }
 
+  // Until the Define step has its own canvas it stacks the earlier use case
+  // and rules canvases.
   const canvas =
-    stage === "usecase" ? (
-      <UseCaseCanvas
-        project={project}
-        policy={policy}
-        onProject={setProject}
-        onPolicy={rebase}
-      />
-    ) : stage === "rules" ? (
-      <RulesCanvas
-        project={project}
-        policy={policy}
-        draft={rulesDraft}
-        onDraft={setRulesDraft}
-        onPolicy={rebase}
-      />
-    ) : stage === "try" ? (
-      <TryCanvas project={project} policy={policy} />
+    stage === "define" ? (
+      <div className="space-y-6">
+        <UseCaseCanvas
+          project={project}
+          policy={policy}
+          onProject={setProject}
+          onPolicy={rebase}
+        />
+        <RulesCanvas
+          project={project}
+          policy={policy}
+          draft={rulesDraft}
+          onDraft={setRulesDraft}
+          onPolicy={rebase}
+        />
+      </div>
+    ) : stage === "data" ? (
+      <DataCanvas />
+    ) : stage === "review" ? (
+      <ReviewCanvas />
+    ) : stage === "train" ? (
+      <TrainCanvas />
     ) : stage === "use" ? (
       <UseCanvas project={project} onProject={setProject} />
-    ) : stage === "improve" ? (
-      <ImproveCanvas project={project} policy={policy} />
     ) : (
-      <ComingSoon stage={stage} />
+      <ImproveCanvas project={project} policy={policy} />
     )
+  const label = STAGES.find((s) => s.id === stage)?.label ?? ""
 
   return (
     <div className="space-y-4">
@@ -244,12 +247,20 @@ function Workspace() {
 
       <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,2fr)]">
         <div className={panel === "assistant" ? "" : "hidden lg:block"}>
-          <AgentPanel project={project} onCanvas={onCanvas} onStage={onStage} />
+          <AgentPanel
+            project={project}
+            stage={stage}
+            onCanvas={onCanvas}
+            onStage={onStage}
+          />
         </div>
         <div
           className={panel === "canvas" ? "min-w-0" : "hidden min-w-0 lg:block"}
         >
-          {canvas}
+          <div className="space-y-4">
+            <StepHeader title={label} hint={stageHint(stage)} />
+            {canvas}
+          </div>
         </div>
       </div>
     </div>

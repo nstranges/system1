@@ -12,9 +12,8 @@ import {
 import { Skeleton } from "@/components/ui/skeleton"
 import { useApi } from "@/lib/api/client"
 import { readProblem, type Project, type Template } from "@/lib/api/types"
-import { isStage } from "@/features/workspace/stages"
-import { NewProjectDialog } from "./NewProjectDialog"
-import { TemplateCard } from "./TemplateCard"
+import { normalizeStage } from "@/features/workspace/stages"
+import { NewProjectDialog, type StartMode } from "./NewProjectDialog"
 
 export function DashboardPage() {
   const api = useApi()
@@ -22,7 +21,7 @@ export function DashboardPage() {
   const [projects, setProjects] = useState<Project[] | null>(null)
   const [templates, setTemplates] = useState<Template[] | null>(null)
   const [busy, setBusy] = useState(false)
-  const [dialog, setDialog] = useState<"describe" | "find" | null>(null)
+  const [dialogOpen, setDialogOpen] = useState(false)
 
   const [loadError, setLoadError] = useState<string | null>(null)
 
@@ -51,21 +50,39 @@ export function DashboardPage() {
   async function create(
     name: string,
     templateId: string | null,
-    firstMessage?: string,
+    description: string | null,
+    next: { stage: string; state: Record<string, unknown> | null },
   ) {
     setBusy(true)
     const { data, error } = await api.POST("/api/projects", {
-      body: { name, template_id: templateId },
+      body: { name, template_id: templateId, description },
     })
     setBusy(false)
     if (!data) {
       toast.error(readProblem(error).message)
       return
     }
-    // A template arrives with rules to look at; a blank project starts at the use case.
-    navigate(`/app/p/${data.id}/${templateId ? "rules" : "usecase"}`, {
-      state: firstMessage ? { firstMessage } : null,
-    })
+    navigate(`/app/p/${data.id}/${next.stage}`, { state: next.state })
+  }
+
+  function start(mode: StartMode, name: string, deciding: string) {
+    if (mode === "upload")
+      void create(name, null, deciding || null, {
+        stage: "data",
+        state: { openUpload: true },
+      })
+    else if (mode === "documents")
+      void create(name, null, deciding || null, {
+        stage: "define",
+        state: { openContext: true },
+      })
+    else
+      void create(name, null, deciding || null, {
+        stage: "define",
+        state: {
+          firstMessage: deciding || "Help me find a decision worth automating",
+        },
+      })
   }
 
   if (loadError) {
@@ -83,76 +100,62 @@ export function DashboardPage() {
   }
 
   return (
-    <div className="space-y-10">
-      <section className="space-y-4">
+    <div className="space-y-6">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <h1 className="text-2xl font-semibold tracking-tight">Your projects</h1>
-        {projects === null ? (
-          <Skeleton className="h-24 w-full" />
-        ) : projects.length === 0 ? (
-          <p className="text-muted-foreground">
-            No projects yet. Pick a starting point below.
-          </p>
-        ) : (
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {projects.map((p) => (
-              <Link
-                key={p.id}
-                to={`/app/p/${p.id}/${isStage(p.stage) ? p.stage : "usecase"}`}
-              >
-                <Card className="h-full transition-colors hover:bg-muted/50">
-                  <CardHeader>
-                    <CardTitle>{p.name}</CardTitle>
-                    <CardDescription>
-                      {p.description ?? "Open to keep working"}
-                    </CardDescription>
-                  </CardHeader>
-                </Card>
-              </Link>
-            ))}
-          </div>
-        )}
-      </section>
-
-      <section className="space-y-4">
-        <div>
-          <h2 className="text-xl font-semibold tracking-tight">
-            Start a new decision
-          </h2>
-          <p className="text-sm text-muted-foreground">
-            Pick a decision your team makes again and again, or describe your
-            own.
-          </p>
+        <Button onClick={() => setDialogOpen(true)}>New project</Button>
+      </div>
+      {projects === null ? (
+        <Skeleton className="h-24 w-full" />
+      ) : projects.length === 0 ? (
+        <Card className="mx-auto max-w-md text-center">
+          <CardHeader>
+            <CardTitle>Start your first project</CardTitle>
+            <CardDescription>
+              Pick a decision your team makes again and again, and teach a model
+              to make it.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Button onClick={() => setDialogOpen(true)}>New project</Button>
+          </CardContent>
+        </Card>
+      ) : (
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {projects.map((p) => (
+            <Link
+              key={p.id}
+              to={`/app/p/${p.id}/${normalizeStage(p.stage) ?? "define"}`}
+            >
+              <Card className="h-full transition-colors hover:bg-muted/50">
+                <CardHeader>
+                  <CardTitle>{p.name}</CardTitle>
+                  <CardDescription>
+                    {p.description ?? "Open to keep working"}
+                  </CardDescription>
+                  <p className="text-xs text-muted-foreground">
+                    Created {new Date(p.created_at).toLocaleDateString()}
+                  </p>
+                </CardHeader>
+              </Card>
+            </Link>
+          ))}
         </div>
-        <div className="flex flex-wrap gap-3">
-          <Button onClick={() => setDialog("describe")}>
-            Describe your own
-          </Button>
-          <Button variant="outline" onClick={() => setDialog("find")}>
-            Help me find one
-          </Button>
-        </div>
-        {templates === null ? (
-          <Skeleton className="h-48 w-full" />
-        ) : (
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {templates.map((t) => (
-              <TemplateCard
-                key={t.id}
-                template={t}
-                busy={busy}
-                onUse={() => void create(t.name, t.id)}
-              />
-            ))}
-          </div>
-        )}
-      </section>
+      )}
 
       <NewProjectDialog
-        key={dialog ?? "closed"}
-        mode={dialog}
+        key={dialogOpen ? "open" : "closed"}
+        open={dialogOpen}
+        templates={templates}
         busy={busy}
-        onClose={() => setDialog(null)}
-        onCreate={(name, first) => void create(name, null, first)}
+        onClose={() => setDialogOpen(false)}
+        onStart={start}
+        onTemplate={(t, name) =>
+          void create(name || t.name, t.id, null, {
+            stage: "define",
+            state: null,
+          })
+        }
       />
     </div>
   )

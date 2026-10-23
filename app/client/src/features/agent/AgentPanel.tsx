@@ -11,10 +11,12 @@ const STARTERS = ["Look over my rules", "Try it on an example", "Add a rule"]
 
 export function AgentPanel({
   project,
+  stage,
   onCanvas,
   onStage,
 }: {
   project: Project
+  stage: string
   onCanvas: (e: CanvasEvent) => void
   onStage: (stage: string) => void
 }) {
@@ -24,6 +26,7 @@ export function AgentPanel({
       onCanvas,
       onStage,
     },
+    stage,
   )
   const location = useLocation()
   const navigate = useNavigate()
