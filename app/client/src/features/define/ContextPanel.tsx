@@ -58,11 +58,16 @@ export function useContextDocs(projectId: string) {
 
 // Drop zone, file picker and paste box. Server messages for limits (file too
 // big, too many files, unsupported type) are shown as they come.
+const MAX_FILES = 10
+const MAX_BYTES = 2_000_000
+
 function AddZone({
   projectId,
+  existing,
   onAdded,
 }: {
   projectId: string
+  existing: number
   onAdded: () => Promise<void>
 }) {
   const api = useApi()
@@ -70,6 +75,7 @@ function AddZone({
   const [over, setOver] = useState(false)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [note, setNote] = useState<string | null>(null)
   const [pasting, setPasting] = useState(false)
   const [name, setName] = useState("")
   const [text, setText] = useState("")
@@ -78,44 +84,81 @@ function AddZone({
     if (files.length === 0) return
     setBusy(true)
     setError(null)
-    for (const file of files) {
-      const { error: err, response } = await api.POST(
-        "/api/projects/{project_id}/context",
-        {
-          params: { path: { project_id: projectId } },
-          // The typed body is a string placeholder; the serializer sends the file.
-          body: { file: "" },
-          bodySerializer: () => {
-            const fd = new FormData()
-            fd.append("file", file)
-            return fd
+    setNote(null)
+    let added = 0
+    const failed: string[] = []
+    let count = existing
+    try {
+      for (const file of files) {
+        if (count >= MAX_FILES) {
+          failed.push(
+            `${file.name}: a project can hold up to ${MAX_FILES} context files`,
+          )
+          continue
+        }
+        if (file.size > MAX_BYTES) {
+          failed.push(`${file.name}: over 2 MB, try a shorter one`)
+          continue
+        }
+        const { error: err, response } = await api.POST(
+          "/api/projects/{project_id}/context",
+          {
+            params: { path: { project_id: projectId } },
+            // The typed body is a string placeholder; the serializer sends the file.
+            body: { file: "" },
+            bodySerializer: () => {
+              const fd = new FormData()
+              fd.append("file", file)
+              return fd
+            },
           },
-        },
-      )
-      if (!response.ok) {
-        const message =
-          response.status === 413
-            ? "That file is over 2 MB. Try a shorter one."
-            : readProblem(err).message
-        setError(`${file.name}: ${message}`)
-        break
+        )
+        if (response.ok) {
+          added += 1
+          count += 1
+        } else {
+          failed.push(
+            `${file.name}: ${
+              response.status === 413
+                ? "over 2 MB, try a shorter one"
+                : readProblem(err).message
+            }`,
+          )
+        }
       }
+    } catch {
+      failed.push("We couldn't reach the server")
+    } finally {
+      setBusy(false)
     }
-    setBusy(false)
+    if (failed.length > 0) {
+      setError(
+        files.length === 1
+          ? failed[0]
+          : `${added} added, ${failed.length} failed: ${failed.join("; ")}`,
+      )
+    } else if (files.length > 1) {
+      setNote(`${added} added`)
+    }
     await onAdded()
   }
 
   async function paste() {
     setBusy(true)
     setError(null)
-    const { response, error: err } = await api.POST(
-      "/api/projects/{project_id}/context/paste",
-      {
+    let result
+    try {
+      result = await api.POST("/api/projects/{project_id}/context/paste", {
         params: { path: { project_id: projectId } },
         body: { name: name.trim() || "Pasted text", text },
-      },
-    )
-    setBusy(false)
+      })
+    } catch {
+      setError("We couldn't reach the server.")
+      return
+    } finally {
+      setBusy(false)
+    }
+    const { response, error: err } = result
     if (!response.ok) {
       setError(readProblem(err).message)
       return
@@ -205,6 +248,7 @@ function AddZone({
         </div>
       )}
       {busy && <p className="text-sm text-muted-foreground">Adding…</p>}
+      {note && <p className="text-sm text-muted-foreground">{note}</p>}
       {error && (
         <p role="alert" className="text-sm text-destructive">
           {error}
@@ -232,6 +276,18 @@ export function ContextPanel({
   const api = useApi()
   const [removeError, setRemoveError] = useState<string | null>(null)
 
+  // A file dropped outside the zone would make the browser navigate away and
+  // lose unsaved edits.
+  useEffect(() => {
+    const stop = (e: DragEvent) => e.preventDefault()
+    window.addEventListener("dragover", stop)
+    window.addEventListener("drop", stop)
+    return () => {
+      window.removeEventListener("dragover", stop)
+      window.removeEventListener("drop", stop)
+    }
+  }, [])
+
   async function remove(doc: ContextDoc) {
     setRemoveError(null)
     const { response, error } = await api.DELETE(
@@ -256,7 +312,11 @@ export function ContextPanel({
           Policies, guides or FAQs. The assistant reads them to help.
         </p>
       </div>
-      <AddZone projectId={projectId} onAdded={reload} />
+      <AddZone
+        projectId={projectId}
+        existing={docs?.length ?? 0}
+        onAdded={reload}
+      />
       {loadError && <p className="text-sm text-destructive">{loadError}</p>}
       {removeError && (
         <p role="alert" className="text-sm text-destructive">
@@ -292,7 +352,11 @@ export function ContextPanel({
               Policies, guides or FAQs. The assistant reads them to help.
             </DialogDescription>
           </DialogHeader>
-          <AddZone projectId={projectId} onAdded={reload} />
+          <AddZone
+            projectId={projectId}
+            existing={docs?.length ?? 0}
+            onAdded={reload}
+          />
           {docs && docs.length > 0 && (
             <p className="text-sm text-muted-foreground">
               {docs.length} added so far.

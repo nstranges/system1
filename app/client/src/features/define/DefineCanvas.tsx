@@ -10,6 +10,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Input } from "@/components/ui/input"
+import { describeIssue } from "@/features/rules/issueText"
 import { IssueList } from "@/features/rules/IssueList"
 import { InputsPanel } from "@/features/rules/InputsPanel"
 import { RulesPanel } from "@/features/rules/RulesPanel"
@@ -32,6 +33,9 @@ import { DraftDialog, type DraftSource } from "./DraftDialog"
 import { GuidelinesPanel } from "./GuidelinesPanel"
 import { QuickCheck } from "./QuickCheck"
 import { SamplesPanel } from "./SamplesPanel"
+
+const isAdvancedTarget = (t?: string) =>
+  !!t && (t.startsWith("rule-") || t.startsWith("input-"))
 
 export function DefineCanvas({
   project,
@@ -62,8 +66,12 @@ export function DefineCanvas({
   const issues = override?.base === policy ? override.issues : policy.issues
   const context = useContextDocs(project.id)
   const [contextOpen, setContextOpen] = useState(false)
+  const [advancedOpen, setAdvancedOpen] = useState(false)
   const [drafting, setDrafting] = useState<DraftSource | null>(null)
+  // null until the count has loaded (or failed): the menu doesn't claim "no
+  // examples" for something it hasn't checked.
   const [exampleCount, setExampleCount] = useState<number | null>(null)
+  const [countLoading, setCountLoading] = useState(false)
   const contextRef = useRef<HTMLDivElement>(null)
 
   const change = (next: PolicyInput) => onDraft(next)
@@ -97,6 +105,8 @@ export function DefineCanvas({
   }, [])
 
   async function loadExampleCount() {
+    setCountLoading(true)
+    setExampleCount(null)
     const { data } = await api.GET(
       "/api/projects/{project_id}/examples/health",
       { params: { path: { project_id: project.id } } },
@@ -108,6 +118,7 @@ export function DefineCanvas({
           .reduce((a, b) => a + b, 0),
       )
     }
+    setCountLoading(false)
   }
 
   async function save() {
@@ -127,6 +138,12 @@ export function DefineCanvas({
     // The draft stays as typed so nothing is lost while fixing the problems.
     const problem = readProblem(error)
     setOverride({ base: policy, issues: problem.issues })
+    if (
+      problem.issues.some((i) =>
+        isAdvancedTarget(describeIssue(i, draft).target),
+      )
+    )
+      setAdvancedOpen(true)
     toast.error(problem.message)
   }
 
@@ -136,7 +153,13 @@ export function DefineCanvas({
     const { data } = await api.GET("/api/projects/{project_id}/policy", {
       params: { path: { project_id: project.id } },
     })
-    if (data) onPolicy(data)
+    if (!data) {
+      toast.error(
+        "The bucket was deleted, but we couldn't refresh this page. Reload to see the latest.",
+      )
+      return
+    }
+    onPolicy(data)
     if (unsaved) {
       onDraft({
         ...unsaved,
@@ -167,7 +190,11 @@ export function DefineCanvas({
           </Button>
         </div>
       </div>
-      <IssueList issues={issues} policy={draft} />
+      <IssueList
+        issues={issues}
+        policy={draft}
+        onJump={(t) => isAdvancedTarget(t) && setAdvancedOpen(true)}
+      />
 
       <label className="block">
         <span className="mb-1 block text-sm font-medium">
@@ -194,11 +221,16 @@ export function DefineCanvas({
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
               <DropdownMenuItem
-                disabled={!exampleCount}
+                disabled={exampleCount === 0 && !countLoading}
                 onClick={() => setDrafting("examples")}
               >
                 From my examples
-                {!exampleCount && (
+                {countLoading && (
+                  <span className="ml-2 text-xs text-muted-foreground">
+                    Checking…
+                  </span>
+                )}
+                {exampleCount === 0 && !countLoading && (
                   <span className="ml-2 text-xs text-muted-foreground">
                     Add examples first
                   </span>
@@ -240,7 +272,11 @@ export function DefineCanvas({
 
       <QuickCheck projectId={project.id} policy={policy} dirty={dirty} />
 
-      <details className="rounded-lg border p-4">
+      <details
+        className="rounded-lg border p-4"
+        open={advancedOpen}
+        onToggle={(e) => setAdvancedOpen(e.currentTarget.open)}
+      >
         <summary className="cursor-pointer font-medium">Advanced</summary>
         <div className="mt-4 space-y-8">
           <p className="text-sm text-muted-foreground">
@@ -256,6 +292,18 @@ export function DefineCanvas({
         projectId={project.id}
         source={drafting}
         hasUnsaved={dirty}
+        onLoad={(proposed, found) => {
+          setDrafting(null)
+          onDraft(proposed)
+          setOverride({ base: policy, issues: found })
+          if (
+            found.some((i) =>
+              isAdvancedTarget(describeIssue(i, proposed).target),
+            )
+          )
+            setAdvancedOpen(true)
+          toast("Draft loaded. Fix the problems, then save.")
+        }}
         onClose={() => setDrafting(null)}
         onApplied={(saved) => {
           setDrafting(null)

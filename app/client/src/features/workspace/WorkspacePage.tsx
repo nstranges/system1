@@ -15,6 +15,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
+import { Input } from "@/components/ui/input"
 import { Skeleton } from "@/components/ui/skeleton"
 import { useApi } from "@/lib/api/client"
 import {
@@ -216,7 +217,7 @@ function Workspace() {
           All projects
         </Link>
         <span className="text-muted-foreground">/</span>
-        <h1 className="truncate text-lg font-semibold">{project.name}</h1>
+        <ProjectName project={project} onProject={setProject} />
       </div>
       <StageRail projectId={project.id} current={stage} />
 
@@ -253,5 +254,71 @@ function Workspace() {
         </div>
       </div>
     </div>
+  )
+}
+
+// Click the name to rename: Enter saves, Escape cancels.
+function ProjectName({
+  project,
+  onProject,
+}: {
+  project: Project
+  onProject: (p: Project) => void
+}) {
+  const api = useApi()
+  const [editing, setEditing] = useState(false)
+  const [name, setName] = useState(project.name)
+  const [saving, setSaving] = useState(false)
+
+  async function save() {
+    const next = name.trim()
+    if (!next || next === project.name) {
+      setEditing(false)
+      return
+    }
+    setSaving(true)
+    const { data, error } = await api.PATCH("/api/projects/{project_id}", {
+      params: { path: { project_id: project.id } },
+      body: { name: next },
+    })
+    setSaving(false)
+    if (data) {
+      onProject(data)
+      setEditing(false)
+    } else {
+      toast.error(readProblem(error).message)
+    }
+  }
+
+  if (!editing) {
+    return (
+      <button
+        type="button"
+        title="Rename project"
+        className="truncate text-left text-lg font-semibold hover:underline"
+        onClick={() => {
+          setName(project.name)
+          setEditing(true)
+        }}
+      >
+        {project.name}
+      </button>
+    )
+  }
+  return (
+    <Input
+      autoFocus
+      className="h-8 max-w-xs text-lg font-semibold"
+      aria-label="Project name"
+      value={name}
+      maxLength={120}
+      disabled={saving}
+      onChange={(e) => setName(e.target.value)}
+      onKeyDown={(e) => {
+        if (e.key === "Enter") void save()
+        if (e.key === "Escape") setEditing(false)
+      }}
+      onBlur={() => !saving && setEditing(false)}
+    />
   )
 }

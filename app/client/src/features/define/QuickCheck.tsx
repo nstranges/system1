@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { useApi } from "@/lib/api/client"
@@ -76,6 +76,9 @@ export function QuickCheck({
   const [results, setResults] = useState<LaneResult[] | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [running, setRunning] = useState(false)
+
+  // Answers belong to the policy they were run against.
+  useEffect(() => setResults(null), [policy.version])
 
   const blocked =
     policy.policy.options.length < 2

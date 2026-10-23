@@ -5,10 +5,13 @@ export function IssueList({
   issues,
   policy,
   title = "Fix these before you save or try it out",
+  onJump,
 }: {
   issues: PolicyIssue[]
   policy: PolicyInput
   title?: string
+  // Lets the host reveal a collapsed section before the row is looked up.
+  onJump?: (target: string) => void
 }) {
   if (issues.length === 0) return null
   return (
@@ -28,13 +31,21 @@ export function IssueList({
                   type="button"
                   className="text-left underline-offset-2 hover:underline"
                   onClick={() => {
-                    const el = document.getElementById(view.target!)
-                    el?.scrollIntoView({ behavior: "smooth", block: "center" })
-                    el?.classList.add("ring-2", "ring-destructive")
-                    setTimeout(
-                      () => el?.classList.remove("ring-2", "ring-destructive"),
-                      2000,
-                    )
+                    onJump?.(view.target!)
+                    // Wait a frame so a section opened above can render.
+                    requestAnimationFrame(() => {
+                      const el = document.getElementById(view.target!)
+                      el?.scrollIntoView({
+                        behavior: "smooth",
+                        block: "center",
+                      })
+                      el?.classList.add("ring-2", "ring-destructive")
+                      setTimeout(
+                        () =>
+                          el?.classList.remove("ring-2", "ring-destructive"),
+                        2000,
+                      )
+                    })
                   }}
                 >
                   {text}

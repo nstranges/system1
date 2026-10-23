@@ -11,7 +11,12 @@ import {
 import { Skeleton } from "@/components/ui/skeleton"
 import { describeIssue } from "@/features/rules/issueText"
 import { useApi } from "@/lib/api/client"
-import { readProblem, type PolicyInput, type PolicyOut } from "@/lib/api/types"
+import {
+  readProblem,
+  type PolicyInput,
+  type PolicyIssue,
+  type PolicyOut,
+} from "@/lib/api/types"
 import type { components } from "@/lib/api/schema"
 
 type Draft = components["schemas"]["DraftOut"]
@@ -37,6 +42,7 @@ export function DraftDialog({
   hasUnsaved,
   onClose,
   onApplied,
+  onLoad,
 }: {
   projectId: string
   // null keeps the dialog closed.
@@ -44,9 +50,16 @@ export function DraftDialog({
   hasUnsaved: boolean
   onClose: () => void
   onApplied: (saved: PolicyOut) => void
+  // A proposal with problems can't be saved; it goes into the editor instead.
+  onLoad: (proposed: PolicyInput, issues: PolicyIssue[]) => void
 }) {
+  // Closing while Apply is in flight would let onApplied run after Discard.
+  const [applying, setApplying] = useState(false)
   return (
-    <Dialog open={source !== null} onOpenChange={(o) => !o && onClose()}>
+    <Dialog
+      open={source !== null}
+      onOpenChange={(o) => !o && !applying && onClose()}
+    >
       <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-2xl">
         {source && (
           <Body
@@ -57,6 +70,9 @@ export function DraftDialog({
             hasUnsaved={hasUnsaved}
             onClose={onClose}
             onApplied={onApplied}
+            onLoad={onLoad}
+            applying={applying}
+            setApplying={setApplying}
           />
         )}
       </DialogContent>
@@ -70,18 +86,23 @@ function Body({
   hasUnsaved,
   onClose,
   onApplied,
+  onLoad,
+  applying,
+  setApplying,
 }: {
   projectId: string
   source: DraftSource
   hasUnsaved: boolean
   onClose: () => void
   onApplied: (saved: PolicyOut) => void
+  onLoad: (proposed: PolicyInput, issues: PolicyIssue[]) => void
+  applying: boolean
+  setApplying: (b: boolean) => void
 }) {
   const api = useApi()
   const [draft, setDraft] = useState<Draft | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [applyError, setApplyError] = useState<string | null>(null)
-  const [applying, setApplying] = useState(false)
 
   useEffect(() => {
     let live = true
@@ -187,7 +208,7 @@ function Body({
               className="rounded-lg border border-destructive/40 bg-destructive/5 p-3"
             >
               <p className="font-medium text-destructive">
-                This proposal has problems you'd need to fix after applying
+                This proposal has problems. Load it into the editor to fix them
               </p>
               <ul className="mt-1 list-disc pl-5">
                 {draft.issues.map((issue, n) => (
@@ -204,12 +225,18 @@ function Body({
         </p>
       )}
       <DialogFooter>
-        <Button variant="ghost" onClick={onClose}>
+        <Button variant="ghost" disabled={applying} onClick={onClose}>
           Discard
         </Button>
-        <Button disabled={!draft || applying} onClick={() => void apply()}>
-          {applying ? "Applying…" : "Apply"}
-        </Button>
+        {draft && draft.issues.length > 0 ? (
+          <Button onClick={() => onLoad(draft.policy, draft.issues)}>
+            Load into editor
+          </Button>
+        ) : (
+          <Button disabled={!draft || applying} onClick={() => void apply()}>
+            {applying ? "Applying…" : "Apply"}
+          </Button>
+        )}
       </DialogFooter>
     </>
   )

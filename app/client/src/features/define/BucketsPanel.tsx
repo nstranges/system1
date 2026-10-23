@@ -1,5 +1,5 @@
 import { Plus, X } from "lucide-react"
-import { useState } from "react"
+import { useRef, useState } from "react"
 import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -38,6 +38,11 @@ export function BucketsPanel({
   const api = useApi()
   const options = policy.options
   const [target, setTarget] = useState<DeleteTarget | null>(null)
+  const [checking, setChecking] = useState(false)
+  // The health request is async; removal must apply to the policy as it is
+  // when the answer arrives, not as it was when the click happened.
+  const latest = useRef({ policy, onChange })
+  latest.current = { policy, onChange }
   const set = (i: number, patch: Partial<PolicyOption>) =>
     onChange({
       ...policy,
@@ -57,17 +62,24 @@ export function BucketsPanel({
     }
     // A bucket that was never saved has no examples to worry about.
     if (!o.key || isNew(o)) return drop(i)
+    if (checking) return
+    setChecking(true)
     const { data, error } = await api.GET(
       "/api/projects/{project_id}/examples/health",
       { params: { path: { project_id: projectId } } },
     )
+    setChecking(false)
+    const dropKey = () => {
+      const { policy: p, onChange: change } = latest.current
+      change({ ...p, options: p.options.filter((x) => x.key !== o.key) })
+    }
     if (!data) {
       toast.error(readProblem(error).message)
       return
     }
     const splits = data.per_bucket[o.key] ?? {}
     const total = Object.values(splits).reduce((a, b) => a + b, 0)
-    if (total === 0) return drop(i)
+    if (total === 0) return dropKey()
     setTarget({
       key: o.key,
       name: o.name || o.key,
@@ -131,7 +143,7 @@ export function BucketsPanel({
                 size="icon"
                 variant="ghost"
                 aria-label={`Remove ${o.name || "bucket"}`}
-                disabled={options.length <= MIN_BUCKETS}
+                disabled={options.length <= MIN_BUCKETS || checking}
                 title={
                   options.length <= MIN_BUCKETS
                     ? `You need at least ${MIN_BUCKETS} buckets`
@@ -167,7 +179,9 @@ export function BucketsPanel({
       <DeleteBucketDialog
         projectId={projectId}
         target={target}
-        others={options.filter((o) => o.key && o.key !== target?.key)}
+        others={options.filter(
+          (o) => o.key && !isNew(o) && o.key !== target?.key,
+        )}
         onClose={() => setTarget(null)}
         onDeleted={async (key) => {
           setTarget(null)

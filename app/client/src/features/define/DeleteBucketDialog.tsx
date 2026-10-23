@@ -109,7 +109,8 @@ function Body({
           should happen to {target.examples === 1 ? "it" : "them"}?
         </DialogDescription>
       </DialogHeader>
-      <div className="space-y-2 text-sm">
+      <fieldset className="space-y-2 text-sm">
+        <legend className="sr-only">What happens to the examples</legend>
         <label className="flex items-center gap-2">
           <input
             type="radio"
@@ -138,7 +139,7 @@ function Body({
             ))}
           </NativeSelect>
         )}
-      </div>
+      </fieldset>
       {needsReset && (
         <div
           role="alert"
