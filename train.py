@@ -25,9 +25,9 @@ STAGES = ["Loading model", "Preparing data", "Training", "Calibrating"]
 def model_config(base = "convaiinnovations/laya"):
     """Load the base model (a Hugging Face id or a saved folder) and attach LoRA adapters."""
     model, tokenizer = FastDecisionModel.from_pretrained(
-        model_name = "unsloth/Qwen3.5-4B",
-        max_seq_length = 2048,
-        load_in_4bit = True,
+        model_name = base,
+        max_seq_length = 512,
+        load_in_4bit = False,
     )
 
     model = FastDecisionModel.get_peft_model(
@@ -93,7 +93,7 @@ def calibrate_model(model, tokenizer, cal_items):
     return metrics
 
 # Full training loop
-def start_training(model, tokenizer, train_items, eval_items):
+def start_training(model, tokenizer, train_items, eval_items, epochs = 1):
     """Train the model and return the trainer stats."""
     trainer = DecisionTrainer(
         model = model,
@@ -103,10 +103,10 @@ def start_training(model, tokenizer, train_items, eval_items):
         args = TrainingArguments(
             per_device_train_batch_size = 16,
             gradient_accumulation_steps = 1, # Use GA to mimic batch size!
-            warmup_steps = 10,
-            num_train_epochs = 3, # Set this for 1 full training run.
+            warmup_steps = 0.03, # below 1 this is a share of total steps, so short runs don't spend most of it warming up
+            num_train_epochs = epochs,
             #max_steps = 240,
-            learning_rate = 2e-5,
+            learning_rate = 2e-4,
             lr_scheduler_type = "cosine",
             weight_decay = 0.01,
             bf16 = is_bfloat16_supported(),
@@ -147,7 +147,7 @@ def save_adapter(model, tokenizer, out_dir):
     (out / "calibration.json").write_text(json.dumps(calibration, indent = 2))
 
 @app.function(image = image, gpu = "L4", timeout = 60 * 60 * 4, volumes = {"/outputs": vol})
-def train(rows = None, variant = "terse", merge = False, base = "convaiinnovations/laya"):
+def train(rows = None, variant = "terse", merge = False, base = "convaiinnovations/laya", epochs = 1):
     """Run all stages on the L4, then save the LoRA adapter to the volume."""
     with tqdm(total = len(STAGES), desc = "Overall", unit = "stage") as overall:
         overall.set_postfix_str(STAGES[0])
@@ -159,7 +159,7 @@ def train(rows = None, variant = "terse", merge = False, base = "convaiinnovatio
         overall.update(1)
 
         overall.set_postfix_str(STAGES[2])
-        trainer_stats = start_training(model, tokenizer, train_items, eval_items)
+        trainer_stats = start_training(model, tokenizer, train_items, eval_items, epochs)
         overall.update(1)
 
         overall.set_postfix_str(STAGES[3])
@@ -177,12 +177,13 @@ def train(rows = None, variant = "terse", merge = False, base = "convaiinnovatio
     tqdm.write(str(cal_metrics))
 
 @app.local_entrypoint()
-def main(data: str = "", variant: str = "terse", merge: bool = False, base: str = ""):
+def main(data: str = "", variant: str = "terse", merge: bool = False, base: str = "", epochs: int = 1):
     """Run training remotely, then download the LoRA adapter to ./lora.
 
     --data is a parquet from build_dataset.py; without it, train on typed-decisions.
     --variant picks the question set: terse (label list only) or policy.
     --base starts from a saved full model folder (such as ./merged) instead of Laya.
+    --epochs sets the number of passes over the training rows.
     --merge also saves the LoRA merged into the base model as a full model in ./merged.
     """
     rows = None
@@ -197,7 +198,7 @@ def main(data: str = "", variant: str = "terse", merge: bool = False, base: str 
             upload.put_directory(base, "base")
         base_id = "/outputs/base"
         print(f"Uploaded {base} to the volume as base/")
-    train.remote(rows, variant, merge, base_id)
+    train.remote(rows, variant, merge, base_id, epochs)
 
     for folder in ("lora", "merged") if merge else ("lora",):
         download(folder)

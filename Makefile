@@ -13,6 +13,12 @@ MODAL      := $(VENV)/bin/modal
 LIMIT ?=
 LIMIT_ARG := $(if $(LIMIT),--limit $(LIMIT),)
 
+# Dataset the training and eval targets use (decision rows from data/banking/to_decision_parquet.py).
+# Override with DATA=path, or DATA= to fall back to LocalLLaMA/typed-decisions.
+DATA     ?= data/banking/banking77_decisions.parquet
+DATA_ARG := $(if $(DATA),--data $(DATA),)
+EPOCHS   ?= 1
+
 # Load .env into each recipe's shell. The shell parses the file, so keys never pass
 # through make and never appear in echoed commands.
 LOAD_ENV := set -a; [ -f .env ] && . ./.env; set +a;
@@ -74,20 +80,20 @@ jev-check: check-env ## Verify the Jev key by listing models (no decisions are m
 		"$$TYPESAFE_BASE_URL/v1/models"; echo
 
 # --- Training and evaluation ------------------------------------------------
-# These currently run on LocalLLaMA/typed-decisions. Phase 1 will point them at our dataset.
+# These run on $(DATA), Banking77 by default.
 
 train: ## Train the Laya LoRA on Modal (L4) and download it to ./lora
-	$(MODAL) run train.py
+	$(MODAL) run train.py $(DATA_ARG) --epochs $(EPOCHS)
 
 eval-laya: ## Evaluate untrained Laya on the test split (Modal) -> results/laya_*
-	$(MODAL) run eval_laya.py $(LIMIT_ARG)
+	$(MODAL) run eval_laya.py $(DATA_ARG) $(LIMIT_ARG)
 
 eval-lora: ## Evaluate the trained LoRA in ./lora on the test split (Modal) -> results/laya_lora_*
 	@[ -f lora/trainable.pt ] || { echo "lora/trainable.pt not found. Run 'make train' first."; exit 1; }
-	$(MODAL) run eval_lora.py $(LIMIT_ARG)
+	$(MODAL) run eval_lora.py $(DATA_ARG) $(LIMIT_ARG)
 
 eval-jev: check-env ## Evaluate Jev (hosted API, pinned to JEV_MODEL) on the test split -> results/jev_*
-	@$(LOAD_ENV) $(PYTHON) eval_jev.py --model "$$JEV_MODEL" $(LIMIT_ARG)
+	@$(LOAD_ENV) $(PYTHON) eval_jev.py --model "$$JEV_MODEL" $(DATA_ARG) $(LIMIT_ARG)
 
 eval-all: eval-laya eval-lora eval-jev ## Run all three evals
 
