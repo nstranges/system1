@@ -41,12 +41,15 @@ class JobContext:
         # Ends the job as this status instead of "succeeded", "preview" or "unavailable" for a training run that made no model.
         self.final_status: str | None = None
 
-    def progress(self, value: float, stage: str | None = None) -> None:
+    def progress(self, value: float, stage: str | None = None, live: dict | None = None) -> None:
+        """`live` is shown on the job while it runs (merged over the partial result), e.g. training loss."""
         job = self.session.get(Job, self._job_id)
         if job is not None:
             job.progress = max(0.0, min(1.0, value))
             if stage is not None:
                 job.stage = stage
+            if live is not None:
+                job.result_json = {**(self.result or {}), **live}
             self.session.commit()
 
 

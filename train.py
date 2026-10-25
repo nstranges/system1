@@ -93,13 +93,14 @@ def calibrate_model(model, tokenizer, cal_items):
     return metrics
 
 # Full training loop
-def start_training(model, tokenizer, train_items, eval_items, epochs = 1):
-    """Train the model and return the trainer stats."""
+def start_training(model, tokenizer, train_items, eval_items, epochs = 1, callbacks = None):
+    """Train the model and return the trainer stats. callbacks are optional transformers TrainerCallbacks."""
     trainer = DecisionTrainer(
         model = model,
         processing_class = tokenizer,
         train_dataset = train_items,
         eval_dataset = eval_items,
+        callbacks = callbacks,
         args = TrainingArguments(
             per_device_train_batch_size = 16,
             gradient_accumulation_steps = 1, # Use GA to mimic batch size!

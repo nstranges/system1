@@ -148,29 +148,28 @@ def test_preview_training_card_has_real_jev_rows_and_preview_sys1(client_for):
 
     report = client.get(f"/api/projects/{pid}/report").json()
     rows = _rows(report)
-    assert list(rows) == ["sys1", "jev", "jev_labels"]  # no base model for a project without one
+    assert list(rows) == ["sys1", "jev"]  # no base model for a project without one
     assert rows["sys1"]["status"] == "preview" and rows["sys1"]["message"] == "Real training connects soon."
     assert rows["sys1"]["accuracy"] is None
     assert rows["jev"]["status"] == "ok" and rows["jev"]["accuracy"] == 1.0 and rows["jev"]["n"] == 12
-    assert rows["jev_labels"]["accuracy"] == 1.0
     assert report["is_preview"] and not report["is_fixture"] and report["test_set_version"] == 1
     assert report["verdict"]["winner"] == "none"
     assert report["details"]["per_bucket"]["jev"] == {"billing": 1.0, "shipping": 1.0}
-    assert jev.calls == 24
+    assert jev.calls == 12
 
     with Session(client.app.state.engine) as session:
         decisions = list(session.scalars(select(Decision).where(Decision.project_id == pid)))
-        assert len(decisions) == 24 and {d.source for d in decisions} == {"eval"}
+        assert len(decisions) == 12 and {d.source for d in decisions} == {"eval"}
         assert all(d.not_for_training for d in decisions)
         assert session.scalar(select(TokenUsage.tokens)) is None  # Jev calls don't touch the Anthropic cap
         assert session.scalar(select(ReportCard.is_preview)) is True
 
     # The same versions are scored once: a second card re-uses the saved Jev answers.
     _train(client, pid)
-    assert jev.calls == 24
+    assert jev.calls == 12
     with Session(client.app.state.engine) as session:
         assert len(list(session.scalars(select(ReportCard)))) == 2
-        assert len(list(session.scalars(select(JevEval)))) == 2
+        assert len(list(session.scalars(select(JevEval)))) == 1
 
 
 def test_jev_errors_hide_the_verdict_when_many(client_for):
@@ -190,7 +189,6 @@ def test_jev_errors_hide_the_verdict_when_many(client_for):
     rows = _rows(report)
     assert rows["jev"]["status"] == "errored" and rows["jev"]["accuracy"] is None
     assert rows["jev"]["message"] == "Jev errored on 12 of 12" and rows["jev"]["errors"] == 12
-    assert rows["jev_labels"]["accuracy"] == 1.0
     assert report["verdict"]["winner"] == "none" and "Jev" in report["verdict"]["sentence"]
 
 
@@ -377,7 +375,7 @@ def test_flagship_serves_its_recorded_card(client_for):
     report = client.get(f"/api/projects/{pid}/report").json()
     assert report["available"] and report["is_fixture"] and not report["is_preview"]
     rows = _rows(report)
-    assert list(rows) == ["sys1", "jev", "jev_labels", "base"]
+    assert list(rows) == ["sys1", "jev", "base"]
     assert rows["jev"]["accuracy"] == pytest.approx(0.7166666, abs=1e-4) and rows["jev"]["n"] == 60
     assert report["verdict"]["winner"] in ("sys1", "jev", "inconclusive")
     assert report["details"]["per_bucket"]["sys1"]
@@ -429,11 +427,11 @@ def test_jev_answers_are_asked_again_when_the_guidelines_change(client_for):
     client = client_for("org_a", providers=_providers(jev=jev))
     pid = _project(client)
     _train(client, pid)
-    assert jev.calls == 24
+    assert jev.calls == 12
     policy = {"decision_question": "Where does it go?", "options": OPTIONS, "guidelines": ["Refunds are billing."]}
     assert client.put(f"/api/projects/{pid}/policy", json={"policy": policy}).status_code == 200
     _train(client, pid)
-    assert jev.calls == 48  # a new policy version is a new cache key
+    assert jev.calls == 24  # a new policy version is a new cache key
     with Session(client.app.state.engine) as session:
         assert {e.policy_version for e in session.scalars(select(JevEval))} == {2, 3}
 
@@ -495,8 +493,8 @@ class FakeRunner:
         base = [{"id": r["id"], "pred": "billing"} for r in self.payload["test_rows"]]
         return "done", {"adapter_ref": "vol/lora", "metrics": {}, "evaluations": {"sys1": answers, "base": base}}
 
-    def stage(self, call_id: str):
-        return "learning"
+    def progress(self, call_id: str):
+        return {"stage": "learning", "step": 5, "total_steps": 10, "history": [[1, 2.0], [5, 1.2]]}
 
 
 def test_modal_trainer_scores_your_model_and_base_from_its_own_answers(client_for):
@@ -505,6 +503,7 @@ def test_modal_trainer_scores_your_model_and_base_from_its_own_answers(client_fo
     pid = _project(client, per_bucket=50)
     job = _train(client, pid)
     assert job["status"] == "succeeded"
+    assert job["result"]["training"]["history"] == [[1, 2.0], [5, 1.2]]  # the live loss stays on the finished job
 
     payload = runner.payload
     assert payload["epochs"] == 2 and len(payload["test_rows"]) == 20

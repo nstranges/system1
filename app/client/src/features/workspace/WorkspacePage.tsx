@@ -52,6 +52,24 @@ function Workspace() {
   const [missing, setMissing] = useState(false)
   const [loadError, setLoadError] = useState<string | null>(null)
   const location = useLocation()
+  // The assistant can be tucked away on wide screens; the choice is remembered.
+  const [assistantOpen, setAssistantOpen] = useState(() => {
+    try {
+      return localStorage.getItem("system1:assistant") !== "closed"
+    } catch {
+      return true
+    }
+  })
+  function toggleAssistant() {
+    setAssistantOpen((open) => {
+      try {
+        localStorage.setItem("system1:assistant", open ? "closed" : "open")
+      } catch {
+        // Storage can be blocked; the toggle still works for this visit.
+      }
+      return !open
+    })
+  }
   // A new blank project opens on the assistant, which is about to speak.
   const [panel, setPanel] = useState<"assistant" | "canvas">(
     (location.state as { firstMessage?: string } | null)?.firstMessage
@@ -254,8 +272,29 @@ function Workspace() {
         ))}
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,2fr)]">
-        <div className={panel === "assistant" ? "" : "hidden lg:block"}>
+      <div
+        className={
+          assistantOpen
+            ? "grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,3fr)]"
+            : "grid gap-6"
+        }
+      >
+        <div
+          className={
+            panel === "assistant"
+              ? assistantOpen
+                ? ""
+                : "lg:hidden"
+              : assistantOpen
+                ? "hidden lg:block"
+                : "hidden"
+          }
+        >
+          <div className="mb-2 hidden lg:block">
+            <Button size="sm" variant="ghost" onClick={toggleAssistant}>
+              Hide assistant
+            </Button>
+          </div>
           <AgentPanel
             project={project}
             stage={stage}
@@ -267,6 +306,13 @@ function Workspace() {
           className={panel === "canvas" ? "min-w-0" : "hidden min-w-0 lg:block"}
         >
           <div className="space-y-4">
+            {!assistantOpen && (
+              <div className="hidden lg:block">
+                <Button size="sm" variant="ghost" onClick={toggleAssistant}>
+                  Show assistant
+                </Button>
+              </div>
+            )}
             <StepHeader title={label} hint={stageHint(stage)} />
             {canvas}
           </div>

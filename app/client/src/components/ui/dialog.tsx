@@ -8,7 +8,14 @@ import { Button } from "@/components/ui/button"
 import { XIcon } from "lucide-react"
 
 function Dialog({ ...props }: DialogPrimitive.Root.Props) {
-  return <DialogPrimitive.Root data-slot="dialog" {...props} />
+  // Clicking outside must not close a dialog: people lose what they typed. Close and Escape still work.
+  return (
+    <DialogPrimitive.Root
+      data-slot="dialog"
+      disablePointerDismissal
+      {...props}
+    />
+  )
 }
 
 function DialogTrigger({ ...props }: DialogPrimitive.Trigger.Props) {

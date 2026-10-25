@@ -73,7 +73,7 @@ def test_too_many_rows_422(client_for):
     data = ("text,kind\n" + "a,refund\n" * (UPLOAD_MAX_ROWS + 1)).encode()
     res = _stage(client, pid, data)
     assert res.status_code == 422
-    assert res.json()["detail"]["message"] == "That file has more than 5,000 rows."
+    assert res.json()["detail"]["message"] == f"That file has more than {UPLOAD_MAX_ROWS:,} rows."
     assert _stage(client, pid, b"\x00\x01\x02binary").json()["detail"]["message"] == (
         "We couldn't read that file as CSV, Excel or JSONL."
     )
@@ -273,7 +273,7 @@ def test_oversized_upload_is_413(client_for):
     pid = _project(client)
     res = _stage(client, pid, b"a" * (UPLOAD_MAX_BYTES + 1))
     assert res.status_code == 413
-    assert res.json()["detail"]["message"] == "That file is over 5 MB."
+    assert res.json()["detail"]["message"] == f"That file is over {UPLOAD_MAX_BYTES // 1_000_000} MB."
 
 
 def test_expired_upload_is_404(client_for):

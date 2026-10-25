@@ -21,7 +21,7 @@ from system1.projects.service import latest_policy
 from system1.providers import Providers
 from system1.report.models import JevEval
 
-JEV_LANES: tuple[Literal["jev", "jev_labels"], ...] = ("jev", "jev_labels")
+JEV_LANES: tuple[Literal["jev", "jev_labels"], ...] = ("jev",)
 MAX_IN_FLIGHT = 4
 PERSIST_EVERY = 50
 
@@ -201,7 +201,7 @@ async def evaluate_jev(
     policy_and_version: tuple[Policy, int] | None = None,
     on_progress: Callable[[float], None] | None = None,
 ) -> dict[str, list[PredRecord]]:
-    """Jev with the guidelines (`jev`) and with bucket names only (`jev_labels`), on every test example."""
+    """Jev with the guidelines (`jev`) on every test example. One lane keeps the report to one Jev row and one bill."""
     policy_and_version = policy_and_version or latest_policy(session, project)
     total = len(load_test_examples(session, project)) * len(JEV_LANES)
     done = 0

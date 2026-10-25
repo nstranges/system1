@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from "react"
+import { Pencil, Trash2 } from "lucide-react"
 import { Link, useNavigate } from "react-router"
 import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
@@ -9,6 +10,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
+import { Input } from "@/components/ui/input"
 import { Skeleton } from "@/components/ui/skeleton"
 import { useApi } from "@/lib/api/client"
 import { readProblem, type Project, type Template } from "@/lib/api/types"
@@ -123,22 +125,17 @@ export function DashboardPage() {
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {projects.map((p) => (
-            <Link
+            <ProjectCard
               key={p.id}
-              to={`/app/p/${p.id}/${normalizeStage(p.stage) ?? "define"}`}
-            >
-              <Card className="h-full transition-colors hover:bg-muted/50">
-                <CardHeader>
-                  <CardTitle>{p.name}</CardTitle>
-                  <CardDescription>
-                    {p.description ?? "Open to keep working"}
-                  </CardDescription>
-                  <p className="text-xs text-muted-foreground">
-                    Created {new Date(p.created_at).toLocaleDateString()}
-                  </p>
-                </CardHeader>
-              </Card>
-            </Link>
+              project={p}
+              onChanged={(next) =>
+                setProjects((all) =>
+                  (all ?? []).flatMap((x) =>
+                    x.id !== p.id ? [x] : next ? [next] : [],
+                  ),
+                )
+              }
+            />
           ))}
         </div>
       )}
@@ -158,5 +155,145 @@ export function DashboardPage() {
         }
       />
     </div>
+  )
+}
+
+// A project card: click to open, with rename and delete beside it. Delete asks first, and only an admin can do it.
+function ProjectCard({
+  project,
+  onChanged,
+}: {
+  project: Project
+  // The renamed project, or null once it is deleted.
+  onChanged: (next: Project | null) => void
+}) {
+  const api = useApi()
+  const [renaming, setRenaming] = useState(false)
+  const [name, setName] = useState(project.name)
+  const [confirming, setConfirming] = useState(false)
+  const [busy, setBusy] = useState(false)
+
+  async function rename() {
+    const next = name.trim()
+    if (!next || next === project.name) {
+      setRenaming(false)
+      setName(project.name)
+      return
+    }
+    setBusy(true)
+    try {
+      const { data, error } = await api.PATCH("/api/projects/{project_id}", {
+        params: { path: { project_id: project.id } },
+        body: { name: next },
+      })
+      if (data) {
+        onChanged(data)
+        setRenaming(false)
+      } else {
+        toast.error(readProblem(error).message)
+      }
+    } catch {
+      toast.error("We couldn't reach the server.")
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  async function remove() {
+    setBusy(true)
+    try {
+      const { response, error } = await api.DELETE(
+        "/api/projects/{project_id}",
+        { params: { path: { project_id: project.id } } },
+      )
+      if (response.ok) {
+        onChanged(null)
+        toast("Project deleted")
+      } else {
+        toast.error(readProblem(error).message)
+        setConfirming(false)
+      }
+    } catch {
+      toast.error("We couldn't reach the server.")
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  const stage = normalizeStage(project.stage) ?? "define"
+  return (
+    <Card className="h-full transition-colors hover:bg-muted/50">
+      <CardHeader>
+        {renaming ? (
+          <Input
+            autoFocus
+            aria-label="Project name"
+            value={name}
+            maxLength={120}
+            disabled={busy}
+            onChange={(e) => setName(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") void rename()
+              if (e.key === "Escape") {
+                setRenaming(false)
+                setName(project.name)
+              }
+            }}
+            onBlur={() => !busy && void rename()}
+          />
+        ) : (
+          <CardTitle>
+            <Link to={`/app/p/${project.id}/${stage}`}>{project.name}</Link>
+          </CardTitle>
+        )}
+        <CardDescription>
+          {project.description ?? "Open to keep working"}
+        </CardDescription>
+        <p className="text-xs text-muted-foreground">
+          Created {new Date(project.created_at).toLocaleDateString()}
+        </p>
+        {confirming ? (
+          <div className="flex items-center gap-2 text-sm">
+            <span>Delete this project and its examples?</span>
+            <Button
+              size="sm"
+              variant="destructive"
+              disabled={busy}
+              onClick={() => void remove()}
+            >
+              Delete
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              disabled={busy}
+              onClick={() => setConfirming(false)}
+            >
+              Keep
+            </Button>
+          </div>
+        ) : (
+          <div className="flex gap-1">
+            <Button
+              size="sm"
+              variant="ghost"
+              onClick={() => {
+                setName(project.name)
+                setRenaming(true)
+              }}
+            >
+              <Pencil /> Rename
+            </Button>
+            <Button
+              size="sm"
+              variant="ghost"
+              onClick={() => setConfirming(true)}
+            >
+              <Trash2 /> Delete
+            </Button>
+          </div>
+        )}
+      </CardHeader>
+    </Card>
   )
 }

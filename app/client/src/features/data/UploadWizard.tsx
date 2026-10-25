@@ -27,14 +27,14 @@ type Staged = components["schemas"]["Staged"]
 type LabelCount = components["schemas"]["LabelCount"]
 export type ImportResult = components["schemas"]["ImportResult"]
 
-const MAX_BYTES = 5_000_000
+const MAX_BYTES = 25_000_000
 const NEW = "__new"
 const DROP = "__drop"
 const STEPS = [
   "Choose a file",
-  "Input columns",
-  "Decision column",
-  "Match labels",
+  "Pick the text",
+  "Pick the answer",
+  "Match to buckets",
   "Import",
 ]
 
@@ -129,7 +129,7 @@ function Body({
     if (!file || busy) return
     setError(null)
     if (file.size > MAX_BYTES) {
-      setError("That file is over 5 MB. Try a smaller one.")
+      setError("That file is over 25 MB. Try a smaller one.")
       return
     }
     if (!/\.(csv|xlsx|jsonl)$/i.test(file.name)) {
@@ -160,7 +160,7 @@ function Body({
       } else {
         setError(
           response.status === 413
-            ? "That file is too big. The limit is 5 MB and 5,000 rows."
+            ? "That file is too big. The limit is 25 MB and 50,000 rows."
             : readProblem(err).message,
         )
       }
@@ -291,7 +291,7 @@ function Body({
           )}
         >
           <Upload className="size-5" />
-          <p>Drop a spreadsheet of past decisions here, or</p>
+          <p>Drop a spreadsheet of past examples here, or</p>
           <Button
             variant="outline"
             disabled={busy}
@@ -300,7 +300,7 @@ function Body({
             {busy ? "Reading your file…" : "Choose file"}
           </Button>
           <p className="text-xs">
-            .csv, .xlsx or .jsonl. Up to 5 MB and 5,000 rows.
+            .csv, .xlsx or .jsonl. Up to 25 MB and 50,000 rows.
           </p>
           <input
             ref={input}
@@ -318,8 +318,9 @@ function Body({
       {step === 1 && staged && (
         <div className="space-y-3">
           <p className="text-sm">
-            Which columns describe the case? These are what the model reads.
-            Found {staged.row_count} rows.
+            Which column(s) hold the text the model should read, such as a
+            message, ticket or request? This is the input. Found{" "}
+            {staged.row_count} rows.
           </p>
           <div className="flex flex-wrap gap-x-4 gap-y-1">
             {staged.columns.map((c) => (
@@ -346,7 +347,9 @@ function Body({
       {step === 2 && staged && (
         <div className="space-y-3">
           <p className="text-sm">
-            Which column holds the decision that was made?
+            Which column holds the correct answer for each row? This is the
+            label: the bucket that row belongs in, such as "refund" or
+            "escalate".
           </p>
           <div className="flex flex-wrap gap-x-4 gap-y-1">
             {staged.columns.map((c) => {
@@ -379,7 +382,8 @@ function Body({
       {step === 3 && labels && (
         <div className="space-y-3">
           <p className="text-sm">
-            Match each decision in your file to a bucket.
+            Match each answer in your file to a bucket. Pick an existing bucket,
+            make a new one, or skip it.
           </p>
           <div className="space-y-2">
             {labels.map((l) => (

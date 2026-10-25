@@ -1,6 +1,7 @@
 import { Check, Loader2 } from "lucide-react"
 import { useEffect, useRef, useState } from "react"
 import { useApi } from "@/lib/api/client"
+import { LossDetails, readDetail } from "./LossDetails"
 import type { components } from "@/lib/api/schema"
 
 type Job = components["schemas"]["JobOut"]
@@ -187,6 +188,7 @@ export function TrainProgress({
         {job.status === "queued" ? "Queued. A GPU is being set up." : detail}{" "}
         Training can take several minutes; you can leave this page.
       </p>
+      <LossDetails detail={readDetail(job.result)} />
       {trouble && (
         <p className="text-xs text-muted-foreground">
           We couldn't reach the server. Trying again…

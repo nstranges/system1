@@ -318,7 +318,7 @@ def start_training(
             raise
         jev = await evaluation
 
-        records: dict[RowKey, list[PredRecord]] = {"jev": jev["jev"], "jev_labels": jev["jev_labels"]}
+        records: dict[RowKey, list[PredRecord]] = {"jev": jev["jev"]}
         sys1_note: ReportRow | None = None
         scored_remotely = trained.status == "succeeded" and "sys1" in trained.evaluations
         if scored_remotely:
@@ -365,7 +365,12 @@ def start_training(
             ctx.final_status, ctx.message = "unavailable", trained.message
         elif sys1_note is not None:
             ctx.message = NOT_CONNECTED_MESSAGE
-        return {**summary, "report_card_id": card.id, "trainer_status": trained.status}
+        return {
+            **summary,
+            "report_card_id": card.id,
+            "trainer_status": trained.status,
+            **({"training": progress.detail} if progress.detail else {}),
+        }
 
     job_service.start_job(job_service.session_factory_for(session), job.id, work)
     return job.id
@@ -379,10 +384,17 @@ class _Progress:
         self.stage = "preparing"
         self._trainer = 0.0
         self._scoring = 0.0
+        self.detail: dict | None = None
 
-    def trainer(self, stage: str | None, done: bool = False) -> None:
+    def trainer(self, stage: str | None, done: bool = False, detail: dict | None = None) -> None:
         self.stage = stage if stage in STAGE_PROGRESS else self.stage
         self._trainer = 1.0 if done else STAGE_PROGRESS[self.stage]
+        step, total = (detail or {}).get("step"), (detail or {}).get("total_steps")
+        if self.stage == "learning" and step is not None and total:
+            # Move through the learning stage as steps finish, instead of sitting at one value.
+            self._trainer = 0.1 + 0.55 * min(1.0, step / total)
+        if detail:
+            self.detail = detail
         if done:
             self.stage = "testing"
         self._push()
@@ -392,14 +404,18 @@ class _Progress:
         self._push()
 
     def _push(self) -> None:
-        self._ctx.progress(min(0.99, TRAINER_SHARE * self._trainer + (1 - TRAINER_SHARE) * self._scoring), self.stage)
+        self._ctx.progress(
+            min(0.99, TRAINER_SHARE * self._trainer + (1 - TRAINER_SHARE) * self._scoring),
+            self.stage,
+            {"training": self.detail} if self.detail else None,
+        )
 
 
 async def _run_trainer(providers: Providers, dataset_ref: str, config: dict, progress: _Progress) -> TrainingJob:
     # Trainers may block on the network, so they run off the event loop.
     job = await asyncio.to_thread(providers.trainer.start, dataset_ref, config)
     while job.status in ("queued", "running"):
-        progress.trainer(job.metrics.get("stage"))
+        progress.trainer(job.metrics.get("stage"), detail=job.metrics.get("detail"))
         await asyncio.sleep(POLL_INTERVAL_S)
         job = await asyncio.to_thread(providers.trainer.status, job.id)
     progress.trainer(None, done=True)
@@ -452,7 +468,7 @@ def _fixture_report(session: Session, project: Project) -> Report | None:
     if not runs:
         return None
     # The recorded files call the guidelines run "jev_policy".
-    keys: dict[str, RowKey] = {"sys1": "sys1", "jev_policy": "jev", "jev_labels": "jev_labels", "base": "base"}
+    keys: dict[str, RowKey] = {"sys1": "sys1", "jev_policy": "jev", "base": "base"}
     records: dict[RowKey, list[PredRecord]] = {
         keys[run.model_key]: [
             PredRecord(id=r.id, gold=r.gold, pred=r.pred, p_gold=r.p_gold, correct=r.correct) for r in run.records

@@ -15,7 +15,9 @@ class ModalRunner(Protocol):
         """("running", None), ("done", result dict) or ("failed", message)."""
         ...
 
-    def stage(self, call_id: str) -> str | None: ...
+    def progress(self, call_id: str) -> dict:
+        """What the running function last reported: {stage, step, total_steps, epoch, history, ...}."""
+        ...
 
 
 class SdkModalRunner:
@@ -46,11 +48,10 @@ class SdkModalRunner:
         except Exception as exc:  # noqa: BLE001 - an exception raised inside the remote function is re-raised here as its own type
             return "failed", str(exc) or type(exc).__name__
 
-    def stage(self, call_id: str) -> str | None:
+    def progress(self, call_id: str) -> dict:
         import modal
 
-        progress = modal.Dict.from_name(self._progress_name, create_if_missing=True)
-        return (progress.get(call_id) or {}).get("stage")
+        return modal.Dict.from_name(self._progress_name, create_if_missing=True).get(call_id) or {}
 
 
 class ModalTrainer:
@@ -88,10 +89,11 @@ class ModalTrainer:
     def status(self, job_id: str) -> TrainingJob:
         state, value = self._runner.poll(job_id)
         if state == "running":
-            stage = self._runner.stage(job_id)
-            return TrainingJob(
-                id=job_id, status="running", message="Training.", metrics={"stage": stage} if stage in STAGES else {}
-            )
+            info = self._runner.progress(job_id)
+            metrics = {"stage": info["stage"]} if info.get("stage") in STAGES else {}
+            if len(info) > 1:
+                metrics["detail"] = {k: v for k, v in info.items() if k != "stage"}
+            return TrainingJob(id=job_id, status="running", message="Training.", metrics=metrics)
         if state == "failed":
             return TrainingJob(id=job_id, status="failed", message=f"Training didn't finish: {value}")
         return TrainingJob(

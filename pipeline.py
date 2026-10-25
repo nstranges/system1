@@ -15,6 +15,7 @@ pipeline_image = image.add_local_python_source("train")
 
 with pipeline_image.imports():
     from tqdm.auto import tqdm
+    from transformers import TrainerCallback
     from unsloth import FastDecisionModel
 
 def predict_rows(model, tokenizer, test_rows):
@@ -35,6 +36,36 @@ def predict_rows(model, tokenizer, test_rows):
         })
     return out
 
+class LiveProgress(TrainerCallback if "TrainerCallback" in globals() else object):
+    """Reports step, epoch and loss to the progress Dict, at most every few seconds, for the product's details view."""
+
+    def __init__(self, push, every = 3.0):
+        self.push, self.every, self.last = push, every, 0.0
+        self.loss, self.eval_loss = [], []
+
+    def _send(self, state, force = False):
+        if not force and time.monotonic() - self.last < self.every:
+            return
+        self.last = time.monotonic()
+        stride = max(1, len(self.loss) // 200)  # keep the payload small on long runs
+        self.push({
+            "step": state.global_step,
+            "total_steps": state.max_steps,
+            "epoch": round(state.epoch or 0, 2),
+            "history": self.loss[::stride],
+            "eval_history": self.eval_loss,
+        })
+
+    def on_log(self, args, state, control, logs = None, **kwargs):
+        if logs and "loss" in logs:
+            self.loss.append([state.global_step, round(float(logs["loss"]), 4)])
+        self._send(state)
+
+    def on_evaluate(self, args, state, control, metrics = None, **kwargs):
+        if metrics and "eval_loss" in metrics:
+            self.eval_loss.append([round(state.epoch or 0, 2), round(float(metrics["eval_loss"]), 4)])
+        self._send(state, force = True)
+
 @app.function(image = pipeline_image, gpu = "L4", timeout = 60 * 60 * 2)
 def evaluate_base(test_rows):
     """Untrained Laya on the test rows (same load as eval_laya.py)."""
@@ -50,8 +81,8 @@ def run_project(payload):
     call_id = modal.current_function_call_id()
     progress = modal.Dict.from_name(PROGRESS_DICT, create_if_missing = True)
 
-    def stage(name):
-        progress[call_id] = {"stage": name}
+    def stage(name, **detail):
+        progress[call_id] = {"stage": name, **detail}
 
     base_call = evaluate_base.spawn(payload["test_rows"])  # runs on its own GPU while this one trains
 
@@ -60,7 +91,8 @@ def run_project(payload):
     train_items, eval_items, cal_items = data_config(tokenizer, model, payload["rows"], "labels")
 
     stage("learning")
-    stats = start_training(model, tokenizer, train_items, eval_items, payload["epochs"])
+    live = LiveProgress(lambda detail: stage("learning", **detail))
+    stats = start_training(model, tokenizer, train_items, eval_items, payload["epochs"], [live])
 
     stage("checking")
     calibration = calibrate_model(model, tokenizer, cal_items)
