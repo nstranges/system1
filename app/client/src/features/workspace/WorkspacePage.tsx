@@ -218,7 +218,7 @@ function Workspace() {
     ) : stage === "review" ? (
       <ReviewCanvas project={project} policy={policy} />
     ) : stage === "train" ? (
-      <TrainCanvas />
+      <TrainCanvas project={project} policy={policy} />
     ) : stage === "use" ? (
       <UseCanvas project={project} onProject={setProject} />
     ) : (

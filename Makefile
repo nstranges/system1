@@ -24,7 +24,7 @@ EPOCHS   ?= 1
 LOAD_ENV := set -a; [ -f .env ] && . ./.env; set +a;
 
 .DEFAULT_GOAL := help
-.PHONY: help env venv install test dev format check docs verify modal-setup check-env jev-check train eval-laya eval-lora eval-jev eval-all grid tickets-check blind readback dataset dataset-provisional clean
+.PHONY: help env venv install test dev format check docs verify modal-setup check-env jev-check train eval-laya eval-lora eval-jev eval-all modal-deploy grid tickets-check blind readback dataset dataset-provisional clean
 
 help: ## List available commands
 	@grep -E '^[a-zA-Z_-]+:.*?## ' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-12s\033[0m %s\n", $$1, $$2}'
@@ -96,6 +96,9 @@ eval-jev: check-env ## Evaluate Jev (hosted API, pinned to JEV_MODEL) on the tes
 	@$(LOAD_ENV) $(PYTHON) eval_jev.py --model "$$JEV_MODEL" $(DATA_ARG) $(LIMIT_ARG)
 
 eval-all: eval-laya eval-lora eval-jev ## Run all three evals
+
+modal-deploy: ## Deploy pipeline.py to Modal so the server's TRAINER=modal can call it
+	$(MODAL) deploy pipeline.py
 
 # --- Phase 1 dataset --------------------------------------------------------
 

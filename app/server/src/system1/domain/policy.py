@@ -12,7 +12,9 @@ from pydantic import BaseModel, ConfigDict, Field
 from system1.datasets.constants import MAX_GUIDELINE_CHARS, MAX_GUIDELINES, MAX_SAMPLE_INPUT_CHARS, MAX_SAMPLE_INPUTS
 
 MIN_OPTIONS = 2
-MAX_OPTIONS = 15
+# Jev takes up to 255 options. Drafting keeps to a smaller number, so a drafted rulebook stays readable.
+MAX_OPTIONS = 100
+MAX_DRAFT_OPTIONS = 15
 SNAKE_CASE = re.compile(r"[a-z][a-z0-9]*(_[a-z0-9]+)*")
 
 

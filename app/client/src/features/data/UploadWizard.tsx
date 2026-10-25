@@ -21,13 +21,13 @@ import { useApi } from "@/lib/api/client"
 import { readProblem, type Policy } from "@/lib/api/types"
 import type { components } from "@/lib/api/schema"
 import { cn } from "@/lib/utils"
+import { MAX_BUCKETS } from "@/features/define/BucketsPanel"
 
 type Staged = components["schemas"]["Staged"]
 type LabelCount = components["schemas"]["LabelCount"]
 export type ImportResult = components["schemas"]["ImportResult"]
 
 const MAX_BYTES = 5_000_000
-const MAX_BUCKETS = 15
 const NEW = "__new"
 const DROP = "__drop"
 const STEPS = [

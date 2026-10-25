@@ -6,6 +6,7 @@ from fastapi import Request
 from system1.adapters.anthropic_llm import AnthropicLLM
 from system1.adapters.fakes import FakeDecisionProvider, FakeLLM, FakeTrainer, PreviewTrainer, UnavailableTrainer
 from system1.adapters.jev_typesafe import TypeSafeJevProvider
+from system1.adapters.modal_trainer import ModalTrainer, SdkModalRunner
 from system1.adapters.sys1_http import HttpSys1Provider
 from system1.config import Settings
 from system1.contracts.decisions import DecisionProvider
@@ -45,6 +46,10 @@ def build_providers(settings: Settings) -> Providers:
         "fake": FakeTrainer,
         "preview": PreviewTrainer,
         "none": UnavailableTrainer,
+        "modal": lambda: ModalTrainer(
+            SdkModalRunner(settings.modal_app, settings.modal_function, settings.modal_progress_dict),
+            settings.training_epochs,
+        ),
     }
     trainer = trainers[settings.trainer]()
     return Providers(jev=jev, sys1=sys1, llm=llm, trainer=trainer, generator=SimpleGenerator(llm))

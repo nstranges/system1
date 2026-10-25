@@ -47,6 +47,22 @@ class TestExample(NamedTuple):
     label: str
 
 
+class AnyExample(NamedTuple):
+    id: str
+    split: str
+    input: str | dict
+    label: str
+
+
+def load_examples(session: Session, project: Project) -> list[AnyExample]:
+    rows = session.execute(
+        select(Example.id, Example.split, Example.input_json, Example.label)
+        .where(Example.project_id == project.id)
+        .order_by(Example.id)
+    )
+    return [AnyExample(*row) for row in rows]
+
+
 def load_test_examples(session: Session, project: Project) -> list[TestExample]:
     rows = session.execute(
         select(Example.id, Example.input_json, Example.label)

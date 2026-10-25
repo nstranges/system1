@@ -1,10 +1,12 @@
 import asyncio
+import json
 
 import pytest
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from system1.adapters.fakes import FakeDecisionProvider, FakeLLM, FakeTrainer, PreviewTrainer
+from system1.adapters.modal_trainer import ModalTrainer
 from system1.contracts.decisions import DecisionRequest, ProviderError
 from system1.contracts.training import TrainingJob
 from system1.datasets import service as dataset_service
@@ -471,3 +473,67 @@ def test_answers_already_paid_for_survive_a_failed_run(client_for):
     with Session(client.app.state.engine) as session:
         saved = sum(len(r.results_json) for r in session.scalars(select(JevEval)))
     assert 0 < saved <= 10
+
+
+class FakeRunner:
+    def __init__(self):
+        self.payload = None
+        self.polls = 0
+
+    def spawn(self, payload: dict) -> str:
+        self.payload = payload
+        return "fc-1"
+
+    def poll(self, call_id: str):
+        self.polls += 1
+        if self.polls < 2:
+            return "running", None
+        answers = [
+            {"id": r["id"], "pred": json.loads(r["gold"])["decision"]["label"], "p_gold": 0.9}
+            for r in self.payload["test_rows"]
+        ]
+        base = [{"id": r["id"], "pred": "billing"} for r in self.payload["test_rows"]]
+        return "done", {"adapter_ref": "vol/lora", "metrics": {}, "evaluations": {"sys1": answers, "base": base}}
+
+    def stage(self, call_id: str):
+        return "learning"
+
+
+def test_modal_trainer_scores_your_model_and_base_from_its_own_answers(client_for):
+    runner = FakeRunner()
+    client = client_for("org_a", providers=_providers(trainer=ModalTrainer(runner, epochs=2), sys1=None))
+    pid = _project(client, per_bucket=50)
+    job = _train(client, pid)
+    assert job["status"] == "succeeded"
+
+    payload = runner.payload
+    assert payload["epochs"] == 2 and len(payload["test_rows"]) == 20
+    assert {r["split"] for r in payload["rows"]} == {"train", "cal"}  # test examples are never trained on
+    assert "questions_labels" in payload["rows"][0] and "questions" in payload["test_rows"][0]
+
+    rows = _rows(client.get(f"/api/projects/{pid}/report").json())
+    assert rows["sys1"]["status"] == "ok" and rows["sys1"]["accuracy"] == 1.0
+    assert rows["base"]["status"] == "ok" and rows["base"]["accuracy"] == 0.5
+
+
+def test_modal_trainer_reports_remote_failure():
+    class Failing(FakeRunner):
+        def poll(self, call_id):
+            return "failed", "out of memory"
+
+    trainer = ModalTrainer(Failing())
+    job = trainer.status("fc-1")
+    assert job.status == "failed" and "out of memory" in job.message
+
+
+def test_sdk_runner_treats_the_builtin_timeout_as_still_running(monkeypatch):
+    import modal
+
+    from system1.adapters.modal_trainer import SdkModalRunner
+
+    class Call:
+        def get(self, timeout):
+            raise TimeoutError
+
+    monkeypatch.setattr(modal.FunctionCall, "from_id", staticmethod(lambda call_id: Call()))
+    assert SdkModalRunner("app", "fn", "progress").poll("fc-1") == ("running", None)

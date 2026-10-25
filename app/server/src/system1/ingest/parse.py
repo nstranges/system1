@@ -109,9 +109,11 @@ def _decode(data: bytes) -> str:
 def _csv_table(data: bytes) -> Table:
     text = _decode(data)
     try:
-        dialect = csv.Sniffer().sniff(text[:SNIFF_CHARS], delimiters=",;\t|")
+        delimiter = csv.Sniffer().sniff(text[:SNIFF_CHARS], delimiters=",;\t|").delimiter
     except csv.Error:
-        dialect = csv.excel
+        delimiter = csv.excel.delimiter
+    # Only the delimiter is guessed: the sniffer also guesses quoting, and gets it wrong for text with "" in it.
+    dialect = type("Sniffed", (csv.excel,), {"delimiter": delimiter})
     try:
         records = csv.reader(io.StringIO(text, newline=""), dialect)
         columns: list[str] | None = None

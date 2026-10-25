@@ -11,12 +11,13 @@ from system1.agent.context import AgentContext, register_action_handler
 from system1.agent.models import PendingAction
 from system1.auth.principal import Principal
 from system1.config import Settings
-from system1.contracts.training import TrainingJob
+from system1.contracts.training import EvalAnswer, TrainingJob
 from system1.datasets import service as dataset_service
 from system1.datasets.constants import MIN_PER_BUCKET, VERDICT_MIN_TEST_PER_BUCKET
 from system1.datasets.service import NewExample
 from system1.decisions.models import Decision, Feedback
 from system1.domain.policy import Policy, validate_policy
+from system1.domain.questions import build_questions
 from system1.errors import ApiError
 from system1.generation.service import BucketsUnfinished
 from system1.jobs import service as job_service
@@ -25,7 +26,7 @@ from system1.jobs.service import JobContext
 from system1.projects import service as project_service
 from system1.projects.models import Project
 from system1.providers import Providers
-from system1.report.evaluation import PredRecord, evaluate_jev, evaluate_lane, load_test_examples
+from system1.report.evaluation import PredRecord, evaluate_jev, evaluate_lane, load_examples, load_test_examples
 from system1.report.models import ReportCard
 from system1.report.schemas import Confusion, Report, ReportDetails, ReportRow, RowKey, Verdict
 from system1.report.stats import accuracy_ci, paired_diff_ci, per_bucket_accuracy, top_confusions
@@ -283,7 +284,12 @@ def start_training(
     project_id, org_id = project.id, principal.org_id
     test_set_version, dataset_version = project.test_set_version, project.dataset_version
     dataset_ref = f"project:{project_id}:v{dataset_version}"
-    config = {"project_id": project_id, "test_set_version": test_set_version}
+    config: dict = {"project_id": project_id, "test_set_version": test_set_version}
+    if getattr(providers.trainer, "needs_examples", False):
+        config["questions"] = build_questions(policy, "labels")
+        config["examples"] = [
+            {"id": e.id, "split": e.split, "input": e.input, "label": e.label} for e in load_examples(session, project)
+        ]
     summary: dict = {"copied": copied, "skipped_stale": stale}
 
     async def work(ctx: JobContext) -> dict:
@@ -314,7 +320,14 @@ def start_training(
 
         records: dict[RowKey, list[PredRecord]] = {"jev": jev["jev"], "jev_labels": jev["jev_labels"]}
         sys1_note: ReportRow | None = None
-        if trained.status == "succeeded" and trained.adapter_ref and _serves(providers.sys1, trained.adapter_ref):
+        scored_remotely = trained.status == "succeeded" and "sys1" in trained.evaluations
+        if scored_remotely:
+            records["sys1"] = _records(ctx.session, own, trained.evaluations["sys1"])
+        if trained.status == "succeeded" and "base" in trained.evaluations:
+            records["base"] = _records(ctx.session, own, trained.evaluations["base"])
+        if scored_remotely:
+            pass
+        elif trained.status == "succeeded" and trained.adapter_ref and _serves(providers.sys1, trained.adapter_ref):
             progress.stage = "testing"
             records["sys1"] = await evaluate_lane(
                 ctx.session, providers, own, "sys1", test_set_version, policy_and_version=(policy, policy_version)
@@ -391,6 +404,28 @@ async def _run_trainer(providers: Providers, dataset_ref: str, config: dict, pro
         job = await asyncio.to_thread(providers.trainer.status, job.id)
     progress.trainer(None, done=True)
     return job
+
+
+def _records(session: Session, project: Project, answers: list[EvalAnswer]) -> list[PredRecord]:
+    """Scores a trainer's answers against our own gold labels; a test example it skipped counts as wrong."""
+    by_id = {a.id: a for a in answers}
+    records = []
+    for example in load_test_examples(session, project):
+        answer = by_id.get(example.id)
+        if answer is None or answer.pred is None:
+            records.append(PredRecord(id=example.id, gold=example.label, error="No answer."))
+        else:
+            records.append(
+                PredRecord(
+                    id=example.id,
+                    gold=example.label,
+                    pred=answer.pred,
+                    p_gold=answer.p_gold,
+                    latency_ms=answer.latency_ms,
+                    correct=answer.pred.lower() == example.label.lower(),
+                )
+            )
+    return records
 
 
 def _test_per_bucket(session: Session, project: Project, policy: Policy) -> dict[str, int]:

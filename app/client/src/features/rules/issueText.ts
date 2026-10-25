@@ -90,5 +90,5 @@ export function describeIssue(
 }
 
 export function describeOptionCount(issue: PolicyIssue): string | null {
-  return issue.path === "options" ? "Pick between 2 and 15 buckets." : null
+  return issue.path === "options" ? "Pick between 2 and 100 buckets." : null
 }

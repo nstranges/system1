@@ -8,7 +8,7 @@ from system1.datasets.constants import (
     REVIEW_CARDS,
 )
 from system1.datasets.service import Health
-from system1.domain.policy import MAX_OPTIONS, Policy
+from system1.domain.policy import MAX_DRAFT_OPTIONS, Policy
 from system1.drafting.service import (
     MAX_KEY_CHARS as KEY_CHARS,
 )
@@ -40,7 +40,7 @@ def system_blocks(settings: Settings) -> list[dict]:
 
 
 SAMPLE_CHARS = 200
-MAX_BUCKETS = MAX_OPTIONS
+MAX_BUCKETS = MAX_DRAFT_OPTIONS
 MAX_CONTEXT_FILES = CONTEXT_MAX_FILES
 DATA_CHARS = 12_000
 

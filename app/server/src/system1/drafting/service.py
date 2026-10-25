@@ -10,7 +10,7 @@ from system1.context.service import context_text
 from system1.contracts.llm import LLM
 from system1.datasets.constants import MAX_GUIDELINE_CHARS, MAX_GUIDELINES
 from system1.datasets.models import Example
-from system1.domain.policy import MAX_OPTIONS, Option, Policy
+from system1.domain.policy import MAX_DRAFT_OPTIONS, Option, Policy
 from system1.errors import ApiError
 from system1.llm_prompts import DATA_RULE, data_block
 from system1.projects import service as project_service
@@ -180,7 +180,7 @@ def _to_policy(current: Policy, spec: DraftSpec, starter_question: str) -> tuple
         )
 
     # Existing buckets the draft left out are appended, so the result has them all plus the draft's new ones.
-    room = max(MAX_OPTIONS - len(current.options), 0)
+    room = max(MAX_DRAFT_OPTIONS - len(current.options), 0)
     options: list[Option] = []
     new_kept = new_dropped = 0
     for option, is_new in drafted:
@@ -194,7 +194,7 @@ def _to_policy(current: Policy, spec: DraftSpec, starter_question: str) -> tuple
     if new_dropped:
         notes.append(
             f"Left out {new_dropped} suggested bucket{'s' if new_dropped > 1 else ''}: "
-            f"a decision can have at most {MAX_OPTIONS}."
+            f"a decision can have at most {MAX_DRAFT_OPTIONS}."
         )
 
     # Hand-written wording stays: the draft's question only replaces an empty one or the project-name starter.

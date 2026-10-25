@@ -34,7 +34,11 @@ class Settings(BaseSettings):
     sys1_provider: Literal["none", "http", "fake"] = "none"
     sys1_base_url: str | None = None
     sys1_model: str = "sys1"
-    trainer: Literal["none", "fake", "preview"] = "preview"
+    trainer: Literal["none", "fake", "preview", "modal"] = "preview"
+    modal_app: str = "laya-training"
+    modal_function: str = "run_project"
+    modal_progress_dict: str = "system1-progress"
+    training_epochs: int = 1
 
     agent_model: str = "claude-sonnet-5-5"
     agent_effort: str = "medium"

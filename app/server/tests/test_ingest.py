@@ -11,6 +11,7 @@ from sqlalchemy.orm import Session
 from system1.datasets import service as dataset_service
 from system1.datasets.constants import UPLOAD_MAX_BYTES, UPLOAD_MAX_COLUMNS, UPLOAD_MAX_ROWS
 from system1.datasets.models import Example
+from system1.domain.policy import MAX_OPTIONS
 from system1.ingest.models import StagedUpload
 from system1.ingest.parse import parse_table
 from system1.projects.models import PolicyVersion, now
@@ -137,11 +138,11 @@ def test_new_buckets_over_the_limit_write_nothing(client_for):
     client = client_for("org_a")
     pid = _project(client)
     before = _counts(client, pid)
-    rows = [(f"message {i}", f"kind {i}") for i in range(14)]
+    rows = [(f"message {i}", f"kind {i}") for i in range(MAX_OPTIONS)]
     up = _stage(client, pid, _csv(rows)).json()
     res = _import(client, pid, up["upload_id"], create_buckets=True)
     assert res.status_code == 422
-    assert "15" in res.json()["detail"]["message"]
+    assert str(MAX_OPTIONS) in res.json()["detail"]["message"]
     assert _counts(client, pid) == before
 
 
@@ -301,3 +302,12 @@ def test_failure_after_the_policy_is_staged_rolls_everything_back(client_for, mo
     assert _counts(client, pid) == (0, 2)
     with Session(client.app.state.engine) as session:
         assert session.get(StagedUpload, up["upload_id"]) is not None
+
+
+def test_csv_with_escaped_quotes_and_newlines_keeps_its_rows():
+    from system1.ingest.parse import parse_table
+
+    csv_text = 'text,decision\n"they said ""no"", please help, ok?",a\n"\nline two",b\nplain,a\n'
+    table = parse_table("x.csv", csv_text.encode())
+    assert [r["decision"] for r in table.rows] == ["a", "b", "a"]
+    assert table.rows[0]["text"] == 'they said "no", please help, ok?'

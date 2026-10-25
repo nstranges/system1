@@ -14,7 +14,7 @@ import {
 } from "@/lib/api/types"
 import { DeleteBucketDialog, type DeleteTarget } from "./DeleteBucketDialog"
 
-export const MAX_BUCKETS = 15
+export const MAX_BUCKETS = 100
 export const MIN_BUCKETS = 2
 
 const slug = (text: string) =>

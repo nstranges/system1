@@ -3,7 +3,7 @@ from pathlib import Path
 
 import pytest
 
-from system1.domain.policy import InputField, Option, Policy, Rule, validate_policy
+from system1.domain.policy import MAX_OPTIONS, InputField, Option, Policy, Rule, validate_policy
 from system1.domain.questions import build_questions
 
 RULES = Path(__file__).parents[1] / "src/system1/templates/data/tallyfern/rules.json"
@@ -35,7 +35,7 @@ def test_validate_rejects_unknown_label_duplicates_and_option_count():
     )
     assert len(validate_policy(dupes)) == 1
 
-    many = [Option(key=f"o{i}", name=f"O{i}") for i in range(16)]
+    many = [Option(key=f"o{i}", name=f"O{i}") for i in range(MAX_OPTIONS + 1)]
     assert len(validate_policy(make_policy(options=many, rules=[Rule(id="R1", text="t", label="o0")]))) == 1
 
     single = make_policy(options=[Option(key="a", name="A")], rules=[Rule(id="R1", text="t", label="a")])
