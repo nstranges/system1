@@ -11,10 +11,12 @@ from pathlib import Path
 
 import modal
 
+from model_sizes import SIZES, base_for
 from train import app, calibrate_model, data_config, image, model_config, save_adapter, start_training, vol
 
 PROGRESS_DICT = "system1-progress"
-pipeline_image = image.add_local_python_source("train")
+BASE_FILE = "base_model.json"  # saved beside each adapter so Decider loads it onto the model it was trained on
+pipeline_image = image.add_local_python_source("train", "model_sizes")
 
 with pipeline_image.imports():
     from tqdm.auto import tqdm
@@ -70,29 +72,31 @@ class LiveProgress(TrainerCallback if "TrainerCallback" in globals() else object
         self._send(state, force = True)
 
 @app.function(image = pipeline_image, gpu = "L4", timeout = 60 * 60 * 2)
-def evaluate_base(test_rows):
-    """Untrained Laya on the test rows (same load as eval_laya.py)."""
+def evaluate_base(test_rows, base = SIZES["small"]):
+    """The untrained base model on the test rows (for Laya, the same load as eval_laya.py)."""
     model, tokenizer = FastDecisionModel.from_pretrained(
-        model_name = "convaiinnovations/laya", max_seq_length = 512, load_in_4bit = False
+        model_name = base, max_seq_length = 512, load_in_4bit = False
     )
     FastDecisionModel.for_inference(model)
     return predict_rows(model, tokenizer, test_rows)
 
 @app.function(image = pipeline_image, gpu = "L4", timeout = 60 * 60 * 4, volumes = {"/outputs": vol})
 def run_project(payload):
-    """payload: {project_id, epochs, rows (train + cal), test_rows}. Stages match the server's progress names."""
+    """payload: {project_id, size, epochs, rows (train + cal), test_rows}. Stages match the server's progress names."""
+    size = payload.get("size", "small")
+    base = base_for(size)
     call_id = modal.current_function_call_id()
     progress = modal.Dict.from_name(PROGRESS_DICT, create_if_missing = True)
 
     def stage(name, **detail):
         progress[call_id] = {"stage": name, **detail}
 
-    base_call = evaluate_base.spawn(payload["test_rows"])  # runs on its own GPU while this one trains
+    base_call = evaluate_base.spawn(payload["test_rows"], base)  # runs on its own GPU while this one trains
     # So the server can stop this call too when it stops the run: a cancelled parent doesn't cancel its children.
     progress[f"{call_id}:base"] = base_call.object_id
 
     stage("preparing")
-    model, tokenizer = model_config()
+    model, tokenizer = model_config(base)
     train_items, eval_items, cal_items = data_config(tokenizer, model, payload["rows"], "labels")
 
     stage("learning")
@@ -103,6 +107,7 @@ def run_project(payload):
     calibration = calibrate_model(model, tokenizer, cal_items)
     folder = f"/outputs/projects/{payload['project_id']}/{call_id}"
     save_adapter(model, tokenizer, folder)
+    (Path(folder) / BASE_FILE).write_text(json.dumps({"size": size, "base": base}))
     vol.commit()
 
     stage("testing")
@@ -116,7 +121,7 @@ def run_project(payload):
     }
 
 ADAPTER_PREFIX = "laya-outputs:projects/"
-CACHED_ADAPTERS = 3  # each is a full Laya copy (about 1 GB), so a few fit on the L4 next to each other
+CACHED_ADAPTERS = 3  # each is a full copy of its base (about 1 GB for Laya, up to about 5 GB for the large size)
 
 def adapter_folder(adapter_ref):
     """The volume folder run_project saved this adapter_ref to. Anything else is refused, so a ref can't escape it."""
@@ -125,14 +130,17 @@ def adapter_folder(adapter_ref):
     return Path("/outputs") / adapter_ref.removeprefix("laya-outputs:")
 
 def load_adapter(folder):
-    """Laya plus a run's saved LoRA, head and calibration, ready to predict. Mirrors eval_lora.py's loader."""
+    """The run's base model plus its saved LoRA, head and calibration, ready to predict. Mirrors eval_lora.py's loader.
+    Adapters saved before sizes existed have no base file and are Laya."""
     from peft import PeftModel, set_peft_model_state_dict
     from safetensors.torch import load_file
 
     import torch
 
+    base_file = folder / BASE_FILE
+    base = json.loads(base_file.read_text())["base"] if base_file.exists() else SIZES["small"]
     model, tokenizer = FastDecisionModel.from_pretrained(
-        model_name = "convaiinnovations/laya", max_seq_length = 512, load_in_4bit = False
+        model_name = base, max_seq_length = 512, load_in_4bit = False
     )
     adapter_file = folder / "adapter_model.safetensors"
     if adapter_file.exists():

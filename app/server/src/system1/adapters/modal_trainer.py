@@ -94,6 +94,7 @@ class ModalTrainer:
         examples = config["examples"]
         payload = {
             "project_id": config["project_id"],
+            "size": config.get("size", "small"),
             "epochs": self._epochs,
             # train.py picks its question set by column name; the test rows are only scored, never trained on.
             "rows": [{**row(e), "questions_labels": questions} for e in examples if e["split"] != "test"],

@@ -1,11 +1,13 @@
 from typing import Annotated
 
 from fastapi import APIRouter, Depends
+from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
 from system1.auth.deps import get_principal
 from system1.auth.principal import Principal
 from system1.config import get_settings
+from system1.contracts.training import ModelSize
 from system1.db import get_session
 from system1.generation.router import JobStarted
 from system1.projects.service import get_project
@@ -20,11 +22,18 @@ SessionDep = Annotated[Session, Depends(get_session)]
 ProvidersDep = Annotated[Providers, Depends(get_providers)]
 
 
+class TrainIn(BaseModel):
+    size: ModelSize = "small"
+
+
 # async so the job starts on the server's event loop; the client calls this only after its confirmation card.
 @router.post("/{project_id}/training")
-async def train(project_id: str, principal: PrincipalDep, session: SessionDep, providers: ProvidersDep) -> JobStarted:
+async def train(
+    project_id: str, principal: PrincipalDep, session: SessionDep, providers: ProvidersDep, body: TrainIn | None = None
+) -> JobStarted:
     project = get_project(session, principal, project_id)
-    return JobStarted(job_id=service.start_training(session, providers, get_settings(), principal, project))
+    size = body.size if body else "small"
+    return JobStarted(job_id=service.start_training(session, providers, get_settings(), principal, project, size))
 
 
 @router.get("/{project_id}/report")

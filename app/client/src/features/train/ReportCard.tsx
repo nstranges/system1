@@ -43,6 +43,11 @@ export function ReportCard({ report }: { report: Report }) {
         {report.is_fixture && (
           <Badge variant="secondary">Recorded sample numbers</Badge>
         )}
+        {report.details?.size && (
+          <Badge variant="secondary" className="capitalize">
+            {report.details?.size} model
+          </Badge>
+        )}
         {report.is_preview && (
           <Badge variant="secondary">Preview: no model was trained</Badge>
         )}

@@ -1404,6 +1404,8 @@ export interface components {
       test_set_version: number
       /** Corrections Used */
       corrections_used: number | null
+      /** Size */
+      size: string | null
       /** Checked */
       checked: number
       /** Checked Right */
@@ -1551,6 +1553,8 @@ export interface components {
       stage: string
       /** Default Lane */
       default_lane: string
+      /** Endpoint Enabled */
+      endpoint_enabled: boolean
       /** Live Model Label */
       live_model_label: string | null
       /** Live Model Id */
@@ -1569,6 +1573,8 @@ export interface components {
       description?: string | null
       /** Default Lane */
       default_lane?: ("jev" | "sys1" | "auto") | null
+      /** Endpoint Enabled */
+      endpoint_enabled?: boolean | null
     }
     /** Report */
     Report: {
@@ -1618,6 +1624,8 @@ export interface components {
       trainer?: string | null
       /** Adapter Ref */
       adapter_ref?: string | null
+      /** Size */
+      size?: string | null
       /** Training */
       training?: {
         [key: string]: unknown
@@ -1805,6 +1813,15 @@ export interface components {
        * @default
        */
       summary: string
+    }
+    /** TrainIn */
+    TrainIn: {
+      /**
+       * Size
+       * @default small
+       * @enum {string}
+       */
+      size: "small" | "medium" | "large"
     }
     /** TryIn */
     TryIn: {
@@ -3244,7 +3261,11 @@ export interface operations {
       }
       cookie?: never
     }
-    requestBody?: never
+    requestBody?: {
+      content: {
+        "application/json": components["schemas"]["TrainIn"] | null
+      }
+    }
     responses: {
       /** @description Successful Response */
       200: {

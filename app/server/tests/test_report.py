@@ -284,7 +284,7 @@ def test_trainer_receives_dataset_ref_and_config(client_for):
     pid = _project(client)
     _train(client, pid)
     ref, config = trainer.started_with
-    assert ref.startswith(f"project:{pid}:v") and config == {"project_id": pid, "test_set_version": 1}
+    assert ref.startswith(f"project:{pid}:v") and config == {"project_id": pid, "test_set_version": 1, "size": "small"}
 
 
 def test_too_few_test_verdict(client_for):
@@ -665,3 +665,28 @@ def test_scored_row_averages_the_probability_on_the_right_answer():
     ]
     row = report_service.scored_row("sys1", records, "Your model")
     assert row.avg_p_gold == pytest.approx(0.6)
+
+
+def test_training_size_reaches_the_trainer_and_is_kept_on_the_card(client_for):
+    trainer = FinishingTrainer("succeeded", adapter_ref="adapter/1")
+    client = client_for("org_a", providers=_providers(trainer=trainer))
+    pid = _project(client)
+    res = client.post(f"/api/projects/{pid}/training", json={"size": "medium"})
+    assert res.status_code == 200
+    wait_for_job(res.json()["job_id"])
+
+    assert trainer.started_with[1]["size"] == "medium"
+    models = client.get("/api/models", params={"project_id": pid}).json()
+    assert [m["size"] for m in models] == ["medium"]
+
+
+def test_unknown_training_size_is_refused(client_for):
+    client = client_for("org_a", providers=_providers(trainer=FinishingTrainer("preview")))
+    pid = _project(client)
+    assert client.post(f"/api/projects/{pid}/training", json={"size": "huge"}).status_code == 422
+
+
+def test_modal_trainer_sends_the_size_to_modal():
+    runner = FakeRunner()
+    ModalTrainer(runner).start("ref", {"project_id": "p", "size": "large", "questions": {"q": {}}, "examples": []})
+    assert runner.payload["size"] == "large"

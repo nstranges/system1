@@ -1851,6 +1851,23 @@
             }
           }
         ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "anyOf": [
+                  {
+                    "$ref": "#/components/schemas/TrainIn"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "title": "Body"
+              }
+            }
+          }
+        },
         "responses": {
           "200": {
             "description": "Successful Response",
@@ -3741,6 +3758,17 @@
             ],
             "title": "Corrections Used"
           },
+          "size": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Size"
+          },
           "checked": {
             "type": "integer",
             "title": "Checked"
@@ -3763,6 +3791,7 @@
           "median_latency_ms",
           "test_set_version",
           "corrections_used",
+          "size",
           "checked",
           "checked_right"
         ],
@@ -4132,6 +4161,10 @@
             "type": "string",
             "title": "Default Lane"
           },
+          "endpoint_enabled": {
+            "type": "boolean",
+            "title": "Endpoint Enabled"
+          },
           "live_model_label": {
             "anyOf": [
               {
@@ -4168,6 +4201,7 @@
           "template_id",
           "stage",
           "default_lane",
+          "endpoint_enabled",
           "live_model_label",
           "live_model_id",
           "created_at"
@@ -4209,6 +4243,17 @@
               }
             ],
             "title": "Default Lane"
+          },
+          "endpoint_enabled": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Endpoint Enabled"
           }
         },
         "type": "object",
@@ -4332,6 +4377,17 @@
               }
             ],
             "title": "Adapter Ref"
+          },
+          "size": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Size"
           },
           "training": {
             "anyOf": [
@@ -4794,6 +4850,18 @@
         "type": "object",
         "required": ["name", "status"],
         "title": "ToolEvent"
+      },
+      "TrainIn": {
+        "properties": {
+          "size": {
+            "type": "string",
+            "enum": ["small", "medium", "large"],
+            "title": "Size",
+            "default": "small"
+          }
+        },
+        "type": "object",
+        "title": "TrainIn"
       },
       "TryIn": {
         "properties": {

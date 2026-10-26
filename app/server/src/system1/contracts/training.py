@@ -2,6 +2,9 @@ from typing import Literal, Protocol
 
 from pydantic import BaseModel
 
+# Which base model a run fine-tunes: small is Laya, medium and large are bigger Qwen models. The trainer maps the name.
+ModelSize = Literal["small", "medium", "large"]
+
 
 class EvalAnswer(BaseModel):
     """One model answer on a frozen test example. The server scores it against its own copy of the gold label."""
@@ -23,7 +26,8 @@ class TrainingJob(BaseModel):
 
 
 class Trainer(Protocol):
-    """A trainer with `needs_examples = True` also gets `config["questions"]` (the question it is trained to answer)
+    """`config["size"]` is the ModelSize to train. A trainer with `needs_examples = True` also gets `config["questions"]`
+    (the question it is trained to answer)
     and `config["examples"]` (`{id, split, input, label}` for every example, test split included: it may only
     score on test, never train on it)."""
 
