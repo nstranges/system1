@@ -694,6 +694,23 @@ export interface paths {
     patch?: never
     trace?: never
   }
+  "/api/projects/{project_id}/progress": {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /** Get Progress */
+    get: operations["get_progress_api_projects__project_id__progress_get"]
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
   "/api/projects/{project_id}/batches": {
     parameters: {
       query?: never
@@ -1576,6 +1593,19 @@ export interface components {
       /** Endpoint Enabled */
       endpoint_enabled?: boolean | null
     }
+    /** ProjectProgress */
+    ProjectProgress: {
+      /** Stages */
+      stages: components["schemas"]["StageState"][]
+      /** Next */
+      next: ("define" | "data" | "review" | "train" | "use" | "improve") | null
+      /** Examples */
+      examples: number
+      /** Accuracy */
+      accuracy: number | null
+      /** Jev Accuracy */
+      jev_accuracy: number | null
+    }
     /** Report */
     Report: {
       /** Available */
@@ -1738,6 +1768,21 @@ export interface components {
       type: "stage"
       /** Stage */
       stage: string
+    }
+    /** StageState */
+    StageState: {
+      /**
+       * Id
+       * @enum {string}
+       */
+      id: "define" | "data" | "review" | "train" | "use" | "improve"
+      /**
+       * Status
+       * @enum {string}
+       */
+      status: "done" | "ready" | "blocked"
+      /** Note */
+      note: string
     }
     /** Staged */
     Staged: {
@@ -3398,6 +3443,37 @@ export interface operations {
         }
         content: {
           "application/json": components["schemas"]["Comparison"]
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"]
+        }
+      }
+    }
+  }
+  get_progress_api_projects__project_id__progress_get: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        project_id: string
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["ProjectProgress"]
         }
       }
       /** @description Validation Error */

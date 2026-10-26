@@ -62,6 +62,7 @@ export function SamplesPanel({
             </div>
             <Textarea
               rows={5}
+              className="font-voice text-[15px]!"
               value={s}
               maxLength={MAX_SAMPLE_CHARS}
               aria-label={`Sample input ${i + 1}`}

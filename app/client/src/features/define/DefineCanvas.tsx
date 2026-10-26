@@ -174,44 +174,17 @@ export function DefineCanvas({
 
   return (
     <div className="space-y-8">
-      <div className="flex justify-end">
-        <div className="flex gap-2">
-          <Button
-            variant="ghost"
-            disabled={!dirty || saving}
-            onClick={() => {
-              onDraft(null)
-              setOverride(null)
-            }}
-          >
-            Discard changes
-          </Button>
-          <Button disabled={!dirty || saving} onClick={() => void save()}>
-            Save
-          </Button>
-        </div>
-      </div>
       <IssueList
         issues={issues}
         policy={draft}
         onJump={(t) => isAdvancedTarget(t) && setAdvancedOpen(true)}
       />
 
-      <label className="block">
-        <span className="mb-1 block text-sm font-medium">
-          What are you deciding?
-        </span>
-        <Input
-          value={draft.decision_question}
-          onChange={(e) =>
-            change({ ...draft, decision_question: e.target.value })
-          }
-          placeholder="For example: Which queue should handle this ticket?"
-        />
-      </label>
-
-      <div className="space-y-6">
-        <div className="flex justify-end">
+      <div>
+        <div className="mb-1 flex items-center justify-between gap-2">
+          <label htmlFor="decision-question" className="text-sm font-medium">
+            What are you deciding?
+          </label>
           <DropdownMenu
             onOpenChange={(open) => {
               if (open) void loadExampleCount()
@@ -251,6 +224,17 @@ export function DefineCanvas({
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
+        <Input
+          id="decision-question"
+          value={draft.decision_question}
+          onChange={(e) =>
+            change({ ...draft, decision_question: e.target.value })
+          }
+          placeholder="For example: Which queue should handle this ticket?"
+        />
+      </div>
+
+      <div className="space-y-6">
         <BucketsPanel
           projectId={project.id}
           policy={draft}
@@ -288,6 +272,31 @@ export function DefineCanvas({
           <RulesPanel policy={draft} onChange={change} />
         </div>
       </details>
+
+      {dirty && (
+        <div
+          role="region"
+          aria-label="Unsaved changes"
+          className="sticky bottom-4 z-20 mt-8 flex items-center justify-between gap-3 rounded-[10px] border bg-card px-4 py-3"
+        >
+          <p className="text-sm">You have unsaved changes</p>
+          <div className="flex gap-2">
+            <Button
+              variant="ghost"
+              disabled={saving}
+              onClick={() => {
+                onDraft(null)
+                setOverride(null)
+              }}
+            >
+              Discard changes
+            </Button>
+            <Button disabled={saving} onClick={() => void save()}>
+              Save
+            </Button>
+          </div>
+        </div>
+      )}
 
       <DraftDialog
         projectId={project.id}

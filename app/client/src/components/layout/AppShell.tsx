@@ -1,11 +1,15 @@
 import { OrganizationSwitcher, UserButton } from "@clerk/react"
-import { Link, Outlet } from "react-router"
+import { Link, Outlet, useMatch } from "react-router"
+import { cn } from "@/lib/utils"
 
 export function AppShell() {
+  // A project's workspace has a rail, a canvas and the assistant side by side.
+  const wide = useMatch("/app/p/*") !== null
+  const width = wide ? "max-w-[1600px]" : "max-w-6xl"
   return (
     <div className="min-h-svh bg-background">
       <header className="border-b">
-        <div className="mx-auto flex h-14 max-w-6xl items-center gap-4 px-4">
+        <div className={cn("mx-auto flex h-14 items-center gap-4 px-4", width)}>
           <Link to="/app" className="text-lg font-semibold tracking-tight">
             system<span className="text-primary">1</span>
           </Link>
@@ -25,7 +29,7 @@ export function AppShell() {
           </nav>
         </div>
       </header>
-      <main className="mx-auto max-w-6xl px-4 py-8">
+      <main className={cn("mx-auto px-4 py-8", width)}>
         <Outlet />
       </main>
     </div>

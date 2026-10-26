@@ -1,24 +1,44 @@
+import { PanelRightClose } from "lucide-react"
 import { useEffect, useRef } from "react"
 import { useLocation, useNavigate } from "react-router"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import {
+  Card,
+  CardAction,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card"
 import type { Project } from "@/lib/api/types"
 import { Composer } from "./Composer"
 import { MessageList } from "./MessageList"
 import { useAgent, type CanvasEvent } from "./useAgent"
 
-const STARTERS = ["Look over my rules", "Try it on an example", "Add a rule"]
+const STARTERS: Record<string, string[]> = {
+  define: [
+    "Draft my buckets",
+    "Look over my guidelines",
+    "What makes a good bucket?",
+  ],
+  data: ["Generate practice examples", "How many examples do I need?"],
+  review: ["Which buckets look weakest?"],
+  train: ["Train my model", "Explain the report card"],
+  use: ["How do I call the endpoint?"],
+  improve: ["What should I fix first?"],
+}
 
 export function AgentPanel({
   project,
   stage,
   onCanvas,
   onStage,
+  onHide,
 }: {
   project: Project
   stage: string
   onCanvas: (e: CanvasEvent) => void
   onStage: (stage: string) => void
+  onHide?: () => void
 }) {
   const { events, loaded, loadError, reload, busy, send } = useAgent(
     project.id,
@@ -43,12 +63,25 @@ export function AgentPanel({
     if (events.length === 0) void send(firstMessage)
   }, [loaded, firstMessage, events.length, send, navigate, location.pathname])
 
+  const starters = STARTERS[stage] ?? []
   const empty = loaded && !loadError && events.length === 0 && !firstMessage
 
   return (
-    <Card className="flex h-[70vh] flex-col lg:h-[calc(100vh-14rem)]">
+    <Card className="flex h-[70vh] flex-col lg:h-[calc(100svh-6rem)]">
       <CardHeader>
         <CardTitle>Assistant</CardTitle>
+        {onHide && (
+          <CardAction className="hidden lg:block">
+            <Button
+              size="icon-sm"
+              variant="ghost"
+              aria-label="Hide assistant"
+              onClick={onHide}
+            >
+              <PanelRightClose />
+            </Button>
+          </CardAction>
+        )}
       </CardHeader>
       <CardContent className="flex min-h-0 flex-1 flex-col gap-3">
         {empty && !busy && (
@@ -58,9 +91,9 @@ export function AgentPanel({
                 ? `I've loaded ${project.name} with its rules. Want me to look it over, or try it on a few examples?`
                 : "Tell me about a decision your team makes again and again, or ask me to help you find one."}
             </p>
-            {project.template_id && (
+            {starters.length > 0 && (
               <div className="flex flex-wrap gap-2">
-                {STARTERS.map((s) => (
+                {starters.map((s) => (
                   <Button
                     key={s}
                     size="sm"

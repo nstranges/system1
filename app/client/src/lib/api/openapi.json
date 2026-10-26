@@ -2060,6 +2060,45 @@
         }
       }
     },
+    "/api/projects/{project_id}/progress": {
+      "get": {
+        "summary": "Get Progress",
+        "operationId": "get_progress_api_projects__project_id__progress_get",
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Project Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProjectProgress"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/projects/{project_id}/batches": {
       "post": {
         "summary": "Check Batch",
@@ -4259,6 +4298,58 @@
         "type": "object",
         "title": "ProjectPatch"
       },
+      "ProjectProgress": {
+        "properties": {
+          "stages": {
+            "items": {
+              "$ref": "#/components/schemas/StageState"
+            },
+            "type": "array",
+            "title": "Stages"
+          },
+          "next": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": ["define", "data", "review", "train", "use", "improve"]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next"
+          },
+          "examples": {
+            "type": "integer",
+            "title": "Examples"
+          },
+          "accuracy": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Accuracy"
+          },
+          "jev_accuracy": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Jev Accuracy"
+          }
+        },
+        "type": "object",
+        "required": ["stages", "next", "examples", "accuracy", "jev_accuracy"],
+        "title": "ProjectProgress"
+      },
       "Report": {
         "properties": {
           "available": {
@@ -4690,6 +4781,27 @@
         "type": "object",
         "required": ["stage"],
         "title": "StageEvent"
+      },
+      "StageState": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "enum": ["define", "data", "review", "train", "use", "improve"],
+            "title": "Id"
+          },
+          "status": {
+            "type": "string",
+            "enum": ["done", "ready", "blocked"],
+            "title": "Status"
+          },
+          "note": {
+            "type": "string",
+            "title": "Note"
+          }
+        },
+        "type": "object",
+        "required": ["id", "status", "note"],
+        "title": "StageState"
       },
       "Staged": {
         "properties": {

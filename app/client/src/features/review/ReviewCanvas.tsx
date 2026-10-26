@@ -15,7 +15,9 @@ import {
 } from "@/features/data/HealthPanel"
 import { useApi } from "@/lib/api/client"
 import { readProblem, type PolicyOut, type Project } from "@/lib/api/types"
+import { isTypingTarget, reviewKey } from "./keys"
 import { SortCard, type ReviewExample } from "./SortCard"
+import { useProgressReload } from "@/features/workspace/useProgress"
 
 export function ReviewCanvas({
   project,
@@ -43,9 +45,14 @@ export function ReviewCanvas({
 function Queue({ project, policy }: { project: Project; policy: PolicyOut }) {
   const api = useApi()
   const { health, failed, reload } = useHealth(project.id)
+  const reloadProgress = useProgressReload()
   const [cards, setCards] = useState<ReviewExample[] | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [busyId, setBusyId] = useState<string | null>(null)
+  // Which card the keys act on. It keeps its position when a card is sorted, so it lands on the next one.
+  const [active, setActive] = useState(0)
+  const options = policy.policy.options
+  const activeIndex = Math.min(active, Math.max((cards?.length ?? 0) - 1, 0))
 
   const load = useCallback(async () => {
     try {
@@ -90,6 +97,7 @@ function Queue({ project, policy }: { project: Project; policy: PolicyOut }) {
         setCards((cs) => cs?.filter((c) => c.id !== ex.id) ?? cs)
         acted.current = true
         void reload()
+        reloadProgress()
         const name = policy.policy.options.find((o) => o.key === to)?.name
         toast.success(
           action === "agree" ? "Marked as right" : `Moved to ${name ?? to}`,
@@ -103,6 +111,41 @@ function Queue({ project, policy }: { project: Project; policy: PolicyOut }) {
       setBusyId(null)
     }
   }
+
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) {
+      if (!cards || cards.length === 0 || busyId) return
+      if (e.metaKey || e.ctrlKey || e.altKey || e.repeat) return
+      if (isTypingTarget(e.target as HTMLElement | null)) return
+      // Enter on a focused button or link already activates it.
+      const tag = (e.target as HTMLElement | null)?.tagName
+      if (e.key === "Enter" && (tag === "BUTTON" || tag === "A")) return
+      const action = reviewKey(e.key, options.length)
+      if (!action) return
+      e.preventDefault()
+      const card = cards[activeIndex]
+      if (action.kind === "next")
+        setActive(Math.min(activeIndex + 1, cards.length - 1))
+      else if (action.kind === "prev") setActive(Math.max(activeIndex - 1, 0))
+      else if (action.kind === "agree") void act(card, "agree")
+      else if (options[action.index].key === card.label) void act(card, "agree")
+      else void act(card, "move", options[action.index].key)
+    }
+    window.addEventListener("keydown", onKey)
+    return () => window.removeEventListener("keydown", onKey)
+  })
+
+  const scrolled = useRef(false)
+  useEffect(() => {
+    // Skip the first run so opening the step doesn't jump the page.
+    if (!scrolled.current) {
+      scrolled.current = true
+      return
+    }
+    document
+      .getElementById(`review-card-${activeIndex}`)
+      ?.scrollIntoView({ block: "nearest" })
+  }, [activeIndex])
 
   return (
     <div className="space-y-6">
@@ -124,14 +167,17 @@ function Queue({ project, policy }: { project: Project; policy: PolicyOut }) {
       {cards && cards.length > 0 && (
         <div className="space-y-3">
           <p className="text-sm text-muted-foreground">
-            {cards.length} {cards.length === 1 ? "card" : "cards"}
+            {cards.length} {cards.length === 1 ? "card" : "cards"}. Keys: 1–9
+            sorts into a bucket, Enter keeps it, J and K move between cards.
           </p>
-          {cards.map((c) => (
+          {cards.map((c, i) => (
             <SortCard
               key={c.id}
               example={c}
-              buckets={policy.policy.options}
+              buckets={options}
               busy={busyId !== null}
+              active={i === activeIndex}
+              index={i}
               onAgree={() => void act(c, "agree")}
               onMove={(to) => void act(c, "move", to)}
             />

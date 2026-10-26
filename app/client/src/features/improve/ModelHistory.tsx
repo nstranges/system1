@@ -58,7 +58,7 @@ export function ModelHistory({ models }: { models: TrainedModel[] }) {
               y1="4"
               x2="16"
               y2="4"
-              className="stroke-series-1"
+              className="stroke-model"
               strokeWidth="2"
             />
           </svg>
@@ -72,7 +72,7 @@ export function ModelHistory({ models }: { models: TrainedModel[] }) {
                 y1="4"
                 x2="16"
                 y2="4"
-                className="stroke-series-2"
+                className="stroke-jev"
                 strokeWidth="2"
                 strokeDasharray="4 3"
               />
@@ -102,7 +102,7 @@ export function ModelHistory({ models }: { models: TrainedModel[] }) {
           {jev && (
             <polyline
               fill="none"
-              className="stroke-series-2"
+              className="stroke-jev"
               strokeWidth="2"
               strokeDasharray="4 3"
               points={jev}
@@ -110,7 +110,7 @@ export function ModelHistory({ models }: { models: TrainedModel[] }) {
           )}
           <polyline
             fill="none"
-            className="stroke-series-1"
+            className="stroke-model"
             strokeWidth="2"
             strokeLinejoin="round"
             points={ours}
@@ -122,9 +122,7 @@ export function ModelHistory({ models }: { models: TrainedModel[] }) {
               cy={sy(m.accuracy!)}
               r={m.live ? 6 : 4}
               className={
-                m.live
-                  ? "fill-card stroke-series-1"
-                  : "fill-series-1 stroke-card"
+                m.live ? "fill-card stroke-model" : "fill-model stroke-card"
               }
               strokeWidth="2"
             />

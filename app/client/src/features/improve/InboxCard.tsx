@@ -1,11 +1,13 @@
 import { useState } from "react"
 import { toast } from "sonner"
+import { BucketSwatch } from "@/components/BucketChip"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { useApi } from "@/lib/api/client"
 import type { components } from "@/lib/api/schema"
 import { readProblem, type PolicyOption } from "@/lib/api/types"
+import { bucketIndex } from "@/lib/buckets"
 
 export type InboxItem = components["schemas"]["InboxItem"]
 
@@ -80,15 +82,15 @@ export function InboxCard({
   return (
     <Card>
       <CardContent className="space-y-3">
-        <p className="line-clamp-6 text-sm whitespace-pre-wrap">
+        <p className="font-voice line-clamp-6 whitespace-pre-wrap">
           {stateText(item.state)}
         </p>
         <p className="text-xs text-muted-foreground">
           It said{" "}
           <span className="font-medium text-foreground">
             {item.answer ? name(item.answer) : "nothing"}
-          </span>{" "}
-          · {howSure(item.how_sure)}
+          </span>
+          . {howSure(item.how_sure)}
         </p>
         <div className="space-y-2">
           <p className="text-xs text-muted-foreground">
@@ -103,6 +105,7 @@ export function InboxCard({
                 disabled={busy}
                 onClick={() => void sort(g.key)}
               >
+                <BucketSwatch index={bucketIndex(options, g.key)} />
                 {name(g.key)}
                 <span className="tabular-nums opacity-70">{pct(g.p)}</span>
               </Button>
@@ -134,6 +137,7 @@ export function InboxCard({
                     disabled={busy}
                     onClick={() => void sort(o.key)}
                   >
+                    <BucketSwatch index={bucketIndex(options, o.key)} />
                     {o.name}
                   </Button>
                 ))}

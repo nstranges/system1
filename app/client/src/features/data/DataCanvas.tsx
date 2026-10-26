@@ -17,6 +17,7 @@ import { GenerateDialog } from "./GenerateDialog"
 import { HealthPanel, useHealth, type Health } from "./HealthPanel"
 import { JobProgress, recalledJob, rememberJob } from "./JobProgress"
 import { UploadWizard, describeImport } from "./UploadWizard"
+import { useProgressReload } from "@/features/workspace/useProgress"
 
 export const FLAGSHIP_TEMPLATE = "tallyfern-triage"
 
@@ -33,6 +34,7 @@ export function DataCanvas({
   const location = useLocation()
   const navigate = useNavigate()
   const { health, failed, reload } = useHealth(project.id)
+  const reloadProgress = useProgressReload()
   const [uploading, setUploading] = useState(false)
   const [generating, setGenerating] = useState(false)
   // "Both": generate straight after the upload finishes.
@@ -93,6 +95,7 @@ export function DataCanvas({
       toast.error("Imported, but we couldn't refresh the buckets. Reload.")
     }
     setGapHealth(await reload())
+    reloadProgress()
   }
 
   function startJob(id: string) {
@@ -186,6 +189,7 @@ export function DataCanvas({
                 rememberJob(project.id, null)
                 setRunning(false)
                 void reload()
+                reloadProgress()
               }}
               onRetry={() => {
                 endJob()
