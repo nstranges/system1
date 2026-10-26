@@ -1,4 +1,5 @@
 import { useAuth } from "@clerk/react"
+import { Trash2 } from "lucide-react"
 import { useState } from "react"
 import { Link } from "react-router"
 import { toast } from "sonner"
@@ -23,16 +24,18 @@ const pct = (v: number | null | undefined) =>
 export function ModelList({
   models,
   showProject,
-  onLive,
+  onChange,
 }: {
   models: TrainedModel[]
   showProject: boolean
-  onLive: (project: Project) => void
+  onChange: (project: Project) => void
 }) {
   const api = useApi()
   const { orgRole } = useAuth()
   const isAdmin = orgRole === "org:admin"
   const [busy, setBusy] = useState<string | null>(null)
+  const [confirming, setConfirming] = useState<string | null>(null)
+  const adminHint = isAdmin ? undefined : "Only an admin can change this."
 
   async function makeLive(id: string) {
     setBusy(id)
@@ -41,7 +44,7 @@ export function ModelList({
         params: { path: { model_id: id } },
       })
       if (data) {
-        onLive(data)
+        onChange(data)
         toast("That model now answers your endpoint")
       } else {
         toast.error(readProblem(error).message)
@@ -50,6 +53,45 @@ export function ModelList({
       toast.error("We couldn't reach the server.")
     } finally {
       setBusy(null)
+    }
+  }
+
+  async function turnOff(id: string) {
+    setBusy(id)
+    try {
+      const { data, error } = await api.DELETE("/api/models/{model_id}/live", {
+        params: { path: { model_id: id } },
+      })
+      if (data) {
+        onChange(data)
+        toast("Your endpoint has no live model now")
+      } else {
+        toast.error(readProblem(error).message)
+      }
+    } catch {
+      toast.error("We couldn't reach the server.")
+    } finally {
+      setBusy(null)
+    }
+  }
+
+  async function remove(m: TrainedModel) {
+    setBusy(m.id)
+    try {
+      const { data, error } = await api.DELETE("/api/models/{model_id}", {
+        params: { path: { model_id: m.id } },
+      })
+      if (data) {
+        onChange(data)
+        toast("Model deleted")
+      } else {
+        toast.error(readProblem(error).message)
+      }
+    } catch {
+      toast.error("We couldn't reach the server.")
+    } finally {
+      setBusy(null)
+      setConfirming(null)
     }
   }
 
@@ -96,18 +138,63 @@ export function ModelList({
                 : "–"}
             </TableCell>
             <TableCell className="text-right">
-              {m.live ? (
-                <Badge>Live</Badge>
+              {confirming === m.id ? (
+                <span className="inline-flex flex-wrap items-center justify-end gap-2 text-sm">
+                  {m.live ? "Delete the live model?" : "Delete this model?"}
+                  <Button
+                    size="sm"
+                    variant="destructive"
+                    disabled={busy !== null}
+                    onClick={() => void remove(m)}
+                  >
+                    Delete
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    disabled={busy !== null}
+                    onClick={() => setConfirming(null)}
+                  >
+                    Keep
+                  </Button>
+                </span>
               ) : (
-                <Button
-                  size="sm"
-                  variant="outline"
-                  disabled={!isAdmin || busy !== null}
-                  title={isAdmin ? undefined : "Only an admin can change this."}
-                  onClick={() => void makeLive(m.id)}
-                >
-                  Make live
-                </Button>
+                <span className="inline-flex items-center justify-end gap-2">
+                  {m.live ? (
+                    <>
+                      <Badge>Live</Badge>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        disabled={!isAdmin || busy !== null}
+                        title={adminHint}
+                        onClick={() => void turnOff(m.id)}
+                      >
+                        Turn off
+                      </Button>
+                    </>
+                  ) : (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      disabled={!isAdmin || busy !== null}
+                      title={adminHint}
+                      onClick={() => void makeLive(m.id)}
+                    >
+                      Make live
+                    </Button>
+                  )}
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    aria-label="Delete model"
+                    disabled={!isAdmin || busy !== null}
+                    title={adminHint}
+                    onClick={() => setConfirming(m.id)}
+                  >
+                    <Trash2 />
+                  </Button>
+                </span>
               )}
             </TableCell>
           </TableRow>

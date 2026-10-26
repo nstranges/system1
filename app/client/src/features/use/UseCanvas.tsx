@@ -214,7 +214,7 @@ export function UseCanvas({
             <ModelList
               models={models}
               showProject={false}
-              onLive={(p) => {
+              onChange={(p) => {
                 onProject(p)
                 void loadModels()
               }}

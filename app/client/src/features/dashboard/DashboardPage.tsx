@@ -188,7 +188,7 @@ export function DashboardPage() {
               <ModelList
                 models={models}
                 showProject
-                onLive={() => void loadModels()}
+                onChange={() => void loadModels()}
               />
             </CardContent>
           </Card>

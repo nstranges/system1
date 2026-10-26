@@ -118,6 +118,37 @@ def test_first_model_goes_live_and_a_retrain_waits_to_be_picked(client_for):
     assert [m["live"] for m in client.get("/api/models").json()] == [True, False]
 
 
+def test_an_admin_can_turn_off_or_delete_a_model(client_for):
+    client = client_for("org_a", providers=_providers())
+    pid = _project(client)
+    _train(client, pid)
+    _train(client, pid)
+    older, live = (m["id"] for m in reversed(client.get("/api/models").json()))  # the first trained one is live
+    assert client.get(f"/api/projects/{pid}").json()["live_model_id"] == older
+
+    # Turning off a model that isn't live changes nothing.
+    assert client.delete(f"/api/models/{live}/live").json()["live_model_id"] == older
+    assert client.delete(f"/api/models/{older}/live").json()["live_model_id"] is None
+    assert not any(m["live"] for m in client.get("/api/models").json())
+
+    client.post(f"/api/models/{older}/live")
+    res = client.delete(f"/api/models/{older}")
+    assert res.status_code == 200 and res.json()["live_model_id"] is None  # deleting the live one turns it off
+    assert [m["id"] for m in client.get("/api/models").json()] == [live]
+    assert client.delete(f"/api/models/{older}").status_code == 404
+
+
+def test_another_org_cannot_turn_off_or_delete_your_model(client_for):
+    client = client_for("org_a", providers=_providers())
+    pid = _project(client)
+    _train(client, pid)
+    model_id = client.get("/api/models").json()[0]["id"]
+    other = client_for("org_b", providers=_providers(), engine=client.app.state.engine)
+    assert other.delete(f"/api/models/{model_id}/live").status_code == 404
+    assert other.delete(f"/api/models/{model_id}").status_code == 404
+    assert client.get(f"/api/projects/{pid}").json()["live_model_id"] == model_id
+
+
 def test_models_survive_a_new_session_and_list_across_projects(client_for):
     client = client_for("org_a", providers=_providers())
     for name in ("Triage", "Refunds"):
