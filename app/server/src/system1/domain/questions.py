@@ -2,7 +2,14 @@
 
 from typing import Literal
 
-from system1.domain.policy import Policy, validate_policy
+from system1.domain.policy import Option, Policy, validate_policy
+
+
+def _described(option: Option) -> str | dict:
+    """The bucket's name, plus what it covers and excludes when written. Jev never loses the readable name, so a
+    bucket nobody described is shown to it the same way as in the buckets-only question."""
+    extra = {k: v for k, v in (("covers", option.covers), ("excludes", option.excludes)) if v}
+    return {"name": option.name, **extra} if extra else option.name
 
 
 def build_questions(policy: Policy, variant: Literal["labels", "policy"], order: list[str] | None = None) -> dict:
@@ -22,5 +29,5 @@ def build_questions(policy: Policy, variant: Literal["labels", "policy"], order:
             "precedence": [r.text for r in policy.rules],
         }
         instructions = {k: v for k, v in instructions.items() if v}
-        criteria = {k: {"covers": by_key[k].covers, "excludes": by_key[k].excludes} for k in keys}
+        criteria = {k: _described(by_key[k]) for k in keys}
     return {policy.question_key: {"type": "choice", "instructions": instructions, "criteria": criteria}}
