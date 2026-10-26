@@ -1,7 +1,14 @@
+import { PanelRightClose } from "lucide-react"
 import { useEffect, useRef } from "react"
 import { useLocation, useNavigate } from "react-router"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import {
+  Card,
+  CardAction,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card"
 import type { Project } from "@/lib/api/types"
 import { Composer } from "./Composer"
 import { MessageList } from "./MessageList"
@@ -14,11 +21,13 @@ export function AgentPanel({
   stage,
   onCanvas,
   onStage,
+  onHide,
 }: {
   project: Project
   stage: string
   onCanvas: (e: CanvasEvent) => void
   onStage: (stage: string) => void
+  onHide?: () => void
 }) {
   const { events, loaded, loadError, reload, busy, send } = useAgent(
     project.id,
@@ -46,9 +55,21 @@ export function AgentPanel({
   const empty = loaded && !loadError && events.length === 0 && !firstMessage
 
   return (
-    <Card className="flex h-[70vh] flex-col lg:h-[calc(100vh-14rem)]">
+    <Card className="flex h-[70vh] flex-col lg:h-[calc(100svh-6rem)]">
       <CardHeader>
         <CardTitle>Assistant</CardTitle>
+        {onHide && (
+          <CardAction className="hidden lg:block">
+            <Button
+              size="icon-sm"
+              variant="ghost"
+              aria-label="Hide assistant"
+              onClick={onHide}
+            >
+              <PanelRightClose />
+            </Button>
+          </CardAction>
+        )}
       </CardHeader>
       <CardContent className="flex min-h-0 flex-1 flex-col gap-3">
         {empty && !busy && (

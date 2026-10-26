@@ -16,6 +16,7 @@ import {
 import { useApi } from "@/lib/api/client"
 import { readProblem, type PolicyOut, type Project } from "@/lib/api/types"
 import { SortCard, type ReviewExample } from "./SortCard"
+import { useProgressReload } from "@/features/workspace/useProgress"
 
 export function ReviewCanvas({
   project,
@@ -43,6 +44,7 @@ export function ReviewCanvas({
 function Queue({ project, policy }: { project: Project; policy: PolicyOut }) {
   const api = useApi()
   const { health, failed, reload } = useHealth(project.id)
+  const reloadProgress = useProgressReload()
   const [cards, setCards] = useState<ReviewExample[] | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [busyId, setBusyId] = useState<string | null>(null)
@@ -90,6 +92,7 @@ function Queue({ project, policy }: { project: Project; policy: PolicyOut }) {
         setCards((cs) => cs?.filter((c) => c.id !== ex.id) ?? cs)
         acted.current = true
         void reload()
+        reloadProgress()
         const name = policy.policy.options.find((o) => o.key === to)?.name
         toast.success(
           action === "agree" ? "Marked as right" : `Moved to ${name ?? to}`,

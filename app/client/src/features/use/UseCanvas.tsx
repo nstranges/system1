@@ -15,6 +15,7 @@ import {
 import { ModelList } from "@/features/models/ModelList"
 import { TryCanvas } from "@/features/playground/TryCanvas"
 import { snippets, type SnippetLang } from "./snippets"
+import { useProgressReload } from "@/features/workspace/useProgress"
 
 const LANES = [
   { id: "sys1", label: "Your model", needsModel: true },
@@ -64,6 +65,7 @@ export function UseCanvas({
   const [lang, setLang] = useState<SnippetLang>("curl")
   const [busy, setBusy] = useState(false)
   const keyRef = useRef<HTMLElement>(null)
+  const reloadProgress = useProgressReload()
 
   const loadKeys = useCallback(async () => {
     const { data } = await api.GET("/api/projects/{project_id}/keys", {
@@ -112,6 +114,7 @@ export function UseCanvas({
     if (!data) return void toast.error(readProblem(error).message)
     setCreated(data)
     void loadKeys()
+    reloadProgress()
   }
 
   async function revoke(id: string) {
@@ -122,6 +125,7 @@ export function UseCanvas({
     if (!response.ok) return void toast.error(readProblem(error).message)
     if (created?.id === id) setCreated(null)
     void loadKeys()
+    reloadProgress()
   }
 
   async function copy(text: string, target?: HTMLElement | null) {
