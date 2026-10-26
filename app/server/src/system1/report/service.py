@@ -12,7 +12,7 @@ from system1.agent.context import AgentContext, register_action_handler
 from system1.agent.models import PendingAction
 from system1.auth.principal import Principal
 from system1.config import Settings
-from system1.contracts.training import EvalAnswer, TrainingJob
+from system1.contracts.training import EvalAnswer, ModelSize, TrainingJob
 from system1.datasets import service as dataset_service
 from system1.datasets.constants import MIN_PER_BUCKET, VERDICT_MIN_TEST_PER_BUCKET
 from system1.datasets.service import NewExample
@@ -284,7 +284,12 @@ def _check_ready(session: Session, project: Project, policy: Policy) -> None:
 
 
 def start_training(
-    session: Session, providers: Providers, settings: Settings, principal: Principal, project: Project
+    session: Session,
+    providers: Providers,
+    settings: Settings,
+    principal: Principal,
+    project: Project,
+    size: ModelSize = "small",
 ) -> str:
     """Starts the job and returns its id. Call it from the event loop thread (an async route or handler)."""
     project_service.get_project(session, principal, project.id)
@@ -299,7 +304,7 @@ def start_training(
     project_id, org_id = project.id, principal.org_id
     test_set_version, dataset_version = project.test_set_version, project.dataset_version
     dataset_ref = f"project:{project_id}:v{dataset_version}"
-    config: dict = {"project_id": project_id, "test_set_version": test_set_version}
+    config: dict = {"project_id": project_id, "test_set_version": test_set_version, "size": size}
     if getattr(providers.trainer, "needs_examples", False):
         config["questions"] = build_questions(policy, "labels")
         config["examples"] = [
@@ -362,6 +367,7 @@ def start_training(
             records, sys1_note, test_per_bucket, preview=trained.status == "preview", labels={"jev": jev_label(policy)}
         )
         details.trainer = type(providers.trainer).__name__
+        details.size = size
         details.adapter_ref = trained.adapter_ref
         # Kept on the card so the learning curve and run facts stay after the job is gone from the page.
         details.training = progress.detail

@@ -17,8 +17,8 @@ import { TryCanvas } from "@/features/playground/TryCanvas"
 import { snippets, type SnippetLang } from "./snippets"
 
 const LANES = [
-  { id: "jev", label: "Jev with your rules", needsModel: false },
   { id: "sys1", label: "Your model", needsModel: true },
+  { id: "jev", label: "Jev with your rules", needsModel: false },
   { id: "auto", label: "Auto", needsModel: true },
 ] as const
 
@@ -144,6 +144,15 @@ export function UseCanvas({
     else toast.error(readProblem(error).message)
   }
 
+  async function setEndpoint(enabled: boolean) {
+    const { data, error } = await api.PATCH("/api/projects/{project_id}", {
+      params: { path: { project_id: project.id } },
+      body: { endpoint_enabled: enabled },
+    })
+    if (data) onProject(data)
+    else toast.error(readProblem(error).message)
+  }
+
   // When sys1 answers with each project's own model, it's usable only once this project has a live one.
   const sys1Ready = sys1 && (!needsLive || project.live_model_id != null)
   const notReady =
@@ -166,6 +175,29 @@ export function UseCanvas({
           back.
         </p>
       </div>
+
+      <section className="space-y-2">
+        <h3 className="font-medium">Endpoint</h3>
+        <div className="flex flex-wrap items-center gap-3">
+          <Button
+            variant={project.endpoint_enabled ? "outline" : "default"}
+            disabled={!isAdmin}
+            onClick={() => void setEndpoint(!project.endpoint_enabled)}
+          >
+            {project.endpoint_enabled ? "Turn off" : "Turn on"}
+          </Button>
+          <p className="text-sm text-muted-foreground">
+            {project.endpoint_enabled
+              ? "On: calls with your key get answers."
+              : "Off: calls are refused, but your keys are kept. Turn it on to use them again."}
+          </p>
+        </div>
+        {!isAdmin && (
+          <p className="text-xs text-muted-foreground">
+            Only an admin of your team can turn the endpoint on or off.
+          </p>
+        )}
+      </section>
 
       {models.length > 0 && (
         <section className="space-y-2">

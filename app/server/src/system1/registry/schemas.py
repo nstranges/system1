@@ -19,6 +19,8 @@ class ModelOut(BaseModel):
     # Cards are only comparable on the same test set version.
     test_set_version: int
     corrections_used: int | None
+    # small, medium or large. None for models trained before sizes existed, which are small.
+    size: str | None
     # Live answers from this model that your team checked, and how many of those it had right.
     checked: int
     checked_right: int

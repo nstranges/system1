@@ -63,6 +63,9 @@ def get_project(project_id: str, principal: PrincipalDep, session: SessionDep) -
 @router.patch("/projects/{project_id}")
 def patch_project(project_id: str, body: ProjectPatch, principal: PrincipalDep, session: SessionDep) -> ProjectOut:
     project = service.get_project(session, principal, project_id)
+    # Same rule as creating and revoking keys: switching the endpoint is for admins.
+    if body.endpoint_enabled is not None and principal.org_role != "admin":
+        raise Forbidden()
     for field, value in body.model_dump(exclude_unset=True).items():
         if value is not None:
             setattr(project, field, value)

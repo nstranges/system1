@@ -25,6 +25,8 @@ class Project(Base):
     template_id: Mapped[str | None] = mapped_column(default=None)
     stage: Mapped[str] = mapped_column(default="define")
     default_lane: Mapped[str] = mapped_column(default="jev")  # jev | sys1 | auto
+    # Off makes the public endpoints refuse this project's keys without revoking them.
+    endpoint_enabled: Mapped[bool] = mapped_column(default=True)
     live_model_label: Mapped[str | None] = mapped_column(default=None)
     # The report card of the trained run the sys1 lane answers with. Retraining never moves it on its own.
     live_model_id: Mapped[str | None] = mapped_column(default=None)

@@ -163,3 +163,43 @@ def test_explicit_sys1_without_provider_gets_503(client_for):
     assert res.status_code == 503
     detail = res.json()["detail"]
     assert detail["code"] == "provider_error" and detail["message"] == "Your model isn't connected yet."
+
+
+def test_turning_the_endpoint_off_refuses_calls_and_back_on_restores_them(client_for):
+    client = client_for("org_a")
+    project_id, key = _project_and_key(client)
+    assert client.post("/v1/systemone", json={"state": "hi"}, headers=_bearer(key)).status_code == 200
+
+    off = client.patch(f"/api/projects/{project_id}", json={"endpoint_enabled": False})
+    assert off.status_code == 200 and off.json()["endpoint_enabled"] is False
+    for path, body in (("/v1/systemone", {"state": "hi"}), ("/v1/feedback", {"decision_id": "x", "correct": {}})):
+        res = client.post(path, json=body, headers=_bearer(key))
+        assert res.status_code == 403 and res.json()["detail"]["code"] == "endpoint_off"
+    # The key is still listed: turning off is not revoking.
+    assert len(client.get(f"/api/projects/{project_id}/keys").json()) == 1
+
+    assert client.patch(f"/api/projects/{project_id}", json={"endpoint_enabled": True}).status_code == 200
+    assert client.post("/v1/systemone", json={"state": "hi"}, headers=_bearer(key)).status_code == 200
+
+
+def test_the_in_app_try_box_still_works_with_the_endpoint_off(client_for):
+    client = client_for("org_a")
+    project_id, _ = _project_and_key(client, endpoint_enabled=False)
+    res = client.post(f"/api/projects/{project_id}/try", json={"text": "hello"})
+    assert res.status_code == 200
+
+
+def test_the_default_lane_decides_who_answers_when_the_call_names_no_model(client_for):
+    client = client_for("org_a")
+    project_id, key = _project_and_key(client)
+
+    def routed() -> str:
+        res = client.post("/v1/systemone", json={"state": "hi"}, headers=_bearer(key))
+        assert res.status_code == 200
+        return res.json()["system1"]["routed_to"]
+
+    assert routed() == "jev-fake"
+    for lane, expected in (("sys1", "sys1-fake"), ("jev", "jev-fake")):
+        assert client.patch(f"/api/projects/{project_id}", json={"default_lane": lane}).status_code == 200
+        assert routed() == expected
+    assert client.patch(f"/api/projects/{project_id}", json={"default_lane": "nonsense"}).status_code == 422

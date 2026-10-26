@@ -29,6 +29,12 @@ ProvidersDep = Annotated[Providers, Depends(get_providers)]
 SYS1_MISSING = "Your model isn't connected yet."
 
 
+class EndpointOff(ApiError):
+    status_code = 403
+    code = "endpoint_off"
+    message = "This project's endpoint is turned off."
+
+
 class BadModel(ApiError):
     status_code = 422
     code = "invalid_model"
@@ -71,6 +77,9 @@ def key_from_bearer(session: SessionDep, authorization: Annotated[str | None, He
     key = resolve_key(session, raw.strip()) if scheme.lower() == "bearer" and raw.strip() else None
     if key is None:
         raise Unauthenticated("Send a valid project API key as a Bearer token.")
+    project = session.get(Project, key.project_id)
+    if project is not None and not project.endpoint_enabled:
+        raise EndpointOff()
     return key
 
 

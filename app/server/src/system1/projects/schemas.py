@@ -18,6 +18,7 @@ class ProjectPatch(BaseModel):
     name: str | None = None
     description: str | None = None
     default_lane: Lane | None = None
+    endpoint_enabled: bool | None = None
 
 
 class ProjectOut(BaseModel):
@@ -27,6 +28,7 @@ class ProjectOut(BaseModel):
     template_id: str | None
     stage: str
     default_lane: str
+    endpoint_enabled: bool
     live_model_label: str | None
     live_model_id: str | None
     created_at: datetime

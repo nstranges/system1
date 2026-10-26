@@ -77,8 +77,10 @@ export function ModelList({
                 dateStyle: "medium",
                 timeStyle: "short",
               })}
-              <span className="block font-mono text-xs text-muted-foreground">
-                {m.id.slice(0, 8)}
+              <span className="block text-xs text-muted-foreground">
+                <span className="capitalize">{m.size ?? "small"}</span>
+                {" · "}
+                <span className="font-mono">{m.id.slice(0, 8)}</span>
               </span>
             </TableCell>
             <TableCell>

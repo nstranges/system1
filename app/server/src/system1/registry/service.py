@@ -52,6 +52,7 @@ def _out(card: ReportCard, project: Project, checks: dict[str, tuple[int, int]] 
         median_latency_ms=mine.get("median_latency_ms"),
         test_set_version=card.test_set_version,
         corrections_used=(card.details_json or {}).get("corrections_used"),
+        size=(card.details_json or {}).get("size"),
         checked=checked,
         checked_right=checked_right,
     )
