@@ -18,7 +18,9 @@ MAX_MODELS_PER_ORG = 2
 class ModelLimitReached(ApiError):
     status_code = 409
     code = "model_limit_reached"
-    message = f"You can keep {MAX_MODELS_PER_ORG} models, and they're all live. Delete a project to train another."
+    message = (
+        f"You can keep {MAX_MODELS_PER_ORG} models, and they're all live. Turn one off or delete it to train another."
+    )
 
 
 def is_model(card: ReportCard) -> bool:
