@@ -24,8 +24,9 @@ check: ## Lint and typecheck both sides
 	cd server && uv run ruff check . && uv run ruff format --check .
 	@if [ -d client/node_modules ]; then cd client && bun run typecheck; else echo "skip: client not installed"; fi
 
-test: ## Run the server tests
+test: ## Run the server and client tests
 	cd server && uv run pytest -q
+	@if [ -d client/node_modules ]; then cd client && bun test; else echo "skip: client not installed"; fi
 
 docs: ## Regenerate the OpenAPI schema and the client's types
 	cd server && uv run python -m system1.openapi_dump ../client/src/lib/api/openapi.json
