@@ -233,3 +233,6 @@ app/client/node_modules/
 merged/
 data/generated/
 .claude/settings.json
+
+# Demo Day script, kept local
+docs/demo-script.md
