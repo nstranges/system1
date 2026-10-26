@@ -46,6 +46,8 @@ class ReportDetails(BaseModel):
     training_metrics: dict = Field(default_factory=dict)
     train_examples: int | None = None
     training_seconds: float | None = None
+    # How many of your team's corrections were copied into the examples for this run.
+    corrections_used: int | None = None
 
 
 class Report(BaseModel):

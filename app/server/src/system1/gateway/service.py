@@ -105,12 +105,13 @@ async def run_lane(
     if provider is None:
         return LaneResult(lane=lane, error="sys1 isn't connected yet.")
     model = get_settings().jev_model if lane != "sys1" else get_settings().sys1_model
+    sys1_model_id: str | None = None
     if lane == "sys1" and getattr(provider, "serves_adapters", False):
         # This provider runs whichever adapter it is handed, so it answers with the project's live model.
         adapter = live_adapter(session, project)
         if adapter is None:
             return LaneResult(lane=lane, error=NO_LIVE_MODEL)
-        model = adapter
+        model, sys1_model_id = adapter, project.live_model_id
     policy, version = policy_and_version or latest_policy(session, project)
     questions = questions_for(project, policy, lane)
     try:
@@ -135,6 +136,7 @@ async def run_lane(
         policy_version=version,
         not_for_training=lane.startswith("jev"),
         dataset_row_id=dataset_row_id,
+        sys1_model_id=sys1_model_id,
     )
     session.add(decision)
     session.commit()

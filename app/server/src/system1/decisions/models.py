@@ -27,6 +27,8 @@ class Decision(Base):
     not_for_training: Mapped[bool] = mapped_column(default=False)
     needs_review: Mapped[bool] = mapped_column(default=False)
     dataset_row_id: Mapped[str | None] = mapped_column(default=None)
+    # The trained model (report card id) that gave a sys1 answer, so checked answers can be scored per model.
+    sys1_model_id: Mapped[str | None] = mapped_column(default=None)
     created_at: Mapped[datetime] = mapped_column(default=now)
 
 

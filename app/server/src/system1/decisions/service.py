@@ -112,6 +112,17 @@ def inbox(session: Session, project: Project) -> list[tuple[Decision, float | No
     return out
 
 
+GUESSES_SHOWN = 3
+
+
+def guesses(decision: Decision) -> list[tuple[str, float]]:
+    """The model's top answers with their probabilities, most likely first."""
+    for answer in decision.answers_json.values():
+        probs = answer.get("probabilities") or {}
+        return sorted(probs.items(), key=lambda kv: kv[1], reverse=True)[:GUESSES_SHOWN]
+    return []
+
+
 def training_pool_count(session: Session, project: Project) -> int:
     """Eligible corrections made since the project's latest training job (of any status); all of them if it never trained."""
     stmt = select(func.count(func.distinct(Feedback.decision_id))).where(

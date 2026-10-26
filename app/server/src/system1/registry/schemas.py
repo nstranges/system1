@@ -16,3 +16,27 @@ class ModelOut(BaseModel):
     jev_accuracy: float | None
     test_examples: int | None
     median_latency_ms: float | None
+    # Cards are only comparable on the same test set version.
+    test_set_version: int
+    corrections_used: int | None
+    # Live answers from this model that your team checked, and how many of those it had right.
+    checked: int
+    checked_right: int
+
+
+class BucketChange(BaseModel):
+    key: str
+    before: float
+    after: float
+
+
+class Comparison(BaseModel):
+    candidate: ModelOut
+    live: ModelOut | None
+    # False when the test set changed between the two runs, so their scores can't be compared.
+    same_test_set: bool
+    diff: float | None
+    improved: list[BucketChange]
+    worsened: list[BucketChange]
+    recommend: bool
+    sentence: str

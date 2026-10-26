@@ -1307,6 +1307,45 @@
         }
       }
     },
+    "/api/projects/{project_id}/improve": {
+      "get": {
+        "summary": "Get Improve Summary",
+        "operationId": "get_improve_summary_api_projects__project_id__improve_get",
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Project Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ImproveSummary"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/projects/{project_id}/agent/messages": {
       "post": {
         "summary": "Send Message",
@@ -1926,6 +1965,45 @@
         }
       }
     },
+    "/api/models/{model_id}/compare": {
+      "get": {
+        "summary": "Compare",
+        "operationId": "compare_api_models__model_id__compare_get",
+        "parameters": [
+          {
+            "name": "model_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Model Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Comparison"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/v1/systemone": {
       "post": {
         "summary": "Decide",
@@ -2177,6 +2255,25 @@
         "required": ["file"],
         "title": "Body_upload_examples_api_projects__project_id__uploads_post"
       },
+      "BucketChange": {
+        "properties": {
+          "key": {
+            "type": "string",
+            "title": "Key"
+          },
+          "before": {
+            "type": "number",
+            "title": "Before"
+          },
+          "after": {
+            "type": "number",
+            "title": "After"
+          }
+        },
+        "type": "object",
+        "required": ["key", "before", "after"],
+        "title": "BucketChange"
+      },
       "CanvasEvent": {
         "properties": {
           "type": {
@@ -2294,6 +2391,72 @@
         "type": "object",
         "required": ["question", "options"],
         "title": "ChoicesEvent"
+      },
+      "Comparison": {
+        "properties": {
+          "candidate": {
+            "$ref": "#/components/schemas/ModelOut"
+          },
+          "live": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ModelOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "same_test_set": {
+            "type": "boolean",
+            "title": "Same Test Set"
+          },
+          "diff": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Diff"
+          },
+          "improved": {
+            "items": {
+              "$ref": "#/components/schemas/BucketChange"
+            },
+            "type": "array",
+            "title": "Improved"
+          },
+          "worsened": {
+            "items": {
+              "$ref": "#/components/schemas/BucketChange"
+            },
+            "type": "array",
+            "title": "Worsened"
+          },
+          "recommend": {
+            "type": "boolean",
+            "title": "Recommend"
+          },
+          "sentence": {
+            "type": "string",
+            "title": "Sentence"
+          }
+        },
+        "type": "object",
+        "required": [
+          "candidate",
+          "live",
+          "same_test_set",
+          "diff",
+          "improved",
+          "worsened",
+          "recommend",
+          "sentence"
+        ],
+        "title": "Comparison"
       },
       "ConfigOut": {
         "properties": {
@@ -2746,6 +2909,21 @@
         "type": "object",
         "title": "GenerateIn"
       },
+      "Guess": {
+        "properties": {
+          "key": {
+            "type": "string",
+            "title": "Key"
+          },
+          "p": {
+            "type": "number",
+            "title": "P"
+          }
+        },
+        "type": "object",
+        "required": ["key", "p"],
+        "title": "Guess"
+      },
       "HTTPValidationError": {
         "properties": {
           "detail": {
@@ -2888,6 +3066,29 @@
         ],
         "title": "ImportResult"
       },
+      "ImproveSummary": {
+        "properties": {
+          "waiting": {
+            "type": "integer",
+            "title": "Waiting"
+          },
+          "ready": {
+            "type": "integer",
+            "title": "Ready"
+          },
+          "live_checked": {
+            "type": "integer",
+            "title": "Live Checked"
+          },
+          "live_right": {
+            "type": "integer",
+            "title": "Live Right"
+          }
+        },
+        "type": "object",
+        "required": ["waiting", "ready", "live_checked", "live_right"],
+        "title": "ImproveSummary"
+      },
       "InboxItem": {
         "properties": {
           "decision_id": {
@@ -2940,6 +3141,14 @@
               }
             ],
             "title": "How Sure"
+          },
+          "guesses": {
+            "items": {
+              "$ref": "#/components/schemas/Guess"
+            },
+            "type": "array",
+            "title": "Guesses",
+            "default": []
           }
         },
         "type": "object",
@@ -3369,6 +3578,29 @@
               }
             ],
             "title": "Median Latency Ms"
+          },
+          "test_set_version": {
+            "type": "integer",
+            "title": "Test Set Version"
+          },
+          "corrections_used": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Corrections Used"
+          },
+          "checked": {
+            "type": "integer",
+            "title": "Checked"
+          },
+          "checked_right": {
+            "type": "integer",
+            "title": "Checked Right"
           }
         },
         "type": "object",
@@ -3381,7 +3613,11 @@
           "accuracy",
           "jev_accuracy",
           "test_examples",
-          "median_latency_ms"
+          "median_latency_ms",
+          "test_set_version",
+          "corrections_used",
+          "checked",
+          "checked_right"
         ],
         "title": "ModelOut",
         "description": "A trained model: a training run that produced an adapter. Its id is the run's report card id."
@@ -3988,6 +4224,17 @@
               }
             ],
             "title": "Training Seconds"
+          },
+          "corrections_used": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Corrections Used"
           }
         },
         "type": "object",

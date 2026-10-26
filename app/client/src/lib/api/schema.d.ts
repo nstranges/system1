@@ -435,6 +435,23 @@ export interface paths {
     patch?: never
     trace?: never
   }
+  "/api/projects/{project_id}/improve": {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /** Get Improve Summary */
+    get: operations["get_improve_summary_api_projects__project_id__improve_get"]
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
   "/api/projects/{project_id}/agent/messages": {
     parameters: {
       query?: never
@@ -643,6 +660,23 @@ export interface paths {
     patch?: never
     trace?: never
   }
+  "/api/models/{model_id}/compare": {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /** Compare */
+    get: operations["compare_api_models__model_id__compare_get"]
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
   "/v1/systemone": {
     parameters: {
       query?: never
@@ -731,6 +765,15 @@ export interface components {
       /** File */
       file: string
     }
+    /** BucketChange */
+    BucketChange: {
+      /** Key */
+      key: string
+      /** Before */
+      before: number
+      /** After */
+      after: number
+    }
     /** CanvasEvent */
     CanvasEvent: {
       /**
@@ -787,6 +830,23 @@ export interface components {
       question: string
       /** Options */
       options: string[]
+    }
+    /** Comparison */
+    Comparison: {
+      candidate: components["schemas"]["ModelOut"]
+      live: components["schemas"]["ModelOut"] | null
+      /** Same Test Set */
+      same_test_set: boolean
+      /** Diff */
+      diff: number | null
+      /** Improved */
+      improved: components["schemas"]["BucketChange"][]
+      /** Worsened */
+      worsened: components["schemas"]["BucketChange"][]
+      /** Recommend */
+      recommend: boolean
+      /** Sentence */
+      sentence: string
     }
     /** ConfigOut */
     ConfigOut: {
@@ -1001,6 +1061,13 @@ export interface components {
         [key: string]: number
       } | null
     }
+    /** Guess */
+    Guess: {
+      /** Key */
+      key: string
+      /** P */
+      p: number
+    }
     /** HTTPValidationError */
     HTTPValidationError: {
       /** Detail */
@@ -1058,6 +1125,17 @@ export interface components {
       /** Created Buckets */
       created_buckets: string[]
     }
+    /** ImproveSummary */
+    ImproveSummary: {
+      /** Waiting */
+      waiting: number
+      /** Ready */
+      ready: number
+      /** Live Checked */
+      live_checked: number
+      /** Live Right */
+      live_right: number
+    }
     /** InboxItem */
     InboxItem: {
       /** Decision Id */
@@ -1080,6 +1158,11 @@ export interface components {
       created_at: string
       /** How Sure */
       how_sure?: number | null
+      /**
+       * Guesses
+       * @default []
+       */
+      guesses: components["schemas"]["Guess"][]
     }
     /** InboxOut */
     InboxOut: {
@@ -1258,6 +1341,14 @@ export interface components {
       test_examples: number | null
       /** Median Latency Ms */
       median_latency_ms: number | null
+      /** Test Set Version */
+      test_set_version: number
+      /** Corrections Used */
+      corrections_used: number | null
+      /** Checked */
+      checked: number
+      /** Checked Right */
+      checked_right: number
     }
     /** NotOf */
     "NotOf-Input": {
@@ -1480,6 +1571,8 @@ export interface components {
       train_examples?: number | null
       /** Training Seconds */
       training_seconds?: number | null
+      /** Corrections Used */
+      corrections_used?: number | null
     }
     /** ReportRow */
     ReportRow: {
@@ -2713,6 +2806,37 @@ export interface operations {
       }
     }
   }
+  get_improve_summary_api_projects__project_id__improve_get: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        project_id: string
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["ImproveSummary"]
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"]
+        }
+      }
+    }
+  }
   send_message_api_projects__project_id__agent_messages_post: {
     parameters: {
       query?: never
@@ -3130,6 +3254,37 @@ export interface operations {
         }
         content: {
           "application/json": components["schemas"]["ProjectOut"]
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"]
+        }
+      }
+    }
+  }
+  compare_api_models__model_id__compare_get: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        model_id: string
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["Comparison"]
         }
       }
       /** @description Validation Error */

@@ -10,7 +10,7 @@ from system1.projects.router import Forbidden
 from system1.projects.schemas import ProjectOut
 from system1.projects.service import get_project
 from system1.registry import service
-from system1.registry.schemas import ModelOut
+from system1.registry.schemas import Comparison, ModelOut
 
 router = APIRouter(prefix="/models", dependencies=[Depends(get_principal)])
 
@@ -33,3 +33,8 @@ def make_live(model_id: str, principal: PrincipalDep, session: SessionDep) -> Pr
         raise Forbidden()
     project = service.make_live(session, principal, model_id)
     return ProjectOut.model_validate(project, from_attributes=True)
+
+
+@router.get("/{model_id}/compare")
+def compare(model_id: str, principal: PrincipalDep, session: SessionDep) -> Comparison:
+    return service.compare(session, principal, model_id)

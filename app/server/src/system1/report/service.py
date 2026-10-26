@@ -366,6 +366,7 @@ def start_training(
         details.training_metrics = {k: v for k, v in trained.metrics.items() if k not in ("stage", "detail")}
         details.train_examples = train_examples
         details.training_seconds = time.monotonic() - started
+        details.corrections_used = copied
         card = ReportCard(
             org_id=org_id,
             project_id=project_id,
