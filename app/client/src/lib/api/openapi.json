@@ -2004,6 +2004,102 @@
         }
       }
     },
+    "/api/projects/{project_id}/batches": {
+      "post": {
+        "summary": "Check Batch",
+        "description": "Runs your live model on every row of the file. Unsure answers then wait in the inbox.",
+        "operationId": "check_batch_api_projects__project_id__batches_post",
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Project Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_check_batch_api_projects__project_id__batches_post"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JobStarted"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/projects/{project_id}/batches/{batch_id}/download": {
+      "get": {
+        "summary": "Download Batch",
+        "operationId": "download_batch_api_projects__project_id__batches__batch_id__download_get",
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Project Id"
+            }
+          },
+          {
+            "name": "batch_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Batch Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/v1/systemone": {
       "post": {
         "summary": "Decide",
@@ -2230,6 +2326,18 @@
         "type": "object",
         "required": ["any"],
         "title": "AnyOf"
+      },
+      "Body_check_batch_api_projects__project_id__batches_post": {
+        "properties": {
+          "file": {
+            "type": "string",
+            "contentMediaType": "application/octet-stream",
+            "title": "File"
+          }
+        },
+        "type": "object",
+        "required": ["file"],
+        "title": "Body_check_batch_api_projects__project_id__batches_post"
       },
       "Body_upload_context_api_projects__project_id__context_post": {
         "properties": {

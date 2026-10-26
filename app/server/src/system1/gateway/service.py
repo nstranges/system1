@@ -1,5 +1,6 @@
 import asyncio
 import json
+from collections.abc import Callable
 from typing import Literal
 
 from pydantic import BaseModel
@@ -9,7 +10,7 @@ from system1.adapters.eval_files import EvalFilesSource
 from system1.adapters.jsonl_dataset import JsonlDatasetSource
 from system1.config import get_settings
 from system1.contracts.datasets import DatasetRow
-from system1.contracts.decisions import DecisionProvider, DecisionRequest, ProviderError
+from system1.contracts.decisions import DecisionProvider, DecisionRequest, DecisionResponse, ProviderError
 from system1.decisions.models import Decision
 from system1.domain.policy import Policy
 from system1.domain.questions import build_questions
@@ -83,6 +84,17 @@ def _provider(providers: Providers, lane: Lane) -> DecisionProvider | None:
     return providers.sys1 if lane == "sys1" else providers.jev
 
 
+def _sys1_model(session: Session, provider: DecisionProvider, project: Project) -> tuple[str, str | None]:
+    """The model name to ask sys1 for, and the trained model it is. A provider that runs whichever adapter it is
+    handed answers with the project's live model; raises LookupError when there isn't one."""
+    if not getattr(provider, "serves_adapters", False):
+        return get_settings().sys1_model, None
+    adapter = live_adapter(session, project)
+    if adapter is None:
+        raise LookupError(NO_LIVE_MODEL)
+    return adapter, project.live_model_id
+
+
 def sys1_ready(session: Session, providers: Providers, project: Project) -> bool:
     if providers.sys1 is None:
         return False
@@ -104,14 +116,13 @@ async def run_lane(
     provider = _provider(providers, lane)
     if provider is None:
         return LaneResult(lane=lane, error="sys1 isn't connected yet.")
-    model = get_settings().jev_model if lane != "sys1" else get_settings().sys1_model
+    model = get_settings().jev_model
     sys1_model_id: str | None = None
-    if lane == "sys1" and getattr(provider, "serves_adapters", False):
-        # This provider runs whichever adapter it is handed, so it answers with the project's live model.
-        adapter = live_adapter(session, project)
-        if adapter is None:
+    if lane == "sys1":
+        try:
+            model, sys1_model_id = _sys1_model(session, provider, project)
+        except LookupError:
             return LaneResult(lane=lane, error=NO_LIVE_MODEL)
-        model, sys1_model_id = adapter, project.live_model_id
     policy, version = policy_and_version or latest_policy(session, project)
     questions = questions_for(project, policy, lane)
     try:
@@ -212,3 +223,71 @@ async def try_input(
         recorded=recorded,
         recorded_is_fixture=recorded_is_fixture,
     )
+
+
+BATCH_CHUNK = 100  # rows per call to the model, so a batch shows progress as it goes
+BATCH_CONCURRENCY = 4  # for providers without a batch call, one decision per request
+
+
+async def run_batch(
+    session: Session,
+    providers: Providers,
+    project: Project,
+    states: list[str],
+    batch_id: str,
+    on_progress: Callable[[float], None] | None = None,
+) -> tuple[list[Decision], int]:
+    """Your live model on every state. Returns the saved decisions and how many states got no answer."""
+    provider = providers.sys1
+    if provider is None:
+        raise ProviderError(NO_LIVE_MODEL)
+    try:
+        model, sys1_model_id = _sys1_model(session, provider, project)
+    except LookupError as exc:
+        raise ProviderError(NO_LIVE_MODEL) from exc
+    policy, version = latest_policy(session, project)
+    questions = questions_for(project, policy, "sys1")
+    gate = asyncio.Semaphore(BATCH_CONCURRENCY)
+
+    async def one(state: str) -> DecisionResponse | None:
+        async with gate:
+            try:
+                return await provider.decide(DecisionRequest(model=model, state=state, questions=questions))
+            except ProviderError:
+                return None
+
+    decisions: list[Decision] = []
+    failed = 0
+    for start in range(0, len(states), BATCH_CHUNK):
+        chunk = states[start : start + BATCH_CHUNK]
+        decide_many = getattr(provider, "decide_many", None)
+        if decide_many is not None:
+            responses: list[DecisionResponse | None] = list(await decide_many(model, chunk, questions))
+        else:
+            responses = list(await asyncio.gather(*(one(s) for s in chunk)))
+        for state, response in zip(chunk, responses, strict=True):
+            answer = response.answers.get(next(iter(questions))) if response else None
+            if response is None or answer is None:
+                failed += 1
+                continue
+            decision = Decision(
+                org_id=project.org_id,
+                project_id=project.id,
+                source="batch",
+                lane="sys1",
+                model_reported=response.model,
+                state_json=state,
+                answers_json={k: v.model_dump() for k, v in response.answers.items()},
+                top_label=answer.choice,
+                top_prob=answer.probabilities.get(answer.choice),
+                latency_ms=response.latency_ms,
+                policy_version=version,
+                sys1_model_id=sys1_model_id,
+                batch_id=batch_id,
+            )
+            session.add(decision)
+            decisions.append(decision)
+        session.commit()
+        if on_progress:
+            on_progress(min(1.0, (start + len(chunk)) / len(states)))
+    return decisions, failed

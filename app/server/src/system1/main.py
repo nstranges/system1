@@ -12,6 +12,7 @@ from system1.agent.router import router as agent_router
 from system1.auth.deps import get_principal
 from system1.auth.principal import Principal
 from system1.auth.verifier import ClerkVerifier, RejectAllVerifier, TokenVerifier
+from system1.batch.router import router as batch_router
 from system1.config import get_settings
 from system1.context.router import router as context_router
 from system1.datasets.router import router as datasets_router
@@ -104,6 +105,7 @@ def create_app(
     api.include_router(drafting_router)
     api.include_router(report_router)
     api.include_router(registry_router)
+    api.include_router(batch_router)
     app.include_router(api)
     app.include_router(public_router)
     return app

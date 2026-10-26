@@ -195,7 +195,16 @@ class Decider:
     @modal.method()
     def decide(self, adapter_ref, state, questions):
         """One Jev-shaped decision: {"answers": {question: {type, choice, confidence, probabilities}}}."""
-        model, tokenizer = self._model(adapter_ref)
+        return self._decide(self._model(adapter_ref), state, questions)
+
+    @modal.method()
+    def decide_many(self, adapter_ref, states, questions):
+        """decide() for each state in order, in one call, so a batch check pays the round trip once."""
+        loaded = self._model(adapter_ref)
+        return [self._decide(loaded, state, questions) for state in states]
+
+    def _decide(self, loaded, state, questions):
+        model, tokenizer = loaded
         answers = FastDecisionModel.predict(model, tokenizer, state, questions)
         return {
             "answers": {

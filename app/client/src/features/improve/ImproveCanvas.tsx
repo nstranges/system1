@@ -21,6 +21,7 @@ import {
 } from "@/lib/api/types"
 import { recalledJob, rememberJob } from "@/features/data/JobProgress"
 import { TrainProgress } from "@/features/train/TrainProgress"
+import { BatchCheck } from "./BatchCheck"
 import { InboxCard, type InboxItem } from "./InboxCard"
 import { ModelHistory } from "./ModelHistory"
 
@@ -106,6 +107,17 @@ export function ImproveCanvas({
       </div>
 
       {summary && <Stats summary={summary} />}
+
+      <BatchCheck
+        projectId={project.id}
+        names={names}
+        disabled={
+          project.live_model_id || models.some((m) => m.live)
+            ? null
+            : "Train a model first; a batch is checked by your live model."
+        }
+        onDone={() => void load()}
+      />
 
       <TeachAgain
         project={project}

@@ -1,0 +1,11 @@
+text,expected,note
+I ordered a new card two weeks ago and it still hasn't arrived. Can you check where it is?,card_arrival,easy
+How do I activate the card that just came in the mail?,activate_my_card,easy
+I forgot my passcode and now I can't log into the app,passcode_forgotten,easy
+The ATM kept my card and didn't give it back,card_swallowed,easy
+I took 100 euros out at an ATM in Lisbon and the rate you used is much worse than what the app showed,wrong_exchange_rate_for_cash_withdrawal,hard: close to card_payment_wrong_exchange_rate and exchange_rate
+I sent money to my brother three days ago and he says it still isn't in his account,transfer_not_received_by_recipient,hard: close to pending_transfer and transfer_timing
+My top-up went through yesterday but today the money was taken back out of my balance,top_up_reverted,hard: close to top_up_failed and pending_top_up
+There's a payment on my statement from a shop I have never heard of,card_payment_not_recognised,hard: close to extra_charge_on_statement and direct_debit_payment_not_recognised
+My salary came in by bank transfer this morning but my balance still shows the old amount,balance_not_updated_after_bank_transfer,hard: close to transfer_into_account and pending_transfer
+The coffee shop charged me twice for the same latte this morning,transaction_charged_twice,hard: close to extra_charge_on_statement

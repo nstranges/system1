@@ -8,6 +8,8 @@ from system1.contracts.decisions import ChoiceAnswer, DecisionRequest, DecisionR
 FAILED = "Your model didn't answer. Try again in a moment."
 # The first call after the model has gone cold loads Laya and the adapter, which takes up to a minute or so.
 COLD_START_S = 180.0
+# On top of the cold start, a batch call gets this long per row.
+PER_ROW_S = 0.5
 
 
 class DeciderRunner(Protocol):
@@ -15,6 +17,10 @@ class DeciderRunner(Protocol):
 
     async def decide(self, adapter_ref: str, state: str, questions: dict) -> dict:
         """{"answers": {question: {"type", "choice", "confidence", "probabilities"}}}"""
+        ...
+
+    async def decide_many(self, adapter_ref: str, states: list[str], questions: dict) -> list[dict]:
+        """One result like `decide`'s per state, in order, from a single call."""
         ...
 
 
@@ -29,6 +35,12 @@ class SdkDeciderRunner:
 
         decider = modal.Cls.from_name(self._app_name, self._class_name)()
         return await decider.decide.remote.aio(adapter_ref, state, questions)
+
+    async def decide_many(self, adapter_ref: str, states: list[str], questions: dict) -> list[dict]:
+        import modal
+
+        decider = modal.Cls.from_name(self._app_name, self._class_name)()
+        return await decider.decide_many.remote.aio(adapter_ref, states, questions)
 
 
 class ModalSys1Provider:
@@ -59,3 +71,25 @@ class ModalSys1Provider:
             usage=None,
             latency_ms=latency_ms,
         )
+
+    async def decide_many(self, model: str, states: list[str], questions: dict) -> list[DecisionResponse | None]:
+        """A batch in one call. Returns None for every state if the call fails, so the caller counts them as unanswered."""
+        started = time.perf_counter()
+        try:
+            results = await asyncio.wait_for(
+                self._runner.decide_many(model, states, questions), self._timeout_s + PER_ROW_S * len(states)
+            )
+        # A failed call leaves those rows unanswered instead of failing the whole batch. Modal re-raises an error
+        # from inside the remote call as its own type, so there is no narrower class to catch.
+        except Exception:  # noqa: BLE001
+            return [None] * len(states)
+        each_ms = (time.perf_counter() - started) * 1000 / max(1, len(states))
+        return [
+            DecisionResponse(
+                model="sys1",
+                answers={k: ChoiceAnswer(**v) for k, v in r.get("answers", {}).items()},
+                usage=None,
+                latency_ms=each_ms,
+            )
+            for r in results
+        ]

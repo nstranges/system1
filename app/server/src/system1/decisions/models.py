@@ -13,7 +13,7 @@ class Decision(Base):
     id: Mapped[str] = mapped_column(primary_key=True, default=new_id)
     org_id: Mapped[str] = mapped_column(index=True)
     project_id: Mapped[str] = mapped_column(ForeignKey("projects.id"), index=True)
-    source: Mapped[str]  # playground | api | agent | eval
+    source: Mapped[str]  # playground | api | agent | eval | batch
     lane: Mapped[str]  # jev | jev_labels | sys1
     model_reported: Mapped[str]
     state_json: Mapped[str | dict | list] = mapped_column(JSON)
@@ -29,6 +29,8 @@ class Decision(Base):
     dataset_row_id: Mapped[str | None] = mapped_column(default=None)
     # The trained model (report card id) that gave a sys1 answer, so checked answers can be scored per model.
     sys1_model_id: Mapped[str | None] = mapped_column(default=None)
+    # The batch check (its job id) this answer came from, so the batch can be downloaded with its answers.
+    batch_id: Mapped[str | None] = mapped_column(default=None, index=True)
     created_at: Mapped[datetime] = mapped_column(default=now)
 
 

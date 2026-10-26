@@ -677,6 +677,43 @@ export interface paths {
     patch?: never
     trace?: never
   }
+  "/api/projects/{project_id}/batches": {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    /**
+     * Check Batch
+     * @description Runs your live model on every row of the file. Unsure answers then wait in the inbox.
+     */
+    post: operations["check_batch_api_projects__project_id__batches_post"]
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  "/api/projects/{project_id}/batches/{batch_id}/download": {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /** Download Batch */
+    get: operations["download_batch_api_projects__project_id__batches__batch_id__download_get"]
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
   "/v1/systemone": {
     parameters: {
       query?: never
@@ -754,6 +791,11 @@ export interface components {
         | components["schemas"]["AnyOf-Output"]
         | components["schemas"]["NotOf-Output"]
       )[]
+    }
+    /** Body_check_batch_api_projects__project_id__batches_post */
+    Body_check_batch_api_projects__project_id__batches_post: {
+      /** File */
+      file: string
     }
     /** Body_upload_context_api_projects__project_id__context_post */
     Body_upload_context_api_projects__project_id__context_post: {
@@ -3285,6 +3327,73 @@ export interface operations {
         }
         content: {
           "application/json": components["schemas"]["Comparison"]
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"]
+        }
+      }
+    }
+  }
+  check_batch_api_projects__project_id__batches_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        project_id: string
+      }
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        "multipart/form-data": components["schemas"]["Body_check_batch_api_projects__project_id__batches_post"]
+      }
+    }
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["JobStarted"]
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"]
+        }
+      }
+    }
+  }
+  download_batch_api_projects__project_id__batches__batch_id__download_get: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        project_id: string
+        batch_id: string
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": unknown
         }
       }
       /** @description Validation Error */
