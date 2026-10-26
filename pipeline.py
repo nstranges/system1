@@ -127,29 +127,45 @@ def load_adapter(folder):
     from peft import PeftModel, set_peft_model_state_dict
     from safetensors.torch import load_file
 
+    import torch
+
     model, tokenizer = FastDecisionModel.from_pretrained(
         model_name = "convaiinnovations/laya", max_seq_length = 512, load_in_4bit = False
     )
-    adapter_config = json.loads((folder / "adapter_config.json").read_text())
+    adapter_file = folder / "adapter_model.safetensors"
+    if adapter_file.exists():
+        # save_pretrained layout: a PEFT adapter plus the decision head in joint_head.safetensors
+        adapter_config = json.loads((folder / "adapter_config.json").read_text())
+        rank, alpha = adapter_config["r"], adapter_config["lora_alpha"]
+    else:
+        # save_adapter's fallback when the model has no save_pretrained: raw LoRA + head weights in trainable.pt.
+        # train.py sets lora_alpha equal to r, so the rank read from the weights gives both.
+        trainable = torch.load(str(folder / "trainable.pt"), map_location = "cpu")
+        rank = alpha = next(v.shape[0] for k, v in trainable.items() if "lora_A" in k)
     model = FastDecisionModel.get_peft_model(
         model,
-        r = adapter_config["r"],
-        lora_alpha = adapter_config["lora_alpha"],
+        r = rank,
+        lora_alpha = alpha,
         lora_dropout = 0,
         use_gradient_checkpointing = "unsloth",
         random_state = 3407,
     )
 
-    peft_model = next(m for m in model.modules() if isinstance(m, PeftModel))
-    result = set_peft_model_state_dict(peft_model, load_file(str(folder / "adapter_model.safetensors")))
-    if result.unexpected_keys:
-        raise RuntimeError(f"{len(result.unexpected_keys)} adapter weights did not match the model")
-    # The head's module name depends on the base model, so find the smallest module holding every saved head weight
-    head_weights = load_file(str(folder / "joint_head.safetensors"))
-    matches = [(len(m.state_dict()), m) for n, m in model.named_modules() if n and set(head_weights) <= set(m.state_dict())]
-    if not matches:
-        raise RuntimeError("no module in the model has all the weights in joint_head.safetensors")
-    min(matches, key = lambda t: t[0])[1].load_state_dict(head_weights, strict = False)
+    if adapter_file.exists():
+        peft_model = next(m for m in model.modules() if isinstance(m, PeftModel))
+        result = set_peft_model_state_dict(peft_model, load_file(str(adapter_file)))
+        if result.unexpected_keys:
+            raise RuntimeError(f"{len(result.unexpected_keys)} adapter weights did not match the model")
+        # The head's module name depends on the base model, so find the smallest module holding every saved head weight
+        head_weights = load_file(str(folder / "joint_head.safetensors"))
+        matches = [(len(m.state_dict()), m) for n, m in model.named_modules() if n and set(head_weights) <= set(m.state_dict())]
+        if not matches:
+            raise RuntimeError("no module in the model has all the weights in joint_head.safetensors")
+        min(matches, key = lambda t: t[0])[1].load_state_dict(head_weights, strict = False)
+    else:
+        result = model.load_state_dict(trainable, strict = False)
+        if result.unexpected_keys:
+            raise RuntimeError(f"{len(result.unexpected_keys)} saved weights did not match the model")
 
     calibration_file = folder / "calibration.json"
     if calibration_file.exists():
