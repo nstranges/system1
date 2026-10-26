@@ -261,7 +261,9 @@ function Workspace() {
   return (
     <ProgressReloadContext.Provider value={reloadProgress}>
       <div className="space-y-4">
-        <div className="flex flex-wrap items-center gap-3">
+        {/* On wide screens the breadcrumb, rail and assistant all pin below the app header (h-14): the
+            breadcrumb right under it, the columns under the breadcrumb (lg:h-12 plus the 1rem gap). */}
+        <div className="flex flex-wrap items-center gap-3 bg-background lg:sticky lg:top-14 lg:z-20 lg:h-12 lg:flex-nowrap">
           <Link
             to="/app"
             className="text-sm text-muted-foreground hover:text-foreground"
@@ -280,7 +282,7 @@ function Workspace() {
               : "lg:grid-cols-[13rem_minmax(0,1fr)]",
           )}
         >
-          <div className="lg:sticky lg:top-[4.5rem] lg:self-start">
+          <div className="lg:sticky lg:top-[7.5rem] lg:self-start">
             <StageRail
               projectId={project.id}
               current={stage}
@@ -320,7 +322,7 @@ function Workspace() {
 
           <div
             className={cn(
-              "min-w-0 lg:sticky lg:top-[4.5rem] lg:self-start",
+              "min-w-0 lg:sticky lg:top-[7.5rem] lg:self-start",
               panel === "assistant"
                 ? assistantOpen
                   ? ""

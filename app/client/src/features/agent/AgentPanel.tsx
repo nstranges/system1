@@ -67,7 +67,7 @@ export function AgentPanel({
   const empty = loaded && !loadError && events.length === 0 && !firstMessage
 
   return (
-    <Card className="flex h-[70vh] flex-col lg:h-[calc(100svh-6rem)]">
+    <Card className="flex h-[70vh] flex-col lg:h-[calc(100svh-9rem)]">
       <CardHeader>
         <CardTitle>Assistant</CardTitle>
         {onHide && (
