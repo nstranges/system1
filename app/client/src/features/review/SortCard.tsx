@@ -1,6 +1,6 @@
 import { ChevronDown } from "lucide-react"
 import { useState } from "react"
-import { Badge } from "@/components/ui/badge"
+import { BucketChip } from "@/components/BucketChip"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import {
@@ -10,6 +10,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import type { components } from "@/lib/api/schema"
+import { bucketIndex } from "@/lib/buckets"
 import type { PolicyOption } from "@/lib/api/types"
 
 export type ReviewExample = components["schemas"]["ExampleOut"]
@@ -48,7 +49,7 @@ export function SortCard({
   return (
     <Card size="sm">
       <CardContent className="space-y-3">
-        <p className="text-sm whitespace-pre-wrap">
+        <p className="font-voice whitespace-pre-wrap">
           {long && !expanded ? `${text.slice(0, LONG)}…` : text}
         </p>
         {long && (
@@ -61,7 +62,10 @@ export function SortCard({
           </button>
         )}
         <div className="flex flex-wrap items-center gap-3">
-          <Badge variant="secondary">{current?.name ?? example.label}</Badge>
+          <BucketChip
+            name={current?.name ?? example.label}
+            index={bucketIndex(buckets, example.label)}
+          />
           {sure !== null && (
             <div className="flex items-center gap-2 text-xs text-muted-foreground">
               <div

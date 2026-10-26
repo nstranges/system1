@@ -131,6 +131,7 @@ export function TryCanvas({
 
       <Textarea
         rows={6}
+        className="font-voice text-[15px]!"
         value={text}
         aria-invalid={tooLong}
         placeholder="Paste a ticket, request or message here"
