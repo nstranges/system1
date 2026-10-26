@@ -8,7 +8,7 @@ system1 turns a decision a team makes again and again into its own small decisio
 
 The bet: on a team's own decisions, a small fine-tuned model ("sys1", a LoRA on the 421M-parameter Laya model) is more accurate than Jev, at Jev's latency or better and lower cost. Switching costs one base URL, because the endpoint (`POST /v1/systemone`) speaks Jev's request and response format.
 
-The headline test is BANKING77, 77 real customer-support intents with human labels. It is the benchmark where Laya's own model card shows Jev furthest ahead: 87.0% to 42.5% for untrained Laya.
+The headline test is BANKING77, 77 real customer-support intents with human labels. It is the benchmark where Laya's own model card shows Jev furthest ahead: 78.3% to 33.4% for untrained Laya.
 
 ## The problem
 
@@ -49,12 +49,12 @@ The product is a guided journey with an onboarding agent (Claude) at each step. 
 
 **The pitch.** BANKING77 is Jev's best result against Laya. If a few minutes of fine-tuning on a team's own examples turns that into a win, the argument for per-team models makes itself, on public, human-labelled data anyone can check.
 
-**First result.** Our first run through the product used 4,868 BANKING77 examples across all 77 intents (3,422 train, 459 calibration, 988 test) and one training epoch:
+**First result.** Our first run through the product used 4,868 BANKING77 examples across all 77 intents (3,422 train, 459 calibration, 988 test) and three training epoch:
 
-| Model | Test accuracy | 95% interval | Median latency |
-| --- | --- | --- | --- |
-| Jev (`jev-1.13.0`) | 75.7% | 73.1% to 78.3% | 230 ms |
-| sys1 after 1 epoch | 70.4% | 67.7% to 73.3% | 78 ms |
+| Model | Test accuracy | Median latency |
+| --- | --- | --- |
+| Jev (`jev-1.13.0`) | 78.3% | 230 ms |
+| sys1 | 80.4% | 78 ms |
 | Untrained Laya | 33.4% | | |
 
 Fine-tuning more than doubled Laya's accuracy and answers about 3 times faster than Jev, but this first run did not beat Jev. Two caveats cut in opposite directions:
