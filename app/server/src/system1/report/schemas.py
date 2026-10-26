@@ -17,6 +17,8 @@ class ReportRow(BaseModel):
     n: int | None = None
     errors: int = 0
     median_latency_ms: float | None = None
+    # Average of the calibrated probability the model gave the right bucket, over the answers that came with one.
+    avg_p_gold: float | None = None
 
 
 class Verdict(BaseModel):

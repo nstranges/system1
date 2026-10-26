@@ -19,6 +19,10 @@ class ModalRunner(Protocol):
         """What the running function last reported: {stage, step, total_steps, epoch, history, ...}."""
         ...
 
+    def cancel(self, call_id: str) -> None:
+        """Stops the run and the GPU work it started. Does nothing for a call that has ended."""
+        ...
+
 
 class SdkModalRunner:
     """Calls the function deployed by `make modal-deploy`. Needs the `modal` extra and Modal's own auth."""
@@ -53,6 +57,17 @@ class SdkModalRunner:
 
         return modal.Dict.from_name(self._progress_name, create_if_missing=True).get(call_id) or {}
 
+    def cancel(self, call_id: str) -> None:
+        import modal
+
+        # Terminating the container is what stops the GPU billing; asking the input to cancel politely can hang
+        # inside a long CUDA call. The untrained-base scoring runs as a call of its own, so stop that one too.
+        progress = modal.Dict.from_name(self._progress_name, create_if_missing=True)
+        base_call = progress.get(f"{call_id}:base")
+        for target in (call_id, base_call):
+            if target:
+                modal.FunctionCall.from_id(target).cancel(terminate_containers=True)
+
 
 class ModalTrainer:
     """Trains a LoRA on Modal (pipeline.py), and scores it and the untrained base on the test examples there."""
@@ -85,6 +100,9 @@ class ModalTrainer:
             "test_rows": [{**row(e), "questions": questions} for e in examples if e["split"] == "test"],
         }
         return TrainingJob(id=self._runner.spawn(payload), status="queued", message="Queued.")
+
+    def cancel(self, job_id: str) -> None:
+        self._runner.cancel(job_id)
 
     def status(self, job_id: str) -> TrainingJob:
         state, value = self._runner.poll(job_id)

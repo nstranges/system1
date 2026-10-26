@@ -2,11 +2,13 @@ import json
 import shutil
 from pathlib import Path
 import modal
+from adaptive import EarlyStopTracker, plan_hyperparams
 
 app = modal.App("laya-training")
 image = (
     modal.Image.debian_slim(python_version = "3.12")
-    .pip_install("unsloth==2026.10.3", "datasets", "transformers", "tqdm")
+    .pip_install("unsloth==2026.10.3", "datasets", "transformers", "tqdm", "schedulefree")
+    .add_local_python_source("adaptive")
 )
 vol = modal.Volume.from_name("laya-outputs", create_if_missing = True)
 
@@ -15,7 +17,7 @@ with image.imports():
     from tqdm.auto import tqdm
     from unsloth import FastDecisionModel, DecisionTrainer, is_bfloat16_supported
     from datasets import Dataset, load_dataset
-    from transformers import TrainingArguments
+    from transformers import TrainerCallback, TrainingArguments
 
 # decision_config entries that calibrate() writes
 CALIBRATION_KEYS = ["temperature", "temperature_by_options", "head_temperature"]
@@ -92,9 +94,54 @@ def calibrate_model(model, tokenizer, cal_items):
 
     return metrics
 
+def best_weights_stopper(patience = 1):
+    """Stop when eval loss stops improving and restore the best epoch's trainable weights.
+
+    The snapshot lives in CPU memory rather than on disk, so keeping the best epoch costs no
+    checkpoint writes.
+    """
+    class BestWeightsStopper(TrainerCallback):
+        def __init__(self):
+            self.tracker = EarlyStopTracker(patience)
+            self.best_state = None
+
+        def on_evaluate(self, args, state, control, metrics = None, model = None, optimizer = None, **kwargs):
+            improved, stop = self.tracker.update(metrics["eval_loss"])
+            if improved:
+                # Schedule-free optimizers keep the weights worth evaluating in eval mode
+                if hasattr(optimizer, "eval"):
+                    optimizer.eval()
+                self.best_state = {
+                    n: p.detach().cpu().clone() for n, p in model.named_parameters() if p.requires_grad
+                }
+            if stop:
+                control.should_training_stop = True
+                tqdm.write(f"Stopping at epoch {state.epoch:.0f}: best eval loss {self.tracker.best:.4f}")
+
+        def on_train_end(self, args, state, control, model = None, **kwargs):
+            if self.best_state is None:
+                return
+            params = dict(model.named_parameters())
+            with torch.no_grad():
+                for name, saved in self.best_state.items():
+                    params[name].copy_(saved)
+
+    return BestWeightsStopper()
+
 # Full training loop
-def start_training(model, tokenizer, train_items, eval_items, epochs = 1, callbacks = None):
-    """Train the model and return the trainer stats. callbacks are optional transformers TrainerCallbacks."""
+def start_training(model, tokenizer, train_items, eval_items, epochs = 0, callbacks = None):
+    """Train the model and return the trainer stats. callbacks are optional transformers TrainerCallbacks.
+
+    epochs = 0 lets the data decide: settings come from plan_hyperparams and training stops early
+    once eval loss stops improving. A positive epochs trains exactly that many passes.
+    """
+    plan = plan_hyperparams(len(train_items))
+    callbacks = list(callbacks or [])
+    if epochs <= 0:
+        epochs = plan["max_epochs"]
+        callbacks.append(best_weights_stopper())
+    tqdm.write(f"Training up to {epochs} epochs at lr {plan['learning_rate']}")
+
     trainer = DecisionTrainer(
         model = model,
         processing_class = tokenizer,
@@ -102,13 +149,15 @@ def start_training(model, tokenizer, train_items, eval_items, epochs = 1, callba
         eval_dataset = eval_items,
         callbacks = callbacks,
         args = TrainingArguments(
-            per_device_train_batch_size = 16,
+            per_device_train_batch_size = plan["batch_size"],
             gradient_accumulation_steps = 1, # Use GA to mimic batch size!
             warmup_steps = 0.03, # below 1 this is a share of total steps, so short runs don't spend most of it warming up
             num_train_epochs = epochs,
             #max_steps = 240,
-            learning_rate = 2e-4,
-            lr_scheduler_type = "cosine",
+            learning_rate = plan["learning_rate"],
+            # Schedule-free AdamW needs no decay length, so stopping early doesn't leave the LR high
+            optim = "schedule_free_adamw",
+            lr_scheduler_type = "constant",
             weight_decay = 0.01,
             bf16 = is_bfloat16_supported(),
             fp16 = not is_bfloat16_supported(),
@@ -148,7 +197,7 @@ def save_adapter(model, tokenizer, out_dir):
     (out / "calibration.json").write_text(json.dumps(calibration, indent = 2))
 
 @app.function(image = image, gpu = "L4", timeout = 60 * 60 * 4, volumes = {"/outputs": vol})
-def train(rows = None, variant = "terse", merge = False, base = "convaiinnovations/laya", epochs = 1):
+def train(rows = None, variant = "terse", merge = False, base = "convaiinnovations/laya", epochs = 0):
     """Run all stages on the L4, then save the LoRA adapter to the volume."""
     with tqdm(total = len(STAGES), desc = "Overall", unit = "stage") as overall:
         overall.set_postfix_str(STAGES[0])
@@ -178,13 +227,13 @@ def train(rows = None, variant = "terse", merge = False, base = "convaiinnovatio
     tqdm.write(str(cal_metrics))
 
 @app.local_entrypoint()
-def main(data: str = "", variant: str = "terse", merge: bool = False, base: str = "", epochs: int = 1):
+def main(data: str = "", variant: str = "terse", merge: bool = False, base: str = "", epochs: int = 0):
     """Run training remotely, then download the LoRA adapter to ./lora.
 
     --data is a parquet from build_dataset.py; without it, train on typed-decisions.
     --variant picks the question set: terse (label list only) or policy.
     --base starts from a saved full model folder (such as ./merged) instead of Laya.
-    --epochs sets the number of passes over the training rows.
+    --epochs sets a fixed number of passes. The default 0 picks settings from the data size and stops early.
     --merge also saves the LoRA merged into the base model as a full model in ./merged.
     """
     rows = None

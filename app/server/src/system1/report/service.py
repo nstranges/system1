@@ -101,6 +101,8 @@ def scored_row(key: RowKey, records: list[PredRecord], subject: str) -> ReportRo
     latencies = [r.latency_ms for r in records if r.latency_ms is not None]
     row.accuracy, row.ci_low, row.ci_high = accuracy, low, high
     row.median_latency_ms = statistics.median(latencies) if latencies else None
+    p_golds = [r.p_gold for r in records if r.p_gold is not None]
+    row.avg_p_gold = statistics.fmean(p_golds) if p_golds else None
     return row
 
 
@@ -413,11 +415,22 @@ class _Progress:
 
 async def _run_trainer(providers: Providers, dataset_ref: str, config: dict, progress: _Progress) -> TrainingJob:
     # Trainers may block on the network, so they run off the event loop.
-    job = await asyncio.to_thread(providers.trainer.start, dataset_ref, config)
-    while job.status in ("queued", "running"):
-        progress.trainer(job.metrics.get("stage"), detail=job.metrics.get("detail"))
-        await asyncio.sleep(POLL_INTERVAL_S)
-        job = await asyncio.to_thread(providers.trainer.status, job.id)
+    starting = asyncio.ensure_future(asyncio.to_thread(providers.trainer.start, dataset_ref, config))
+    try:
+        job = await asyncio.shield(starting)
+    except asyncio.CancelledError:
+        # The run exists once start returns, so wait for it and stop it rather than leave it billing.
+        started = await starting
+        await asyncio.to_thread(providers.trainer.cancel, started.id)
+        raise
+    try:
+        while job.status in ("queued", "running"):
+            progress.trainer(job.metrics.get("stage"), detail=job.metrics.get("detail"))
+            await asyncio.sleep(POLL_INTERVAL_S)
+            job = await asyncio.to_thread(providers.trainer.status, job.id)
+    except asyncio.CancelledError:
+        await asyncio.to_thread(providers.trainer.cancel, job.id)
+        raise
     progress.trainer(None, done=True)
     return job
 

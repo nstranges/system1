@@ -1,6 +1,9 @@
 import { Check, Loader2 } from "lucide-react"
 import { useEffect, useRef, useState } from "react"
+import { toast } from "sonner"
+import { Button } from "@/components/ui/button"
 import { useApi } from "@/lib/api/client"
+import { readProblem } from "@/lib/api/types"
 import { LossDetails, readDetail } from "./LossDetails"
 import type { components } from "@/lib/api/schema"
 
@@ -57,6 +60,7 @@ export function TrainProgress({
   const [job, setJob] = useState<Job | null>(null)
   const [now, setNow] = useState(() => Date.now())
   const [trouble, setTrouble] = useState(false)
+  const [stopping, setStopping] = useState(false)
   const done = useRef(onDone)
   useEffect(() => {
     done.current = onDone
@@ -96,6 +100,23 @@ export function TrainProgress({
     }
   }, [api, jobId])
 
+  // The server ends the job as "cancelled" once the training run has actually stopped, so keep polling until then.
+  async function stop() {
+    setStopping(true)
+    try {
+      const { error, response } = await api.POST("/api/jobs/{job_id}/cancel", {
+        params: { path: { job_id: jobId } },
+      })
+      if (!response.ok) {
+        toast.error(readProblem(error).message)
+        setStopping(false)
+      }
+    } catch {
+      toast.error("We couldn't reach the server.")
+      setStopping(false)
+    }
+  }
+
   const active = job === null || ACTIVE.includes(job.status)
   useEffect(() => {
     if (!active) return
@@ -113,7 +134,7 @@ export function TrainProgress({
   }
 
   if (!active) {
-    const ok = job.status === "succeeded"
+    const ok = job.status === "succeeded" || job.status === "cancelled"
     return (
       <p
         role={ok ? "status" : "alert"}
@@ -188,6 +209,21 @@ export function TrainProgress({
         {job.status === "queued" ? "Queued. A GPU is being set up." : detail}{" "}
         Training can take several minutes; you can leave this page.
       </p>
+      <Button
+        variant="outline"
+        size="sm"
+        disabled={stopping}
+        onClick={() => void stop()}
+      >
+        {stopping ? (
+          <>
+            <Loader2 className="animate-spin" />
+            Stopping…
+          </>
+        ) : (
+          "Stop training"
+        )}
+      </Button>
       <LossDetails detail={readDetail(job.result)} />
       {trouble && (
         <p className="text-xs text-muted-foreground">

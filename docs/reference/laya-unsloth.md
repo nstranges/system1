@@ -62,7 +62,7 @@ All of it currently runs on `LocalLLaMA/typed-decisions` (subset `all`). Command
   - Runs as the Modal app `laya-training` on an L4 GPU, with the volume `laya-outputs`.
   - Fine-tunes a LoRA on Laya, splitting the data into separate train, per-epoch eval and calibration sets.
   - Saves the adapter and downloads it to `./lora`, which is gitignored. When `save_pretrained` isn't available, it falls back to raw trainable weights in `lora/trainable.pt`.
-  - Settings: lr 5e-5, batch 16, 2 epochs, LoRA rank 16.
+  - Settings: lr 5e-5, batch 16, 2 epochs, LoRA rank 16. (Superseded: with `EPOCHS=0`, the default, `adaptive.py` picks the epoch ceiling and lr from the row count, and training stops early on eval loss with schedule-free AdamW. A positive `EPOCHS` fixes the pass count.)
 - **`eval_laya.py` and `eval_lora.py`** (`make eval-laya`, `make eval-lora`): run on Modal and predict the test split with `FastDecisionModel.predict`. `eval_lora.py` rebuilds the `train.py` model and loads `lora/trainable.pt`.
 - **`eval_jev.py`** (`make eval-jev`): runs locally and calls `https://api.typesafe.ai/v1/systemone` with `TYPESAFE_API_KEY`, using 8 threads with retries on 429 and 5xx errors.
 - **`eval_common.py`:** shared scoring. Every answer is reduced to `{id, question, type, pred, gold, confidence, p_gold, correct}`. It reports accuracy, ECE (10 bins) and NLL, using the top *probability* as confidence, which follows our "use probabilities, not `confidence`" rule. Output goes to `results/<name>_{predictions.jsonl,summary.json}`.

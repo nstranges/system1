@@ -18,7 +18,7 @@ class Job(Base):
     kind: Mapped[str]  # generation | training
     status: Mapped[str] = mapped_column(
         default="queued"
-    )  # queued | running | succeeded | failed | preview | unavailable
+    )  # queued | running | succeeded | failed | cancelled | preview | unavailable
     progress: Mapped[float] = mapped_column(default=0.0)
     stage: Mapped[str | None] = mapped_column(default=None)
     message: Mapped[str | None] = mapped_column(default=None)

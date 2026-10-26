@@ -27,6 +27,17 @@ _running: set[str] = set()
 _waiters: dict[str, threading.Event] = {}
 
 RESTARTED = "The server restarted. Anything already saved was kept. Try again."
+STOPPED = "Training stopped."
+ACTIVE = ("queued", "running")
+
+# The task running each job in this process, so a stop request can reach it.
+_by_job: dict[str, asyncio.Task] = {}
+
+
+class NotCancellable(ApiError):
+    status_code = 409
+    code = "job_not_cancellable"
+    message = "This job can't be stopped."
 
 
 class JobContext:
@@ -111,6 +122,10 @@ async def run_job(session_factory: SessionFactory, job_id: str, work: JobWork) -
             ctx = JobContext(session, job_id)
             try:
                 result = await work(ctx)
+            except asyncio.CancelledError:
+                # A stop request, or the server shutting down. Record it, then let the cancellation finish.
+                _finish(session, job_id, "cancelled", STOPPED, ctx.result)
+                raise
             except Exception as exc:  # noqa: BLE001 - job boundary: nothing awaits this task, so any failure must be recorded on the job
                 _finish(session, job_id, "failed", _failure_message(exc), ctx.result)
             else:
@@ -131,7 +146,25 @@ def start_job(session_factory: SessionFactory, job_id: str, work: JobWork) -> No
         _running.add(job_id)
     task = asyncio.get_running_loop().create_task(run_job(session_factory, job_id, work))
     _tasks.add(task)
+    _by_job[job_id] = task
     task.add_done_callback(_tasks.discard)
+    task.add_done_callback(lambda _: _by_job.pop(job_id, None))
+
+
+def cancel_job(session: Session, principal: Principal, job_id: str) -> Job:
+    """Asks a running training job to stop. The job ends as "cancelled" once its work has unwound, so the caller
+    sees it still running until then. A job that has already ended is returned as it is.
+    Call it from the event loop thread: a task can only be cancelled safely from there."""
+    job = get_job(session, principal, job_id)
+    if job.kind != "training":
+        raise NotCancellable("Only a training run can be stopped.")
+    if job.status not in ACTIVE:
+        return job
+    task = _by_job.get(job_id)
+    if task is None:
+        raise NotCancellable("This run isn't going on this server, so it can't be stopped from here.")
+    task.cancel()
+    return job
 
 
 def wait_for_job(job_id: str, timeout: float = 10.0) -> None:
@@ -149,8 +182,6 @@ def fail_unfinished_jobs(engine: Engine) -> None:
     Assumes one server process: with several, a starting process would fail another's live jobs."""
     with Session(engine) as session:
         session.execute(
-            update(Job)
-            .where(Job.status.in_(("queued", "running")))
-            .values(status="failed", message=RESTARTED, finished_at=now())
+            update(Job).where(Job.status.in_(ACTIVE)).values(status="failed", message=RESTARTED, finished_at=now())
         )
         session.commit()

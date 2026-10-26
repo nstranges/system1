@@ -85,6 +85,8 @@ def run_project(payload):
         progress[call_id] = {"stage": name, **detail}
 
     base_call = evaluate_base.spawn(payload["test_rows"])  # runs on its own GPU while this one trains
+    # So the server can stop this call too when it stops the run: a cancelled parent doesn't cancel its children.
+    progress[f"{call_id}:base"] = base_call.object_id
 
     stage("preparing")
     model, tokenizer = model_config()

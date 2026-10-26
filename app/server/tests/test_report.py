@@ -81,6 +81,22 @@ class FinishingTrainer:
         return TrainingJob(id=job_id, status=self._status, message=self._message, adapter_ref=self._adapter_ref)
 
 
+class StuckTrainer:
+    """Never finishes, and notes when it is told to stop."""
+
+    def __init__(self):
+        self.cancelled: list[str] = []
+
+    def start(self, dataset_ref: str, config: dict) -> TrainingJob:
+        return TrainingJob(id="t-1", status="running", message="Training.")
+
+    def status(self, job_id: str) -> TrainingJob:
+        return TrainingJob(id=job_id, status="running", message="Training.")
+
+    def cancel(self, job_id: str) -> None:
+        self.cancelled.append(job_id)
+
+
 def _providers(trainer=None, sys1=None, jev=None) -> Providers:
     llm = FakeLLM([])
     return Providers(
@@ -496,6 +512,9 @@ class FakeRunner:
     def progress(self, call_id: str):
         return {"stage": "learning", "step": 5, "total_steps": 10, "history": [[1, 2.0], [5, 1.2]]}
 
+    def cancel(self, call_id: str) -> None:
+        pass
+
 
 def test_modal_trainer_scores_your_model_and_base_from_its_own_answers(client_for):
     runner = FakeRunner()
@@ -536,3 +555,72 @@ def test_sdk_runner_treats_the_builtin_timeout_as_still_running(monkeypatch):
 
     monkeypatch.setattr(modal.FunctionCall, "from_id", staticmethod(lambda call_id: Call()))
     assert SdkModalRunner("app", "fn", "progress").poll("fc-1") == ("running", None)
+
+
+def test_sdk_runner_cancel_terminates_the_run_and_its_base_scoring_call(monkeypatch):
+    import modal
+
+    from system1.adapters.modal_trainer import SdkModalRunner
+
+    cancelled: list[tuple[str, bool]] = []
+
+    class Call:
+        def __init__(self, call_id):
+            self.call_id = call_id
+
+        def cancel(self, terminate_containers):
+            cancelled.append((self.call_id, terminate_containers))
+
+    monkeypatch.setattr(modal.FunctionCall, "from_id", staticmethod(Call))
+    monkeypatch.setattr(modal.Dict, "from_name", staticmethod(lambda name, create_if_missing: {"fc-1:base": "fc-2"}))
+    SdkModalRunner("app", "fn", "progress").cancel("fc-1")
+    assert cancelled == [("fc-1", True), ("fc-2", True)]
+
+
+def test_stopping_a_training_run_stops_the_trainer_and_ends_the_job_cancelled(client_for):
+    trainer = StuckTrainer()
+    client = client_for("org_a", providers=_providers(trainer))
+    pid = _project(client)
+    job_id = client.post(f"/api/projects/{pid}/training").json()["job_id"]
+
+    res = client.post(f"/api/jobs/{job_id}/cancel")
+    assert res.status_code == 200
+    wait_for_job(job_id)
+
+    job = client.get(f"/api/jobs/{job_id}").json()
+    assert job["status"] == "cancelled" and job["message"] == "Training stopped."
+    assert trainer.cancelled == ["t-1"]
+    assert client.get(f"/api/projects/{pid}/report").json()["available"] is False
+
+
+def test_stopping_a_finished_job_changes_nothing(client_for):
+    trainer = FinishingTrainer("failed", message="It broke.")
+    client = client_for("org_a", providers=_providers(trainer))
+    pid = _project(client)
+    job = _train(client, pid)
+
+    res = client.post(f"/api/jobs/{job['id']}/cancel")
+    assert res.status_code == 200 and res.json()["status"] == "failed"
+
+
+def test_another_org_cannot_stop_a_job(client_for, tmp_path):
+    engine = make_engine(f"sqlite:///{tmp_path / 'shared.db'}")
+    trainer = StuckTrainer()
+    owner = client_for("org_a", providers=_providers(trainer), engine=engine)
+    other = client_for("org_b", engine=engine)
+    pid = _project(owner)
+    job_id = owner.post(f"/api/projects/{pid}/training").json()["job_id"]
+
+    assert other.post(f"/api/jobs/{job_id}/cancel").status_code == 404
+    assert owner.post(f"/api/jobs/{job_id}/cancel").status_code == 200
+    wait_for_job(job_id)
+
+
+def test_scored_row_averages_the_probability_on_the_right_answer():
+    records = [
+        report_service.PredRecord(id="a", gold="x", pred="x", p_gold=0.9, correct=True),
+        report_service.PredRecord(id="b", gold="x", pred="y", p_gold=0.3),
+        report_service.PredRecord(id="c", gold="x", pred="x", correct=True),  # no probability: left out of the mean
+    ]
+    row = report_service.scored_row("sys1", records, "Your model")
+    assert row.avg_p_gold == pytest.approx(0.6)

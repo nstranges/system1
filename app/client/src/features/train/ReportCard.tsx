@@ -26,11 +26,7 @@ function score(row: Row): string {
     if (row.status === "errored") return "Too many failed answers"
     return row.message ?? "Not available"
   }
-  const range =
-    row.ci_low != null && row.ci_high != null
-      ? ` (${pct(row.ci_low)}–${pct(row.ci_high)})`
-      : ""
-  return `${pct(row.accuracy)}${range}`
+  return pct(row.accuracy)
 }
 
 export function ReportCard({ report }: { report: Report }) {
@@ -55,6 +51,7 @@ export function ReportCard({ report }: { report: Report }) {
             <TableRow>
               <TableHead>Model</TableHead>
               <TableHead>Right answers</TableHead>
+              <TableHead>Avg. probability on the right answer</TableHead>
               <TableHead className="text-right">Typical speed</TableHead>
             </TableRow>
           </TableHeader>
@@ -69,6 +66,9 @@ export function ReportCard({ report }: { report: Report }) {
                       {row.message}
                     </span>
                   )}
+                </TableCell>
+                <TableCell>
+                  {row.avg_p_gold != null ? pct(row.avg_p_gold) : "–"}
                 </TableCell>
                 <TableCell className="text-right">
                   {row.median_latency_ms != null

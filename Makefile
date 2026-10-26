@@ -17,7 +17,7 @@ LIMIT_ARG := $(if $(LIMIT),--limit $(LIMIT),)
 # Override with DATA=path, or DATA= to fall back to LocalLLaMA/typed-decisions.
 DATA     ?= data/banking/banking77_decisions.parquet
 DATA_ARG := $(if $(DATA),--data $(DATA),)
-EPOCHS   ?= 1
+EPOCHS   ?= 0
 
 # Load .env into each recipe's shell. The shell parses the file, so keys never pass
 # through make and never appear in echoed commands.

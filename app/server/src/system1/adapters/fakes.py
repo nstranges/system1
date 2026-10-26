@@ -80,6 +80,9 @@ class FakeTrainer:
             id=job_id, status="succeeded", message="Done.", adapter_ref=f"fake-adapter/{job_id}", metrics={"loss": 0.1}
         )
 
+    def cancel(self, job_id: str) -> None:
+        self._polls.pop(job_id, None)
+
 
 class PreviewTrainer:
     """Plays a short, believable training run that ends as `preview`, never as a real model.
@@ -95,6 +98,9 @@ class PreviewTrainer:
         self._duration_s = duration_s
         self._clock = clock
         self._jobs: dict[str, dict[str, float]] = {}
+
+    def cancel(self, job_id: str) -> None:
+        self._jobs.pop(job_id, None)
 
     def start(self, dataset_ref: str, config: dict) -> TrainingJob:
         job_id = f"preview-job-{uuid.uuid4().hex[:12]}"
@@ -122,3 +128,6 @@ class UnavailableTrainer:
 
     def status(self, job_id: str) -> TrainingJob:
         return TrainingJob(id=job_id, status="unavailable", message=self.message)
+
+    def cancel(self, job_id: str) -> None:
+        pass
