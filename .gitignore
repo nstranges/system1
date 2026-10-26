@@ -231,3 +231,4 @@ app/server/.data/
 app/client/dist/
 app/client/node_modules/
 merged/
+data/generated/

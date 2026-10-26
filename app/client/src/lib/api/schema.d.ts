@@ -776,8 +776,6 @@ export interface components {
       detail: string
       /** Est Minutes */
       est_minutes: number
-      /** Est Cost Usd */
-      est_cost_usd: number
       /** Examples */
       examples?: number | null
     }
@@ -909,8 +907,6 @@ export interface components {
       examples: number
       /** Est Minutes */
       est_minutes: number
-      /** Est Cost Usd */
-      est_cost_usd: number
     }
     /** ExampleOut */
     ExampleOut: {

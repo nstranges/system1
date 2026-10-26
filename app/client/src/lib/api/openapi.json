@@ -2245,10 +2245,6 @@
             "type": "number",
             "title": "Est Minutes"
           },
-          "est_cost_usd": {
-            "type": "number",
-            "title": "Est Cost Usd"
-          },
           "examples": {
             "anyOf": [
               {
@@ -2262,14 +2258,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "action_id",
-          "kind",
-          "title",
-          "detail",
-          "est_minutes",
-          "est_cost_usd"
-        ],
+        "required": ["action_id", "kind", "title", "detail", "est_minutes"],
         "title": "ConfirmEvent"
       },
       "ConfirmOut": {
@@ -2535,14 +2524,10 @@
           "est_minutes": {
             "type": "integer",
             "title": "Est Minutes"
-          },
-          "est_cost_usd": {
-            "type": "number",
-            "title": "Est Cost Usd"
           }
         },
         "type": "object",
-        "required": ["examples", "est_minutes", "est_cost_usd"],
+        "required": ["examples", "est_minutes"],
         "title": "Estimate"
       },
       "ExampleOut": {

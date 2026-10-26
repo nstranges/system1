@@ -272,7 +272,7 @@ Everything in the Oct 21 plan's Global Constraints still applies. These are adde
   - It calls `check_budget` first.
   - Each finished batch is saved with `add_examples(source="generated")`, so a failure keeps earlier batches.
   - It records usage.
-- **Estimates:** `estimate(targets) -> {examples, est_minutes, est_cost_usd}` uses `settings.est_cost_per_example_usd`.
+- **Estimates:** `estimate(targets) -> {examples, est_minutes}` (no cost estimate: it was a guess, not a measurement).
 - **Routes:**
   - `POST /api/projects/{id}/generate/estimate`
   - `POST /api/projects/{id}/generate`, which takes `{targets}` and returns `{job_id}`. The client calls it only after its confirmation card.

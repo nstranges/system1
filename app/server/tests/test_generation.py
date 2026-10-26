@@ -173,7 +173,6 @@ def test_estimate_defaults_to_filling_each_bucket(client_for):
     assert client.post(f"/api/projects/{pid}/generate/estimate", json={}).json() == {
         "examples": 60,
         "est_minutes": 2,
-        "est_cost_usd": 1.2,
     }
 
 

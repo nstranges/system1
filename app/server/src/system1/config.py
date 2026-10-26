@@ -40,13 +40,16 @@ class Settings(BaseSettings):
     modal_progress_dict: str = "system1-progress"
     training_epochs: int = 1
 
+    # Which writer drafts generated examples: our own prompt loop, or NVIDIA NeMo Data Designer.
+    generator: Literal["simple", "data_designer"] = "data_designer"
+    generator_model: str = "claude-haiku-5-5"
+
     agent_model: str = "claude-sonnet-5-5"
     agent_effort: str = "medium"
 
     org_daily_token_cap: int = 3_000_000
     max_input_chars: int = 6000
     auto_threshold: float = 0.8
-    est_cost_per_example_usd: float = 0.02
 
     playbook_path: str = ".claude/skills/system1-onboard/playbook.md"
     static_dir: str | None = None

@@ -222,7 +222,7 @@ function ProjectCard({
 
   const stage = normalizeStage(project.stage) ?? "define"
   return (
-    <Card className="h-full transition-colors hover:bg-muted/50">
+    <Card className="relative h-full transition-colors hover:bg-muted/50">
       <CardHeader>
         {renaming ? (
           <Input
@@ -243,7 +243,13 @@ function ProjectCard({
           />
         ) : (
           <CardTitle>
-            <Link to={`/app/p/${project.id}/${stage}`}>{project.name}</Link>
+            {/* The pseudo-element stretches the link over the whole card; the action buttons sit above it. */}
+            <Link
+              to={`/app/p/${project.id}/${stage}`}
+              className="after:absolute after:inset-0"
+            >
+              {project.name}
+            </Link>
           </CardTitle>
         )}
         <CardDescription>
@@ -253,7 +259,7 @@ function ProjectCard({
           Created {new Date(project.created_at).toLocaleDateString()}
         </p>
         {confirming ? (
-          <div className="flex items-center gap-2 text-sm">
+          <div className="relative flex items-center gap-2 text-sm">
             <span>Delete this project and its examples?</span>
             <Button
               size="sm"
@@ -273,7 +279,7 @@ function ProjectCard({
             </Button>
           </div>
         ) : (
-          <div className="flex gap-1">
+          <div className="relative flex gap-1">
             <Button
               size="sm"
               variant="ghost"

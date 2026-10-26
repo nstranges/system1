@@ -32,7 +32,7 @@ class JobStarted(BaseModel):
 def estimate(project_id: str, body: GenerateIn, principal: PrincipalDep, session: SessionDep) -> service.Estimate:
     project = get_project(session, principal, project_id)
     _, targets = service.resolve_targets(session, project, body.targets)
-    return service.estimate(get_settings(), targets)
+    return service.estimate(targets)
 
 
 # async so the job starts on the server's event loop; the client calls this only after its confirmation card.

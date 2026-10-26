@@ -260,7 +260,7 @@ async def _run(name: str, args: BaseModel, ctx: AgentContext) -> tuple[str, list
         if args.count is not None:
             targets = generation.targets_for_count(ctx.session, ctx.project, args.count)
         _, wanted = generation.resolve_targets(ctx.session, ctx.project, targets)
-        estimate = generation.estimate(ctx.settings, wanted)
+        estimate = generation.estimate(wanted)
         action = _pending(ctx, "generation", {"targets": wanted})
         event = ConfirmEvent(
             action_id=action.id,
@@ -268,7 +268,6 @@ async def _run(name: str, args: BaseModel, ctx: AgentContext) -> tuple[str, list
             title=f"Write {estimate.examples} practice examples",
             detail="An AI writes them from your buckets and guidelines, and checks how sure it is of each one, so you can review them before training.",
             est_minutes=estimate.est_minutes,
-            est_cost_usd=estimate.est_cost_usd,
             examples=estimate.examples,
         )
         return "A confirmation card was shown. Nothing has started. Wait for the user.", [event]
@@ -280,7 +279,6 @@ async def _run(name: str, args: BaseModel, ctx: AgentContext) -> tuple[str, list
             title="Train your own model",
             detail="Trains a small model on your examples and checks it against held-out ones.",
             est_minutes=TRAINING_ESTIMATE_MINUTES,
-            est_cost_usd=0.0,
         )
         return "A confirmation card was shown. Nothing has started. Wait for the user.", [event]
     if isinstance(args, GoToStage):

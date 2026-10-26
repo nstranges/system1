@@ -13,6 +13,7 @@ from system1.contracts.decisions import DecisionProvider
 from system1.contracts.generation import ExampleGenerator
 from system1.contracts.llm import LLM
 from system1.contracts.training import Trainer
+from system1.generation.designer import DataDesignerGenerator
 from system1.generation.simple import SimpleGenerator
 
 
@@ -52,7 +53,10 @@ def build_providers(settings: Settings) -> Providers:
         ),
     }
     trainer = trainers[settings.trainer]()
-    return Providers(jev=jev, sys1=sys1, llm=llm, trainer=trainer, generator=SimpleGenerator(llm))
+    generator: ExampleGenerator = SimpleGenerator(llm)
+    if settings.generator == "data_designer" and settings.llm_provider != "fake":
+        generator = DataDesignerGenerator(llm, settings.anthropic_api_key, settings.generator_model)
+    return Providers(jev=jev, sys1=sys1, llm=llm, trainer=trainer, generator=generator)
 
 
 def get_providers(request: Request) -> Providers:

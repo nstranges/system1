@@ -148,9 +148,10 @@ class SimpleGenerator:
                 kept += len(batch) if saved is None else saved
         return out, tokens
 
-    async def _batch(
-        self, policy: Policy, context: str, samples: list[str], bucket: Option, ask: int, seen: set[str]
-    ) -> tuple[list[GeneratedExample], int]:
+    async def _write(
+        self, policy: Policy, context: str, samples: list[str], bucket: Option, ask: int
+    ) -> tuple[list[str], int]:
+        """Write `ask` candidate inputs for the bucket and return them with the tokens used."""
         target = f"Target bucket: {bucket.key} ({bucket.name})"
         written, used = await self._llm.structured(
             system=_WRITE_SYSTEM,
@@ -160,8 +161,14 @@ class SimpleGenerator:
             ),
             schema=GeneratedInputs,
         )
+        return written.inputs, used
+
+    async def _batch(
+        self, policy: Policy, context: str, samples: list[str], bucket: Option, ask: int, seen: set[str]
+    ) -> tuple[list[GeneratedExample], int]:
+        written, used = await self._write(policy, context, samples, bucket, ask)
         fresh: list[str] = []
-        for text in written.inputs:
+        for text in written:
             text = text.strip()
             key = _words(text)
             if text and key not in seen and not leaks(text, policy.options):
