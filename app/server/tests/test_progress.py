@@ -160,9 +160,12 @@ def test_flagship_progress(client_for):
     pid = client.post("/api/projects", json={"name": "T", "template_id": FLAGSHIP}).json()["id"]
     p = _progress(client, pid)
     s = _stages(p)
+    assert s["data"] == ("done", "Built with exact rules")
     assert s["review"] == ("done", "Labelled by exact rules")
     assert s["train"][0] == "done" and s["train"][1].startswith("Your model: ")
     assert p["accuracy"] is not None and p["jev_accuracy"] is not None
+    # Nothing is left to add or check, so the first open step is Use.
+    assert p["next"] == "use"
 
 
 def test_key_marks_use_done(client_for):

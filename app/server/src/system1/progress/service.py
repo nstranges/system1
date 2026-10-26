@@ -42,6 +42,7 @@ def progress(session: Session, project: Project) -> ProjectProgress:
     total = sum(counts["total"] for counts in health.per_bucket.values())
     short = len(health.below_minimum)
     accuracy = _accuracy(report, "sys1")
+    flagship = _is_flagship(project)
     states: dict[StageId, StageState] = {}
 
     if len(policy.options) < 2:
@@ -56,12 +57,15 @@ def progress(session: Session, project: Project) -> ProjectProgress:
 
     if not define_done:
         states["data"] = StageState(id="data", status="blocked", note="Define your buckets first")
+    elif flagship:
+        # The flagship's labels come from exact rules and its results are recorded, so it has no examples to add.
+        states["data"] = StageState(id="data", status="done", note="Built with exact rules")
     elif total > 0 and short == 0:
         states["data"] = StageState(id="data", status="done", note=f"{total} examples")
     else:
         states["data"] = StageState(id="data", status="ready", note=_data_note(total, short))
 
-    if _is_flagship(project):
+    if flagship:
         states["review"] = StageState(id="review", status="done", note="Labelled by exact rules")
     elif total == 0:
         states["review"] = StageState(id="review", status="blocked", note="Add examples first")
