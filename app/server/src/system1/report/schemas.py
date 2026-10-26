@@ -41,6 +41,11 @@ class ReportDetails(BaseModel):
     # Where "your model" came from: the trainer that ran and the adapter it produced, if any.
     trainer: str | None = None
     adapter_ref: str | None = None
+    # The trainer's last progress report ({step, total_steps, epoch, history, eval_history}) and its final metrics.
+    training: dict | None = None
+    training_metrics: dict = Field(default_factory=dict)
+    train_examples: int | None = None
+    training_seconds: float | None = None
 
 
 class Report(BaseModel):

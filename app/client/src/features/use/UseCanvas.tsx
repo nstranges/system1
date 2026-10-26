@@ -7,11 +7,13 @@ import {
   readProblem,
   type ApiKeyCreated,
   type ApiKeyOut,
+  type PolicyOut,
   type Project,
   type Sample,
   type TrainedModel,
 } from "@/lib/api/types"
 import { ModelList } from "@/features/models/ModelList"
+import { TryCanvas } from "@/features/playground/TryCanvas"
 import { snippets, type SnippetLang } from "./snippets"
 
 const LANES = [
@@ -43,9 +45,11 @@ function sampleInput(s: Sample | undefined): string {
 
 export function UseCanvas({
   project,
+  policy,
   onProject,
 }: {
   project: Project
+  policy: PolicyOut
   onProject: (p: Project) => void
 }) {
   const api = useApi()
@@ -151,10 +155,15 @@ export function UseCanvas({
 
   return (
     <div className="space-y-6">
-      <div>
-        <h2 className="text-xl font-semibold tracking-tight">Use it</h2>
+      <TryCanvas project={project} policy={policy} />
+
+      <div className="border-t pt-6">
+        <h2 className="text-xl font-semibold tracking-tight">
+          Connect it to your system
+        </h2>
         <p className="text-sm text-muted-foreground">
-          Send your own text here from your own system, and get a decision back.
+          Call the endpoint from your own app with a key, and get a decision
+          back.
         </p>
       </div>
 

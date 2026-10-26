@@ -1472,6 +1472,18 @@ export interface components {
       trainer?: string | null
       /** Adapter Ref */
       adapter_ref?: string | null
+      /** Training */
+      training?: {
+        [key: string]: unknown
+      } | null
+      /** Training Metrics */
+      training_metrics?: {
+        [key: string]: unknown
+      }
+      /** Train Examples */
+      train_examples?: number | null
+      /** Training Seconds */
+      training_seconds?: number | null
     }
     /** ReportRow */
     ReportRow: {

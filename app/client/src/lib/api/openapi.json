@@ -3964,6 +3964,45 @@
               }
             ],
             "title": "Adapter Ref"
+          },
+          "training": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Training"
+          },
+          "training_metrics": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Training Metrics"
+          },
+          "train_examples": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Train Examples"
+          },
+          "training_seconds": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Training Seconds"
           }
         },
         "type": "object",

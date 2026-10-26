@@ -536,3 +536,44 @@ def test_sdk_runner_treats_the_builtin_timeout_as_still_running(monkeypatch):
 
     monkeypatch.setattr(modal.FunctionCall, "from_id", staticmethod(lambda call_id: Call()))
     assert SdkModalRunner("app", "fn", "progress").poll("fc-1") == ("running", None)
+
+
+def test_jev_row_is_named_for_what_it_was_given(client_for):
+    client = client_for("org_a", providers=_providers())
+    pid = _project(client)
+    _train(client, pid)
+    assert _rows(client.get(f"/api/projects/{pid}/report").json())["jev"]["label"] == "Jev with your buckets"
+
+    policy = {"decision_question": "Where does it go?", "options": OPTIONS, "guidelines": ["Refunds go to billing."]}
+    assert client.put(f"/api/projects/{pid}/policy", json={"policy": policy}).status_code == 200
+    _train(client, pid)
+    assert _rows(client.get(f"/api/projects/{pid}/report").json())["jev"]["label"] == "Jev with your guidelines"
+
+
+def test_changed_questions_ask_jev_again_instead_of_reusing_answers(client_for, monkeypatch):
+    jev = CountingJev()
+    client = client_for("org_a", providers=_providers(jev=jev))
+    pid = _project(client, per_bucket=50)
+    _train(client, pid)
+    first = jev.calls
+    _train(client, pid)
+    assert jev.calls == first  # same question: answers already paid for are reused
+
+    from system1.gateway import service as gateway_service
+
+    real = gateway_service.questions_for
+    monkeypatch.setattr(
+        "system1.report.evaluation.questions_for",
+        lambda project, policy, lane: {**real(project, policy, lane), "format": {"type": "choice"}},
+    )
+    _train(client, pid)
+    assert jev.calls == 2 * first
+
+
+def test_the_card_keeps_the_learning_curve_and_run_facts(client_for):
+    client = client_for("org_a", providers=_providers(trainer=ModalTrainer(FakeRunner()), sys1=None))
+    pid = _project(client, per_bucket=50)
+    _train(client, pid)
+    details = client.get(f"/api/projects/{pid}/report").json()["details"]
+    assert details["training"]["history"] == [[1, 2.0], [5, 1.2]]
+    assert details["train_examples"] == 80 and details["training_seconds"] >= 0
