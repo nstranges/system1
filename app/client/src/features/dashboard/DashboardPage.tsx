@@ -1,15 +1,22 @@
 import { useCallback, useEffect, useState } from "react"
-import { Pencil, Trash2 } from "lucide-react"
+import { MoreHorizontal, Pencil, Trash2 } from "lucide-react"
 import { Link, useNavigate } from "react-router"
 import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
 import {
   Card,
+  CardAction,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 import { Input } from "@/components/ui/input"
 import { Skeleton } from "@/components/ui/skeleton"
 import { useApi } from "@/lib/api/client"
@@ -20,7 +27,9 @@ import {
   type TrainedModel,
 } from "@/lib/api/types"
 import { ModelList } from "@/features/models/ModelList"
-import { normalizeStage } from "@/features/workspace/stages"
+import { STAGES, normalizeStage } from "@/features/workspace/stages"
+import { useProgress } from "@/features/workspace/useProgress"
+import { ProgressStrip } from "./ProgressStrip"
 import { NewProjectDialog, type StartMode } from "./NewProjectDialog"
 
 export function DashboardPage() {
@@ -125,7 +134,9 @@ export function DashboardPage() {
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h1 className="text-2xl font-semibold tracking-tight">Your projects</h1>
+        <h1 className="text-[28px] leading-tight font-semibold tracking-[-0.015em]">
+          Projects
+        </h1>
         <Button onClick={() => setDialogOpen(true)}>New project</Button>
       </div>
       {projects === null ? (
@@ -202,7 +213,7 @@ export function DashboardPage() {
   )
 }
 
-// A project card: click to open, with rename and delete beside it. Delete asks first, and only an admin can do it.
+// A project card: click to open, with rename and delete in its actions menu. Delete asks first, and only an admin can do it.
 function ProjectCard({
   project,
   onChanged,
@@ -212,6 +223,7 @@ function ProjectCard({
   onChanged: (next: Project | null) => void
 }) {
   const api = useApi()
+  const { progress } = useProgress(project.id)
   const [renaming, setRenaming] = useState(false)
   const [name, setName] = useState(project.name)
   const [confirming, setConfirming] = useState(false)
@@ -265,6 +277,14 @@ function ProjectCard({
   }
 
   const stage = normalizeStage(project.stage) ?? "define"
+  const target = progress?.next ?? stage
+  const nextLabel = STAGES.find((s) => s.id === progress?.next)?.label
+  const status = project.live_model_label
+    ? `Live: ${project.live_model_label}`
+    : nextLabel
+      ? `Next: ${nextLabel}`
+      : "All steps done"
+  const pct = (v: number) => `${Math.round(v * 100)}%`
   return (
     <Card className="relative h-full transition-colors hover:bg-muted/50">
       <CardHeader>
@@ -286,24 +306,57 @@ function ProjectCard({
             onBlur={() => !busy && void rename()}
           />
         ) : (
-          <CardTitle>
-            {/* The pseudo-element stretches the link over the whole card; the action buttons sit above it. */}
+          <CardTitle className="text-lg">
+            {/* The pseudo-element stretches the link over the whole card; the actions menu sits above it. */}
             <Link
-              to={`/app/p/${project.id}/${stage}`}
+              to={`/app/p/${project.id}/${target}`}
               className="after:absolute after:inset-0"
             >
               {project.name}
             </Link>
           </CardTitle>
         )}
-        <CardDescription>
-          {project.description ?? "Open to keep working"}
-        </CardDescription>
-        <p className="text-xs text-muted-foreground">
-          Created {new Date(project.created_at).toLocaleDateString()}
-        </p>
-        {confirming ? (
-          <div className="relative flex items-center gap-2 text-sm">
+        <CardAction className="relative z-10">
+          <DropdownMenu>
+            <DropdownMenuTrigger
+              render={
+                <Button
+                  size="icon-sm"
+                  variant="ghost"
+                  aria-label="Project actions"
+                />
+              }
+            >
+              <MoreHorizontal />
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem
+                onClick={() => {
+                  setName(project.name)
+                  setRenaming(true)
+                }}
+              >
+                <Pencil /> Rename
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setConfirming(true)}>
+                <Trash2 /> Delete
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </CardAction>
+      </CardHeader>
+      <CardContent className="space-y-2">
+        <ProgressStrip progress={progress} />
+        <p className="text-[13px] text-muted-foreground">{status}</p>
+        {progress?.accuracy != null && (
+          <p className="text-[13px] tabular-nums">
+            Your model {pct(progress.accuracy)}
+            {progress.jev_accuracy != null &&
+              `, Jev ${pct(progress.jev_accuracy)}`}
+          </p>
+        )}
+        {confirming && (
+          <div className="relative flex flex-wrap items-center gap-2 pt-1 text-sm">
             <span>Delete this project and its examples?</span>
             <Button
               size="sm"
@@ -322,28 +375,8 @@ function ProjectCard({
               Keep
             </Button>
           </div>
-        ) : (
-          <div className="relative flex gap-1">
-            <Button
-              size="sm"
-              variant="ghost"
-              onClick={() => {
-                setName(project.name)
-                setRenaming(true)
-              }}
-            >
-              <Pencil /> Rename
-            </Button>
-            <Button
-              size="sm"
-              variant="ghost"
-              onClick={() => setConfirming(true)}
-            >
-              <Trash2 /> Delete
-            </Button>
-          </div>
         )}
-      </CardHeader>
+      </CardContent>
     </Card>
   )
 }
