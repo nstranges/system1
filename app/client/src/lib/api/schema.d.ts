@@ -435,6 +435,23 @@ export interface paths {
     patch?: never
     trace?: never
   }
+  "/api/projects/{project_id}/improve": {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /** Get Improve Summary */
+    get: operations["get_improve_summary_api_projects__project_id__improve_get"]
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
   "/api/projects/{project_id}/agent/messages": {
     parameters: {
       query?: never
@@ -623,6 +640,97 @@ export interface paths {
     patch?: never
     trace?: never
   }
+  "/api/models": {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /** List Models */
+    get: operations["list_models_api_models_get"]
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  "/api/models/{model_id}/live": {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    /**
+     * Make Live
+     * @description Points the project's sys1 lane at this model. Changing what answers live calls is an admin's call, like keys.
+     */
+    post: operations["make_live_api_models__model_id__live_post"]
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  "/api/models/{model_id}/compare": {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /** Compare */
+    get: operations["compare_api_models__model_id__compare_get"]
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  "/api/projects/{project_id}/batches": {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    /**
+     * Check Batch
+     * @description Runs your live model on every row of the file. Unsure answers then wait in the inbox.
+     */
+    post: operations["check_batch_api_projects__project_id__batches_post"]
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  "/api/projects/{project_id}/batches/{batch_id}/download": {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /** Download Batch */
+    get: operations["download_batch_api_projects__project_id__batches__batch_id__download_get"]
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
   "/v1/systemone": {
     parameters: {
       query?: never
@@ -701,6 +809,11 @@ export interface components {
         | components["schemas"]["NotOf-Output"]
       )[]
     }
+    /** Body_check_batch_api_projects__project_id__batches_post */
+    Body_check_batch_api_projects__project_id__batches_post: {
+      /** File */
+      file: string
+    }
     /** Body_upload_context_api_projects__project_id__context_post */
     Body_upload_context_api_projects__project_id__context_post: {
       /** File */
@@ -710,6 +823,15 @@ export interface components {
     Body_upload_examples_api_projects__project_id__uploads_post: {
       /** File */
       file: string
+    }
+    /** BucketChange */
+    BucketChange: {
+      /** Key */
+      key: string
+      /** Before */
+      before: number
+      /** After */
+      after: number
     }
     /** CanvasEvent */
     CanvasEvent: {
@@ -768,10 +890,32 @@ export interface components {
       /** Options */
       options: string[]
     }
+    /** Comparison */
+    Comparison: {
+      candidate: components["schemas"]["ModelOut"]
+      live: components["schemas"]["ModelOut"] | null
+      /** Same Test Set */
+      same_test_set: boolean
+      /** Diff */
+      diff: number | null
+      /** Improved */
+      improved: components["schemas"]["BucketChange"][]
+      /** Worsened */
+      worsened: components["schemas"]["BucketChange"][]
+      /** Recommend */
+      recommend: boolean
+      /** Sentence */
+      sentence: string
+    }
     /** ConfigOut */
     ConfigOut: {
       /** Sys1 Available */
       sys1_available: boolean
+      /**
+       * Sys1 Needs Live Model
+       * @default false
+       */
+      sys1_needs_live_model: boolean
     }
     /** ConfirmEvent */
     ConfirmEvent: {
@@ -976,6 +1120,13 @@ export interface components {
         [key: string]: number
       } | null
     }
+    /** Guess */
+    Guess: {
+      /** Key */
+      key: string
+      /** P */
+      p: number
+    }
     /** HTTPValidationError */
     HTTPValidationError: {
       /** Detail */
@@ -1033,6 +1184,17 @@ export interface components {
       /** Created Buckets */
       created_buckets: string[]
     }
+    /** ImproveSummary */
+    ImproveSummary: {
+      /** Waiting */
+      waiting: number
+      /** Ready */
+      ready: number
+      /** Live Checked */
+      live_checked: number
+      /** Live Right */
+      live_right: number
+    }
     /** InboxItem */
     InboxItem: {
       /** Decision Id */
@@ -1055,6 +1217,11 @@ export interface components {
       created_at: string
       /** How Sure */
       how_sure?: number | null
+      /**
+       * Guesses
+       * @default []
+       */
+      guesses: components["schemas"]["Guess"][]
     }
     /** InboxOut */
     InboxOut: {
@@ -1207,6 +1374,41 @@ export interface components {
       /** Stage */
       stage?: string | null
     }
+    /**
+     * ModelOut
+     * @description A trained model: a training run that produced an adapter. Its id is the run's report card id.
+     */
+    ModelOut: {
+      /** Id */
+      id: string
+      /** Project Id */
+      project_id: string
+      /** Project Name */
+      project_name: string
+      /**
+       * Created At
+       * Format: date-time
+       */
+      created_at: string
+      /** Live */
+      live: boolean
+      /** Accuracy */
+      accuracy: number | null
+      /** Jev Accuracy */
+      jev_accuracy: number | null
+      /** Test Examples */
+      test_examples: number | null
+      /** Median Latency Ms */
+      median_latency_ms: number | null
+      /** Test Set Version */
+      test_set_version: number
+      /** Corrections Used */
+      corrections_used: number | null
+      /** Checked */
+      checked: number
+      /** Checked Right */
+      checked_right: number
+    }
     /** NotOf */
     "NotOf-Input": {
       /** Not */
@@ -1351,6 +1553,8 @@ export interface components {
       default_lane: string
       /** Live Model Label */
       live_model_label: string | null
+      /** Live Model Id */
+      live_model_id: string | null
       /**
        * Created At
        * Format: date-time
@@ -1414,6 +1618,20 @@ export interface components {
       trainer?: string | null
       /** Adapter Ref */
       adapter_ref?: string | null
+      /** Training */
+      training?: {
+        [key: string]: unknown
+      } | null
+      /** Training Metrics */
+      training_metrics?: {
+        [key: string]: unknown
+      }
+      /** Train Examples */
+      train_examples?: number | null
+      /** Training Seconds */
+      training_seconds?: number | null
+      /** Corrections Used */
+      corrections_used?: number | null
     }
     /** ReportRow */
     ReportRow: {
@@ -2649,6 +2867,37 @@ export interface operations {
       }
     }
   }
+  get_improve_summary_api_projects__project_id__improve_get: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        project_id: string
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["ImproveSummary"]
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"]
+        }
+      }
+    }
+  }
   send_message_api_projects__project_id__agent_messages_post: {
     parameters: {
       query?: never
@@ -3035,6 +3284,166 @@ export interface operations {
         }
         content: {
           "application/json": components["schemas"]["Report"]
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"]
+        }
+      }
+    }
+  }
+  list_models_api_models_get: {
+    parameters: {
+      query?: {
+        project_id?: string | null
+      }
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["ModelOut"][]
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"]
+        }
+      }
+    }
+  }
+  make_live_api_models__model_id__live_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        model_id: string
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["ProjectOut"]
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"]
+        }
+      }
+    }
+  }
+  compare_api_models__model_id__compare_get: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        model_id: string
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["Comparison"]
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"]
+        }
+      }
+    }
+  }
+  check_batch_api_projects__project_id__batches_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        project_id: string
+      }
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        "multipart/form-data": components["schemas"]["Body_check_batch_api_projects__project_id__batches_post"]
+      }
+    }
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["JobStarted"]
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"]
+        }
+      }
+    }
+  }
+  download_batch_api_projects__project_id__batches__batch_id__download_get: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        project_id: string
+        batch_id: string
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": unknown
         }
       }
       /** @description Validation Error */

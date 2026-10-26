@@ -1,6 +1,7 @@
 import asyncio
 import json
 import statistics
+import time
 from collections.abc import Sequence
 
 from sqlalchemy import func, select
@@ -26,6 +27,7 @@ from system1.jobs.service import JobContext
 from system1.projects import service as project_service
 from system1.projects.models import Project
 from system1.providers import Providers
+from system1.registry import service as registry_service
 from system1.report.evaluation import PredRecord, evaluate_jev, evaluate_lane, load_examples, load_test_examples
 from system1.report.models import ReportCard
 from system1.report.schemas import Confusion, Report, ReportDetails, ReportRow, RowKey, Verdict
@@ -75,6 +77,13 @@ def _serves(provider: object | None, adapter_ref: str) -> bool:
     return provider is not None and getattr(provider, "adapter_ref", None) == adapter_ref
 
 
+def jev_label(policy: Policy) -> str:
+    """Jev's row is named for what it was actually given: without guidelines, rules or bucket descriptions it only had
+    the question and the bucket names."""
+    guided = policy.guidelines or policy.rules or any(o.covers or o.excludes for o in policy.options)
+    return LABELS["jev"] if guided else "Jev with your buckets"
+
+
 def _names(policy: Policy, keys: Sequence[str]) -> str:
     by_key = {o.key: o.name for o in policy.options}
     return ", ".join(by_key.get(k, k) for k in keys)
@@ -87,10 +96,10 @@ def _pct(value: float | None) -> str:
 # ---- scoring a card ----------------------------------------------------------------------------------------------
 
 
-def scored_row(key: RowKey, records: list[PredRecord], subject: str) -> ReportRow:
+def scored_row(key: RowKey, records: list[PredRecord], subject: str, label: str | None = None) -> ReportRow:
     n = len(records)
     errors = sum(r.error is not None for r in records)
-    row = ReportRow(key=key, label=LABELS[key], status="ok", n=n, errors=errors)
+    row = ReportRow(key=key, label=label or LABELS[key], status="ok", n=n, errors=errors)
     if errors:
         row.message = f"{subject} errored on {errors} of {n}"
     if n == 0:
@@ -170,14 +179,14 @@ def _verdict(
             winner="sys1",
             sentence=(
                 f"Your model got {_pct(sys1.accuracy)} of your test examples right, "
-                f"ahead of Jev with your guidelines at {_pct(jev.accuracy)}."
+                f"ahead of {jev.label} at {_pct(jev.accuracy)}."
             ),
         )
     elif high < 0:
         winner = Verdict(
             winner="jev",
             sentence=(
-                f"Jev with your guidelines got {_pct(jev.accuracy)} right, ahead of your model at {_pct(sys1.accuracy)}. "
+                f"{jev.label} got {_pct(jev.accuracy)} right, ahead of your model at {_pct(sys1.accuracy)}. "
                 "More examples, or clearer guidelines, are the next step."
             ),
         )
@@ -185,7 +194,7 @@ def _verdict(
         winner = Verdict(
             winner="inconclusive",
             sentence=(
-                f"Your model ({_pct(sys1.accuracy)}) and Jev with your guidelines ({_pct(jev.accuracy)}) "
+                f"Your model ({_pct(sys1.accuracy)}) and {jev.label} ({_pct(jev.accuracy)}) "
                 "are too close to call on these test examples."
             ),
         )
@@ -200,10 +209,14 @@ def assemble(
     *,
     preview: bool = False,
     skip_few_check: bool = False,
+    labels: dict[RowKey, str] | None = None,
 ) -> tuple[list[ReportRow], Verdict, ReportDetails]:
-    """Rows in card order, the verdict and the details. `sys1_note` stands in for your model's row when it has no records."""
+    """Rows in card order, the verdict and the details. `sys1_note` stands in for your model's row when it has no records.
+    `labels` overrides a row's name, such as when Jev had no guidelines to go on."""
     subjects: dict[RowKey, str] = {"sys1": "Your model", "jev": "Jev", "jev_labels": "Jev", "base": "The base model"}
-    by_key: dict[RowKey, ReportRow] = {k: scored_row(k, r, subjects[k]) for k, r in records.items()}
+    by_key: dict[RowKey, ReportRow] = {
+        k: scored_row(k, r, subjects[k], (labels or {}).get(k)) for k, r in records.items()
+    }
     if sys1_note is not None and "sys1" not in records:
         by_key["sys1"] = sys1_note
     rows = [by_key[k] for k in ROW_ORDER if k in by_key]
@@ -293,8 +306,10 @@ def start_training(
             {"id": e.id, "split": e.split, "input": e.input, "label": e.label} for e in load_examples(session, project)
         ]
     summary: dict = {"copied": copied, "skipped_stale": stale}
+    train_examples = sum(e.split != "test" for e in load_examples(session, project))
 
     async def work(ctx: JobContext) -> dict:
+        started = time.monotonic()
         ctx.result = dict(summary)
         own = ctx.session.get(Project, project_id)
         if own is None:  # deleted while it ran
@@ -343,9 +358,17 @@ def start_training(
             sys1_note = ReportRow(key="sys1", label=LABELS["sys1"], status="unavailable", message=trained.message)
 
         test_per_bucket = _test_per_bucket(ctx.session, own, policy)
-        rows, verdict, details = assemble(records, sys1_note, test_per_bucket, preview=trained.status == "preview")
+        rows, verdict, details = assemble(
+            records, sys1_note, test_per_bucket, preview=trained.status == "preview", labels={"jev": jev_label(policy)}
+        )
         details.trainer = type(providers.trainer).__name__
         details.adapter_ref = trained.adapter_ref
+        # Kept on the card so the learning curve and run facts stay after the job is gone from the page.
+        details.training = progress.detail
+        details.training_metrics = {k: v for k, v in trained.metrics.items() if k not in ("stage", "detail")}
+        details.train_examples = train_examples
+        details.training_seconds = time.monotonic() - started
+        details.corrections_used = copied
         card = ReportCard(
             org_id=org_id,
             project_id=project_id,
@@ -360,6 +383,7 @@ def start_training(
         )
         ctx.session.add(card)
         ctx.session.commit()
+        registry_service.adopt_if_first(ctx.session, own, card)
         # Only a trainer that produced a model ends the job as "succeeded".
         if trained.status == "preview":
             ctx.final_status, ctx.message = "preview", PREVIEW_MESSAGE

@@ -46,7 +46,7 @@ def init_db(engine: Engine) -> None:
     from system1.report import models as report_models  # noqa: F401
 
     Base.metadata.create_all(engine)
-    for table in ("feedback", "projects"):
+    for table in ("decisions", "feedback", "projects"):
         _add_missing_columns(engine, table)
 
 

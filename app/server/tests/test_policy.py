@@ -56,7 +56,10 @@ def test_build_questions_policy_variant_shape():
     assert spec["type"] == "choice"
     assert list(spec["criteria"]) == ["b", "a"]
     assert spec["instructions"] == {"question": "Which team?", "precedence": [r.text for r in policy.rules]}
-    assert spec["criteria"]["a"] == {"covers": ["x"], "excludes": []}
+    assert spec["criteria"]["a"] == {"name": "A", "covers": ["x"]}
+    assert spec["criteria"]["b"] == {"name": "B", "excludes": ["y"]}
+    bare = make_policy(options=[Option(key="a", name="A"), Option(key="b", name="B")])
+    assert build_questions(bare, "policy")["decision"]["criteria"] == {"a": "A", "b": "B"}
     labels = build_questions(policy, "labels")["decision"]
     assert labels["criteria"] == {"a": "A", "b": "B"}
 

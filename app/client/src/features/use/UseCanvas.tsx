@@ -7,9 +7,13 @@ import {
   readProblem,
   type ApiKeyCreated,
   type ApiKeyOut,
+  type PolicyOut,
   type Project,
   type Sample,
+  type TrainedModel,
 } from "@/lib/api/types"
+import { ModelList } from "@/features/models/ModelList"
+import { TryCanvas } from "@/features/playground/TryCanvas"
 import { snippets, type SnippetLang } from "./snippets"
 
 const LANES = [
@@ -41,9 +45,11 @@ function sampleInput(s: Sample | undefined): string {
 
 export function UseCanvas({
   project,
+  policy,
   onProject,
 }: {
   project: Project
+  policy: PolicyOut
   onProject: (p: Project) => void
 }) {
   const api = useApi()
@@ -52,6 +58,8 @@ export function UseCanvas({
   const [keys, setKeys] = useState<ApiKeyOut[]>([])
   const [created, setCreated] = useState<ApiKeyCreated | null>(null)
   const [sys1, setSys1] = useState(false)
+  const [needsLive, setNeedsLive] = useState(false)
+  const [models, setModels] = useState<TrainedModel[]>([])
   const [sample, setSample] = useState<Sample | undefined>()
   const [lang, setLang] = useState<SnippetLang>("curl")
   const [busy, setBusy] = useState(false)
@@ -64,18 +72,36 @@ export function UseCanvas({
     setKeys(data ?? [])
   }, [api, project.id])
 
+  const loadModels = useCallback(async () => {
+    const { data } = await api.GET("/api/models", {
+      params: { query: { project_id: project.id } },
+    })
+    setModels(data ?? [])
+  }, [api, project.id])
+
+  // A training run that finished since the workspace loaded may have made a model live.
+  useEffect(() => {
+    void api
+      .GET("/api/projects/{project_id}", {
+        params: { path: { project_id: project.id } },
+      })
+      .then(({ data }) => data && onProject(data))
+  }, [api, onProject, project.id])
+
   useEffect(() => {
     void loadKeys()
-    void api
-      .GET("/api/config")
-      .then(({ data }) => setSys1(data?.sys1_available ?? false))
+    void loadModels()
+    void api.GET("/api/config").then(({ data }) => {
+      setSys1(data?.sys1_available ?? false)
+      setNeedsLive(data?.sys1_needs_live_model ?? false)
+    })
     // Only flagship templates have samples; others answer 404, so use the generic text.
     void api
       .GET("/api/projects/{project_id}/samples", {
         params: { path: { project_id: project.id } },
       })
       .then(({ data }) => setSample(data?.[0]))
-  }, [api, loadKeys, project.id])
+  }, [api, loadKeys, loadModels, project.id])
 
   async function createKey() {
     setBusy(true)
@@ -118,27 +144,58 @@ export function UseCanvas({
     else toast.error(readProblem(error).message)
   }
 
+  // When sys1 answers with each project's own model, it's usable only once this project has a live one.
+  const sys1Ready = sys1 && (!needsLive || project.live_model_id != null)
+  const notReady =
+    sys1 && needsLive
+      ? "This project has no live model yet. Train one in the Train step."
+      : "Your model isn't connected yet."
   const endpoint = `${window.location.origin}/v1/systemone`
   const code = snippets(endpoint, sampleInput(sample))[lang]
 
   return (
     <div className="space-y-6">
-      <div>
-        <h2 className="text-xl font-semibold tracking-tight">Use it</h2>
+      <TryCanvas project={project} policy={policy} />
+
+      <div className="border-t pt-6">
+        <h2 className="text-xl font-semibold tracking-tight">
+          Connect it to your system
+        </h2>
         <p className="text-sm text-muted-foreground">
-          Send your own text here from your own system, and get a decision back.
+          Call the endpoint from your own app with a key, and get a decision
+          back.
         </p>
       </div>
+
+      {models.length > 0 && (
+        <section className="space-y-2">
+          <h3 className="font-medium">Your models</h3>
+          <p className="text-sm text-muted-foreground">
+            Each time you train, the new model is kept here. The live one is the
+            one your endpoint uses.
+          </p>
+          <div className="rounded-lg border">
+            <ModelList
+              models={models}
+              showProject={false}
+              onLive={(p) => {
+                onProject(p)
+                void loadModels()
+              }}
+            />
+          </div>
+        </section>
+      )}
 
       <section className="space-y-2">
         <h3 className="font-medium">Which one answers</h3>
         <div className="grid gap-2 sm:grid-cols-3">
           {LANES.map((l) => {
-            const disabled = l.needsModel && !sys1
+            const disabled = l.needsModel && !sys1Ready
             return (
               <label
                 key={l.id}
-                title={disabled ? "Your model isn't connected yet." : undefined}
+                title={disabled ? notReady : undefined}
                 className={`flex items-center gap-2 rounded-lg border p-3 text-sm ${
                   disabled ? "opacity-50" : "cursor-pointer"
                 }`}
@@ -155,13 +212,12 @@ export function UseCanvas({
             )
           })}
         </div>
-        {!sys1 && (
+        {!sys1Ready && (
           <p className="text-xs text-muted-foreground">
-            Your model isn't connected yet, so only Jev with your rules is
-            available.
+            {notReady} Until then, only Jev with your rules is available.
           </p>
         )}
-        {sys1 && (
+        {sys1Ready && (
           <p className="text-xs text-muted-foreground">
             Auto uses your model when it is sure, and Jev with your rules when
             it isn't. Those answers are flagged for review.

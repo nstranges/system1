@@ -12,6 +12,7 @@ from system1.decisions import service
 from system1.decisions.models import Decision
 from system1.errors import NotFound
 from system1.projects.service import get_project
+from system1.registry.service import list_models
 
 router = APIRouter(dependencies=[Depends(get_principal)])
 
@@ -28,6 +29,11 @@ class FeedbackOut(BaseModel):
     status: str = "recorded"
 
 
+class Guess(BaseModel):
+    key: str
+    p: float
+
+
 class InboxItem(BaseModel):
     decision_id: str
     state: str | dict | list
@@ -36,10 +42,21 @@ class InboxItem(BaseModel):
     created_at: datetime
     # The gap between the top two answers; lowest is least sure. None for items flagged for review.
     how_sure: float | None = None
+    # The model's top answers, most likely first, so the right bucket is usually one click away.
+    guesses: list[Guess] = []
 
 
 class InboxOut(BaseModel):
     items: list[InboxItem]
+
+
+class ImproveSummary(BaseModel):
+    waiting: int
+    # Corrections since the last training that the next one will learn from.
+    ready: int
+    # Answers from the live model that your team checked, and how many it had right.
+    live_checked: int
+    live_right: int
 
 
 class PoolOut(BaseModel):
@@ -67,6 +84,7 @@ def get_inbox(project_id: str, principal: PrincipalDep, session: SessionDep) -> 
                 lane=d.lane,
                 created_at=d.created_at,
                 how_sure=how_sure,
+                guesses=[Guess(key=k, p=p) for k, p in service.guesses(d)],
             )
             for d, how_sure in service.inbox(session, project)
         ]
@@ -77,3 +95,15 @@ def get_inbox(project_id: str, principal: PrincipalDep, session: SessionDep) -> 
 def get_training_pool(project_id: str, principal: PrincipalDep, session: SessionDep) -> PoolOut:
     project = get_project(session, principal, project_id)
     return PoolOut(count=service.training_pool_count(session, project))
+
+
+@router.get("/projects/{project_id}/improve")
+def get_improve_summary(project_id: str, principal: PrincipalDep, session: SessionDep) -> ImproveSummary:
+    project = get_project(session, principal, project_id)
+    live = next((m for m in list_models(session, principal, project.id) if m.live), None)
+    return ImproveSummary(
+        waiting=len(service.inbox(session, project)),
+        ready=service.training_pool_count(session, project),
+        live_checked=live.checked if live else 0,
+        live_right=live.checked_right if live else 0,
+    )

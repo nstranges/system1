@@ -5,6 +5,8 @@ versions doesn't call Jev again. Jev calls never count against the Anthropic tok
 """
 
 import asyncio
+import hashlib
+import json
 from collections.abc import Callable
 from typing import Literal, NamedTuple
 
@@ -15,7 +17,7 @@ from sqlalchemy.orm import Session
 from system1.datasets.models import Example
 from system1.domain.policy import Policy
 from system1.errors import ApiError
-from system1.gateway.service import run_lane
+from system1.gateway.service import questions_for, run_lane
 from system1.projects.models import Project
 from system1.projects.service import latest_policy
 from system1.providers import Providers
@@ -110,7 +112,11 @@ async def evaluate_lane(
     policy, policy_version = policy_and_version or latest_policy(session, project)
     project_id = project.id
     examples = load_test_examples(session, project)
-    cache_row = _cached(session, project_id, test_set_version, policy_version, lane) if use_cache else None
+    # Saved answers are reused only for the exact question Jev saw, so a change in how questions are written
+    # (not just a new policy version) asks again instead of scoring Jev on answers to a different question.
+    asked = json.dumps(questions_for(project, policy, lane), sort_keys=True)
+    cache_key = f"{lane}:{hashlib.sha256(asked.encode()).hexdigest()[:16]}"
+    cache_row = _cached(session, project_id, test_set_version, policy_version, cache_key) if use_cache else None
     saved: dict[str, dict] = dict(cache_row.results_json) if cache_row else {}
     fetched: dict[str, dict | str] = {}  # example id -> answer, or the reason there was none
     gate = gate or asyncio.Semaphore(MAX_IN_FLIGHT)
@@ -120,14 +126,14 @@ async def evaluate_lane(
         if not (use_cache and new):
             return
         merged = {**saved, **new}
-        row = _cached(session, project_id, test_set_version, policy_version, lane)
+        row = _cached(session, project_id, test_set_version, policy_version, cache_key)
         if row is None:
             session.add(
                 JevEval(
                     project_id=project_id,
                     test_set_version=test_set_version,
                     policy_version=policy_version,
-                    lane=lane,
+                    lane=cache_key,
                     results_json=merged,
                 )
             )

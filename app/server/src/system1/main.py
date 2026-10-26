@@ -12,6 +12,7 @@ from system1.agent.router import router as agent_router
 from system1.auth.deps import get_principal
 from system1.auth.principal import Principal
 from system1.auth.verifier import ClerkVerifier, RejectAllVerifier, TokenVerifier
+from system1.batch.router import router as batch_router
 from system1.config import get_settings
 from system1.context.router import router as context_router
 from system1.datasets.router import router as datasets_router
@@ -27,11 +28,14 @@ from system1.jobs.router import router as jobs_router
 from system1.jobs.service import fail_unfinished_jobs
 from system1.projects.router import router as projects_router
 from system1.providers import Providers, build_providers, get_providers
+from system1.registry.router import router as registry_router
 from system1.report.router import router as report_router
 
 
 class ConfigOut(BaseModel):
     sys1_available: bool
+    # True when sys1 answers with each project's own live model, so a project without one can't use it yet.
+    sys1_needs_live_model: bool = False
 
 
 log = logging.getLogger(__name__)
@@ -84,7 +88,10 @@ def create_app(
 
     @api.get("/config", dependencies=[Depends(get_principal)])
     def config(providers: Annotated[Providers, Depends(get_providers)]) -> ConfigOut:
-        return ConfigOut(sys1_available=providers.sys1 is not None)
+        return ConfigOut(
+            sys1_available=providers.sys1 is not None,
+            sys1_needs_live_model=getattr(providers.sys1, "serves_adapters", False),
+        )
 
     api.include_router(projects_router)
     api.include_router(context_router)
@@ -97,6 +104,8 @@ def create_app(
     api.include_router(jobs_router)
     api.include_router(drafting_router)
     api.include_router(report_router)
+    api.include_router(registry_router)
+    api.include_router(batch_router)
     app.include_router(api)
     app.include_router(public_router)
     return app

@@ -13,7 +13,13 @@ import {
 import { Input } from "@/components/ui/input"
 import { Skeleton } from "@/components/ui/skeleton"
 import { useApi } from "@/lib/api/client"
-import { readProblem, type Project, type Template } from "@/lib/api/types"
+import {
+  readProblem,
+  type Project,
+  type Template,
+  type TrainedModel,
+} from "@/lib/api/types"
+import { ModelList } from "@/features/models/ModelList"
 import { normalizeStage } from "@/features/workspace/stages"
 import { NewProjectDialog, type StartMode } from "./NewProjectDialog"
 
@@ -26,6 +32,21 @@ export function DashboardPage() {
   const [dialogOpen, setDialogOpen] = useState(false)
 
   const [loadError, setLoadError] = useState<string | null>(null)
+  const [models, setModels] = useState<TrainedModel[] | null>(null)
+
+  // Loaded on its own, so the projects still show if this one fails.
+  const loadModels = useCallback(async () => {
+    try {
+      const { data } = await api.GET("/api/models")
+      setModels(data ?? [])
+    } catch {
+      setModels([])
+    }
+  }, [api])
+
+  useEffect(() => {
+    void loadModels()
+  }, [loadModels])
 
   const load = useCallback(async () => {
     setLoadError(null)
@@ -138,6 +159,29 @@ export function DashboardPage() {
             />
           ))}
         </div>
+      )}
+
+      {models && models.length > 0 && (
+        <section className="space-y-3">
+          <div>
+            <h2 className="text-xl font-semibold tracking-tight">
+              Your models
+            </h2>
+            <p className="text-sm text-muted-foreground">
+              Every model your team has trained. The live one answers its
+              project's endpoint.
+            </p>
+          </div>
+          <Card>
+            <CardContent>
+              <ModelList
+                models={models}
+                showProject
+                onLive={() => void loadModels()}
+              />
+            </CardContent>
+          </Card>
+        </section>
       )}
 
       <NewProjectDialog

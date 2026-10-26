@@ -16,6 +16,7 @@ import { useHealth } from "@/features/data/HealthPanel"
 import { recalledJob, rememberJob } from "@/features/data/JobProgress"
 import { TrainProgress } from "./TrainProgress"
 import { ReportCard } from "./ReportCard"
+import { RunInsights } from "./RunInsights"
 
 type Report = components["schemas"]["Report"]
 
@@ -157,7 +158,12 @@ export function TrainCanvas({
               This is your last report. It updates when the run finishes.
             </p>
           )}
-          <ReportCard report={report} />
+          <div className="space-y-4">
+            <ReportCard report={report} />
+            {!report.is_fixture && (
+              <RunInsights report={report} names={names} />
+            )}
+          </div>
         </div>
       )}
     </div>

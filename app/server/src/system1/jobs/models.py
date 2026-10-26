@@ -15,7 +15,7 @@ class Job(Base):
     id: Mapped[str] = mapped_column(primary_key=True, default=new_id)
     org_id: Mapped[str] = mapped_column(index=True)
     project_id: Mapped[str] = mapped_column(ForeignKey("projects.id"), index=True)
-    kind: Mapped[str]  # generation | training
+    kind: Mapped[str]  # generation | training | batch
     status: Mapped[str] = mapped_column(
         default="queued"
     )  # queued | running | succeeded | failed | cancelled | preview | unavailable

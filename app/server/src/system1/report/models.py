@@ -36,7 +36,7 @@ class JevEval(Base):
     project_id: Mapped[str] = mapped_column(ForeignKey("projects.id"), index=True)
     test_set_version: Mapped[int]
     policy_version: Mapped[int]
-    lane: Mapped[str]  # jev | jev_labels
+    lane: Mapped[str]  # "jev:<hash of the question asked>" or "jev_labels:<hash>"
     # example id -> {"label", "p_gold", "latency_ms"}. Examples Jev failed on are left out, so a rerun retries them.
     results_json: Mapped[dict] = mapped_column(JSON)
     created_at: Mapped[datetime] = mapped_column(default=now)

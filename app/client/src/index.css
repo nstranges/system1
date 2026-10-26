@@ -35,6 +35,8 @@
   --color-primary-foreground: var(--primary-foreground);
   --color-primary: var(--primary);
   --color-jev: var(--jev);
+  --color-series-1: var(--series-1);
+  --color-series-2: var(--series-2);
   --color-jev-foreground: var(--jev-foreground);
   --color-popover-foreground: var(--popover-foreground);
   --color-popover: var(--popover);
@@ -52,6 +54,9 @@
 }
 
 :root {
+  /* Chart series, checked for colour-blind separation on the light card. */
+  --series-1: #2a78d6;
+  --series-2: #eb6834;
   --background: oklch(1 0 0);
   --foreground: oklch(0.145 0 0);
   --card: oklch(1 0 0);
@@ -89,6 +94,9 @@
 }
 
 .dark {
+  /* The same two hues, stepped and checked for the dark card. */
+  --series-1: #3987e5;
+  --series-2: #d95926;
   --background: oklch(0.145 0 0);
   --foreground: oklch(0.985 0 0);
   --card: oklch(0.205 0 0);
