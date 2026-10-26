@@ -5,8 +5,11 @@ from typing import Annotated
 
 from fastapi import APIRouter, Depends, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 from sqlalchemy import Engine
+from starlette.exceptions import HTTPException as StarletteHTTPException
+from starlette.types import Scope
 
 from system1.agent.router import router as agent_router
 from system1.auth.deps import get_principal
@@ -40,6 +43,19 @@ class ConfigOut(BaseModel):
 
 
 log = logging.getLogger(__name__)
+
+
+class ClientFiles(StaticFiles):
+    """The built client. A path that isn't a file gets index.html, so the client's router can handle deep links."""
+
+    async def get_response(self, path: str, scope: Scope):
+        try:
+            return await super().get_response(path, scope)
+        except StarletteHTTPException as exc:
+            # An unknown API path should stay a 404, not turn into the app's HTML.
+            if exc.status_code != 404 or path.split("/")[0] in ("api", "v1"):
+                raise
+            return await super().get_response("index.html", scope)
 
 
 def create_app(
@@ -110,6 +126,9 @@ def create_app(
     api.include_router(batch_router)
     app.include_router(api)
     app.include_router(public_router)
+    # Mounted last so every API route matches first. In development Vite serves the client instead.
+    if settings.static_dir:
+        app.mount("/", ClientFiles(directory=settings.static_dir, html=True), name="client")
     return app
 
 

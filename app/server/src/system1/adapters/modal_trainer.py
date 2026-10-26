@@ -23,6 +23,10 @@ class ModalRunner(Protocol):
         """Stops the run and the GPU work it started. Does nothing for a call that has ended."""
         ...
 
+    def discard(self, adapter_ref: str) -> None:
+        """Deletes the adapter folder a finished run saved. Does nothing if it's already gone."""
+        ...
+
 
 class SdkModalRunner:
     """Calls the function deployed by `make modal-deploy`. Needs the `modal` extra and Modal's own auth."""
@@ -68,6 +72,18 @@ class SdkModalRunner:
             if target:
                 modal.FunctionCall.from_id(target).cancel(terminate_containers=True)
 
+    def discard(self, adapter_ref: str) -> None:
+        import modal
+
+        # Only folders run_project wrote (pipeline.py's adapter_folder rule), so a ref can't reach anything else.
+        volume, _, path = adapter_ref.partition(":")
+        if volume != "laya-outputs" or not path.startswith("projects/") or ".." in path.split("/"):
+            raise ValueError(f"not a project adapter: {adapter_ref!r}")
+        try:
+            modal.Volume.from_name(volume).remove_file(path, recursive=True)
+        except FileNotFoundError:  # already gone, which is the state we wanted
+            pass
+
 
 class ModalTrainer:
     """Trains a LoRA on Modal (pipeline.py), and scores it and the untrained base on the test examples there."""
@@ -104,6 +120,10 @@ class ModalTrainer:
 
     def cancel(self, job_id: str) -> None:
         self._runner.cancel(job_id)
+
+    def discard(self, adapter_ref: str) -> None:
+        """Deletes a retired model's adapter from the volume."""
+        self._runner.discard(adapter_ref)
 
     def status(self, job_id: str) -> TrainingJob:
         state, value = self._runner.poll(job_id)

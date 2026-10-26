@@ -1,0 +1,13 @@
+.env
+.venv
+**/node_modules
+**/.venv
+**/__pycache__
+app/client/dist
+app/server/.data
+lora
+merged
+data
+results
+agent-prompts
+.git

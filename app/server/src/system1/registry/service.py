@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 
 from system1.auth.principal import Principal
 from system1.decisions.models import Decision, Feedback
-from system1.errors import NotFound
+from system1.errors import ApiError, NotFound
 from system1.projects.models import Project
 from system1.registry.schemas import BucketChange, Comparison, ModelOut
 from system1.report.models import ReportCard
@@ -11,6 +11,14 @@ from system1.report.models import ReportCard
 # Bucket changes smaller than this are noise on a typical test set, so they aren't listed.
 BUCKET_CHANGE_MIN = 0.05
 BUCKETS_SHOWN = 5
+# Each model is a GPU training run plus an adapter kept on the Modal volume, so an org keeps only this many.
+MAX_MODELS_PER_ORG = 2
+
+
+class ModelLimitReached(ApiError):
+    status_code = 409
+    code = "model_limit_reached"
+    message = f"You can keep {MAX_MODELS_PER_ORG} models, and they're all live. Delete a project to train another."
 
 
 def is_model(card: ReportCard) -> bool:
@@ -113,6 +121,42 @@ def adopt_if_first(session: Session, project: Project, card: ReportCard) -> None
     if project.live_model_id is None and is_model(card):
         project.live_model_id = card.id
         session.commit()
+
+
+def _org_models(session: Session, org_id: str) -> list[tuple[ReportCard, Project]]:
+    """The org's models, oldest first."""
+    stmt = (
+        select(ReportCard, Project)
+        .join(Project, Project.id == ReportCard.project_id)
+        .where(Project.org_id == org_id, ReportCard.is_preview.is_(False))
+        .order_by(ReportCard.created_at)
+    )
+    return [(card, project) for card, project in session.execute(stmt).all() if is_model(card)]
+
+
+def check_room(session: Session, org_id: str) -> None:
+    """A new run will replace the oldest model that isn't live, so it can start unless every kept model is live."""
+    models = _org_models(session, org_id)
+    if len(models) >= MAX_MODELS_PER_ORG and all(project.live_model_id == card.id for card, project in models):
+        raise ModelLimitReached()
+
+
+def retire_extra(session: Session, org_id: str, keep_id: str) -> list[str]:
+    """Drops the oldest models that aren't live until the org is back at the limit, and returns their adapter refs.
+
+    The card stays, so past decisions and the report history still resolve; it just stops counting as a model."""
+    models = _org_models(session, org_id)
+    retired: list[str] = []
+    for card, project in models:
+        if len(models) - len(retired) <= MAX_MODELS_PER_ORG:
+            break
+        if card.id == keep_id or project.live_model_id == card.id:
+            continue
+        retired.append(card.details_json["adapter_ref"])
+        # Reassigned, not mutated, so SQLAlchemy sees the JSON column change.
+        card.details_json = {**card.details_json, "adapter_ref": None}
+    session.commit()
+    return retired
 
 
 def live_adapter(session: Session, project: Project) -> str | None:
