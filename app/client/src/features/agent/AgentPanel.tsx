@@ -14,7 +14,18 @@ import { Composer } from "./Composer"
 import { MessageList } from "./MessageList"
 import { useAgent, type CanvasEvent } from "./useAgent"
 
-const STARTERS = ["Look over my rules", "Try it on an example", "Add a rule"]
+const STARTERS: Record<string, string[]> = {
+  define: [
+    "Draft my buckets",
+    "Look over my guidelines",
+    "What makes a good bucket?",
+  ],
+  data: ["Generate practice examples", "How many examples do I need?"],
+  review: ["Which buckets look weakest?"],
+  train: ["Train my model", "Explain the report card"],
+  use: ["How do I call the endpoint?"],
+  improve: ["What should I fix first?"],
+}
 
 export function AgentPanel({
   project,
@@ -52,6 +63,7 @@ export function AgentPanel({
     if (events.length === 0) void send(firstMessage)
   }, [loaded, firstMessage, events.length, send, navigate, location.pathname])
 
+  const starters = STARTERS[stage] ?? []
   const empty = loaded && !loadError && events.length === 0 && !firstMessage
 
   return (
@@ -79,9 +91,9 @@ export function AgentPanel({
                 ? `I've loaded ${project.name} with its rules. Want me to look it over, or try it on a few examples?`
                 : "Tell me about a decision your team makes again and again, or ask me to help you find one."}
             </p>
-            {project.template_id && (
+            {starters.length > 0 && (
               <div className="flex flex-wrap gap-2">
-                {STARTERS.map((s) => (
+                {starters.map((s) => (
                   <Button
                     key={s}
                     size="sm"
