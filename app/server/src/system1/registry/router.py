@@ -35,6 +35,26 @@ def make_live(model_id: str, principal: PrincipalDep, session: SessionDep) -> Pr
     return ProjectOut.model_validate(project, from_attributes=True)
 
 
+@router.delete("/{model_id}/live")
+def turn_off(model_id: str, principal: PrincipalDep, session: SessionDep) -> ProjectOut:
+    """Takes this model off the project's endpoint, which then has no live model until one is picked."""
+    service.get_model(session, principal, model_id)
+    if principal.org_role != "admin":
+        raise Forbidden()
+    project = service.turn_off(session, principal, model_id)
+    return ProjectOut.model_validate(project, from_attributes=True)
+
+
+@router.delete("/{model_id}")
+def delete_model(model_id: str, principal: PrincipalDep, session: SessionDep) -> ProjectOut:
+    """Returns the project, since deleting its live model leaves its endpoint with none."""
+    service.get_model(session, principal, model_id)
+    if principal.org_role != "admin":
+        raise Forbidden()
+    project = service.delete_model(session, principal, model_id)
+    return ProjectOut.model_validate(project, from_attributes=True)
+
+
 @router.get("/{model_id}/compare")
 def compare(model_id: str, principal: PrincipalDep, session: SessionDep) -> Comparison:
     return service.compare(session, principal, model_id)

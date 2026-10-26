@@ -671,7 +671,31 @@ export interface paths {
      * @description Points the project's sys1 lane at this model. Changing what answers live calls is an admin's call, like keys.
      */
     post: operations["make_live_api_models__model_id__live_post"]
-    delete?: never
+    /**
+     * Turn Off
+     * @description Takes this model off the project's endpoint, which then has no live model until one is picked.
+     */
+    delete: operations["turn_off_api_models__model_id__live_delete"]
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  "/api/models/{model_id}": {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post?: never
+    /**
+     * Delete Model
+     * @description Returns the project, since deleting its live model leaves its endpoint with none.
+     */
+    delete: operations["delete_model_api_models__model_id__delete"]
     options?: never
     head?: never
     patch?: never
@@ -3395,6 +3419,68 @@ export interface operations {
     }
   }
   make_live_api_models__model_id__live_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        model_id: string
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["ProjectOut"]
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"]
+        }
+      }
+    }
+  }
+  turn_off_api_models__model_id__live_delete: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        model_id: string
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["ProjectOut"]
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"]
+        }
+      }
+    }
+  }
+  delete_model_api_models__model_id__delete: {
     parameters: {
       query?: never
       header?: never

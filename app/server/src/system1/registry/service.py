@@ -96,6 +96,26 @@ def make_live(session: Session, principal: Principal, model_id: str) -> Project:
     return project
 
 
+def turn_off(session: Session, principal: Principal, model_id: str) -> Project:
+    """Clears the project's live model if it is this one; turning off a model that isn't live changes nothing."""
+    card, project = get_model(session, principal, model_id)
+    if project.live_model_id == card.id:
+        project.live_model_id = None
+        session.commit()
+    return project
+
+
+def delete_model(session: Session, principal: Principal, model_id: str) -> Project:
+    """Removes the run and its report card. A live model stops serving first. Decisions it already made keep
+    their record, and the adapter's files are left where the trainer stored them."""
+    card, project = get_model(session, principal, model_id)
+    if project.live_model_id == card.id:
+        project.live_model_id = None
+    session.delete(card)
+    session.commit()
+    return project
+
+
 def adopt_if_first(session: Session, project: Project, card: ReportCard) -> None:
     """A project's first trained model goes live by itself; later ones wait for someone to pick them."""
     if project.live_model_id is None and is_model(card):
