@@ -6,6 +6,9 @@ system1 turns a decision a team makes again and again into its own small, fine-t
 
 By Thomas Michalski and Nicholas Stranges. The product thinking is in [docs/product-brief.md](docs/product-brief.md).
 
+## Test it
+Upload a small data subset from /examples/finance_complaints_small.csv to the frontend. Derived from BANKING77.
+
 ## The problem
 
 General decision models are good at everyone's decisions and so-so at any one team's. Jev cannot be fine-tuned on customer data, so a team can only shape it through the question, the instructions and the bucket descriptions it sends. That leaves three gaps:
