@@ -1,16 +1,11 @@
-import { ChevronDown } from "lucide-react"
 import { useState } from "react"
-import { Badge } from "@/components/ui/badge"
+import { BucketChip, BucketSwatch } from "@/components/BucketChip"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
 import type { components } from "@/lib/api/schema"
+import { bucketIndex } from "@/lib/buckets"
 import type { PolicyOption } from "@/lib/api/types"
+import { cn } from "@/lib/utils"
 
 export type ReviewExample = components["schemas"]["ExampleOut"]
 const LONG = 280
@@ -27,12 +22,18 @@ export function SortCard({
   example,
   buckets,
   busy,
+  active,
+  index,
   onAgree,
   onMove,
 }: {
   example: ReviewExample
   buckets: PolicyOption[]
   busy: boolean
+  // The card the keyboard shortcuts act on.
+  active: boolean
+  // Its position in the list, for the id the list scrolls to.
+  index: number
   onAgree: () => void
   onMove: (to: string) => void
 }) {
@@ -46,9 +47,14 @@ export function SortCard({
       : Math.round(Math.min(1, Math.max(0, example.how_sure)) * 100)
 
   return (
-    <Card size="sm">
+    <Card
+      size="sm"
+      id={`review-card-${index}`}
+      aria-current={active ? "true" : undefined}
+      className={cn(active && "ring-2 ring-ring")}
+    >
       <CardContent className="space-y-3">
-        <p className="text-sm whitespace-pre-wrap">
+        <p className="font-voice whitespace-pre-wrap">
           {long && !expanded ? `${text.slice(0, LONG)}…` : text}
         </p>
         {long && (
@@ -61,7 +67,10 @@ export function SortCard({
           </button>
         )}
         <div className="flex flex-wrap items-center gap-3">
-          <Badge variant="secondary">{current?.name ?? example.label}</Badge>
+          <BucketChip
+            name={current?.name ?? example.label}
+            index={bucketIndex(buckets, example.label)}
+          />
           {sure !== null && (
             <div className="flex items-center gap-2 text-xs text-muted-foreground">
               <div
@@ -81,26 +90,31 @@ export function SortCard({
             </div>
           )}
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <Button size="sm" disabled={busy} onClick={onAgree}>
             Looks right
           </Button>
-          <DropdownMenu>
-            <DropdownMenuTrigger
-              render={<Button size="sm" variant="outline" disabled={busy} />}
-            >
-              Move to… <ChevronDown />
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="start">
-              {buckets
-                .filter((b) => b.key !== example.label)
-                .map((b) => (
-                  <DropdownMenuItem key={b.key} onClick={() => onMove(b.key)}>
-                    {b.name}
-                  </DropdownMenuItem>
-                ))}
-            </DropdownMenuContent>
-          </DropdownMenu>
+          {buckets.map((b, i) => {
+            const isCurrent = b.key === example.label
+            return (
+              <Button
+                key={b.key}
+                size="sm"
+                variant={isCurrent ? "secondary" : "outline"}
+                aria-pressed={isCurrent}
+                disabled={busy}
+                onClick={() => (isCurrent ? onAgree() : onMove(b.key))}
+              >
+                <BucketSwatch index={i} />
+                {b.name}
+                {i < 9 && (
+                  <span className="text-[13px] text-muted-foreground tabular-nums">
+                    {i + 1}
+                  </span>
+                )}
+              </Button>
+            )
+          })}
         </div>
       </CardContent>
     </Card>

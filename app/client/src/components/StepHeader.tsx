@@ -1,5 +1,4 @@
 import type { ReactNode } from "react"
-import { Hint } from "@/components/Hint"
 
 export function StepHeader({
   title,
@@ -12,11 +11,10 @@ export function StepHeader({
 }) {
   return (
     <header className="space-y-1">
-      <div className="flex items-center gap-2">
-        <h2 className="text-xl font-semibold tracking-tight">{title}</h2>
-        <Hint text={hint} />
-      </div>
-      <p className="text-sm text-muted-foreground">{hint}</p>
+      <h2 className="text-[28px] leading-tight font-semibold tracking-[-0.015em]">
+        {title}
+      </h2>
+      <p className="text-muted-foreground">{hint}</p>
       {children}
     </header>
   )

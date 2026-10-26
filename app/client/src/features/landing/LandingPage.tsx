@@ -1,30 +1,13 @@
 import { Show } from "@clerk/react"
 import { Navigate, Link } from "react-router"
 import { Button } from "@/components/ui/button"
-
-const steps = [
-  {
-    title: "Write your rules",
-    body: "Tell the agent how your team makes the call. It turns your words into clear, editable rules.",
-  },
-  {
-    title: "Try it",
-    body: "Paste a real ticket and see the decision right away, powered by Jev with your rules attached.",
-  },
-  {
-    title: "Get your model",
-    body: "We make labelled examples from your rules and train a small model that learns how your team decides.",
-  },
-  {
-    title: "Improve it",
-    body: "Correct any decision. Your corrections feed the next version of your model.",
-  },
-]
+import { STAGES } from "@/features/workspace/stages"
+import { DecisionDemo } from "./DecisionDemo"
 
 function LandingContent() {
   return (
     <div className="min-h-svh bg-background">
-      <header className="mx-auto flex h-16 max-w-5xl items-center justify-between px-4">
+      <header className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4">
         <span className="text-lg font-semibold tracking-tight">
           system<span className="text-primary">1</span>
         </span>
@@ -37,62 +20,62 @@ function LandingContent() {
         </Button>
       </header>
 
-      <main className="mx-auto max-w-5xl px-4">
-        <section className="py-16 sm:py-24">
-          <p className="mb-4 text-sm font-medium text-primary">
-            For support-ops leads
-          </p>
-          <h1 className="max-w-3xl text-4xl font-semibold tracking-tight text-balance sm:text-5xl">
-            Jev knows decisions.{" "}
-            <span className="text-primary">
-              Your model knows your decisions.
-            </span>
-          </h1>
-          <p className="mt-6 max-w-2xl text-lg text-muted-foreground">
-            Your team makes the same call hundreds of times a week: which queue
-            a ticket goes to, whether a refund gets approved. Describe the
-            decision once. system1 gives you written rules, a working decision
-            endpoint in minutes, and a model of your own that keeps getting
-            better from your corrections.
-          </p>
-          <div className="mt-8 flex flex-wrap gap-3">
-            <Button
-              size="lg"
-              nativeButton={false}
-              render={<Link to="/sign-up" />}
-            >
-              Sign up
-            </Button>
-            <Button
-              size="lg"
-              variant="outline"
-              nativeButton={false}
-              render={<Link to="/sign-in" />}
-            >
-              Sign in
-            </Button>
+      <main className="mx-auto max-w-6xl px-4">
+        <section className="grid items-center gap-12 py-16 sm:py-24 lg:grid-cols-[1.1fr_1fr]">
+          <div>
+            <h1 className="max-w-[18ch] text-[32px] leading-[1.1] font-semibold tracking-[-0.02em] text-balance sm:text-[40px]">
+              Decisions made the way your team makes them.
+            </h1>
+            <p className="mt-6 max-w-[60ch] text-lg text-muted-foreground">
+              Your team makes the same call hundreds of times a week: which
+              queue a ticket goes to, whether a refund gets approved. system1
+              turns that call into written guidelines and a small model trained
+              on your own decisions, behind the same API as Jev.
+            </p>
+            <div className="mt-8 flex flex-wrap gap-3">
+              <Button
+                size="lg"
+                nativeButton={false}
+                render={<Link to="/sign-up" />}
+              >
+                Sign up
+              </Button>
+              <Button
+                size="lg"
+                variant="outline"
+                nativeButton={false}
+                render={<Link to="/sign-in" />}
+              >
+                Sign in
+              </Button>
+            </div>
           </div>
+          <DecisionDemo />
         </section>
 
         <section className="pb-24">
-          <h2 className="mb-6 text-sm font-medium text-muted-foreground">
+          <h2 className="mb-6 text-[22px] font-semibold tracking-[-0.01em]">
             How it works
           </h2>
-          <ol className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            {steps.map((step, i) => (
-              <li key={step.title} className="rounded-xl border p-5">
-                <span className="text-sm font-medium text-primary">
+          <ol className="grid gap-6 sm:grid-cols-2 lg:grid-cols-6">
+            {STAGES.map((stage, i) => (
+              <li key={stage.id}>
+                <span className="flex size-6 items-center justify-center rounded-full border-2 border-model text-[13px] font-medium tabular-nums">
                   {i + 1}
                 </span>
-                <h3 className="mt-2 font-medium">{step.title}</h3>
+                <h3 className="mt-3 font-medium">{stage.label}</h3>
                 <p className="mt-1 text-sm text-muted-foreground">
-                  {step.body}
+                  {stage.hint}
                 </p>
               </li>
             ))}
           </ol>
         </section>
       </main>
+
+      <footer className="mx-auto max-w-6xl px-4 pb-10 text-[13px] text-muted-foreground">
+        Built for Build North 2026 by Thomas Michalski and Nicholas Stranges.
+      </footer>
     </div>
   )
 }

@@ -1,6 +1,7 @@
 import { Lock } from "lucide-react"
 import { useCallback, useEffect, useState } from "react"
 import { Badge } from "@/components/ui/badge"
+import { BucketSwatch } from "@/components/BucketChip"
 import {
   Table,
   TableBody,
@@ -11,6 +12,7 @@ import {
 } from "@/components/ui/table"
 import { useApi } from "@/lib/api/client"
 import type { Policy } from "@/lib/api/types"
+import { bucketIndex } from "@/lib/buckets"
 import type { components } from "@/lib/api/schema"
 
 export type Health = components["schemas"]["Health"]
@@ -114,7 +116,12 @@ export function HealthPanel({
             const total = c?.total ?? 0
             return (
               <TableRow key={r.key}>
-                <TableCell className="font-medium">{r.name}</TableCell>
+                <TableCell className="font-medium">
+                  <span className="inline-flex items-center gap-2">
+                    <BucketSwatch index={bucketIndex(policy.options, r.key)} />
+                    {r.name}
+                  </span>
+                </TableCell>
                 <TableCell className="text-right">{c?.train ?? 0}</TableCell>
                 <TableCell className="text-right">{c?.cal ?? 0}</TableCell>
                 <TableCell className="text-right">{c?.test ?? 0}</TableCell>

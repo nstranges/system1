@@ -76,7 +76,7 @@ function Chart({ detail }: { detail: TrainingDetail }) {
               y1="4"
               x2="16"
               y2="4"
-              className="stroke-series-1"
+              className="stroke-model"
               strokeWidth="2"
             />
           </svg>
@@ -90,7 +90,7 @@ function Chart({ detail }: { detail: TrainingDetail }) {
                 y1="4"
                 x2="16"
                 y2="4"
-                className="stroke-series-2"
+                className="stroke-jev"
                 strokeWidth="2"
                 strokeDasharray="4 3"
               />
@@ -118,7 +118,7 @@ function Chart({ detail }: { detail: TrainingDetail }) {
           />
           <polyline
             fill="none"
-            className="stroke-series-1"
+            className="stroke-model"
             strokeWidth="2"
             strokeLinejoin="round"
             strokeLinecap="round"
@@ -128,7 +128,7 @@ function Chart({ detail }: { detail: TrainingDetail }) {
             <>
               <polyline
                 fill="none"
-                className="stroke-series-2"
+                className="stroke-jev"
                 strokeWidth="2"
                 strokeDasharray="4 3"
                 points={line(held)}
@@ -139,7 +139,7 @@ function Chart({ detail }: { detail: TrainingDetail }) {
                   cx={sx(x)}
                   cy={sy(y)}
                   r="4"
-                  className="fill-series-2 stroke-card"
+                  className="fill-jev stroke-card"
                   strokeWidth="2"
                 />
               ))}
@@ -160,7 +160,7 @@ function Chart({ detail }: { detail: TrainingDetail }) {
                 cx={sx(active[0])}
                 cy={sy(active[1])}
                 r="4"
-                className="fill-series-1 stroke-card"
+                className="fill-model stroke-card"
                 strokeWidth="2"
               />
             </>

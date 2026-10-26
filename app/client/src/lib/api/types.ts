@@ -15,6 +15,8 @@ export type TryResult = components["schemas"]["TryResult"]
 export type ApiKeyOut = components["schemas"]["KeyOut"]
 export type ApiKeyCreated = components["schemas"]["KeyCreated"]
 export type TrainedModel = components["schemas"]["ModelOut"]
+export type ProjectProgress = components["schemas"]["ProjectProgress"]
+export type StageState = components["schemas"]["StageState"]
 
 // Server errors are `{"detail": {"code", "message", "issues"?}}`. Anything else
 // (a network failure, a framework 422) falls back to the generic text.

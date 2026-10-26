@@ -18,6 +18,7 @@ import { recalledJob, rememberJob } from "@/features/data/JobProgress"
 import { TrainProgress } from "./TrainProgress"
 import { ReportCard } from "./ReportCard"
 import { RunInsights } from "./RunInsights"
+import { useProgressReload } from "@/features/workspace/useProgress"
 
 type Report = components["schemas"]["Report"]
 type Size = components["schemas"]["TrainIn"]["size"]
@@ -50,6 +51,7 @@ export function TrainCanvas({
 }) {
   const api = useApi()
   const { health, reload: reloadHealth } = useHealth(project.id)
+  const reloadProgress = useProgressReload()
   const [report, setReport] = useState<Report | null>(null)
   const [jobId, setJobId] = useState<string | null>(() =>
     recalledJob(project.id),
@@ -118,6 +120,7 @@ export function TrainCanvas({
     setRunning(false)
     void loadReport()
     void reloadHealth()
+    reloadProgress()
   }
 
   return (

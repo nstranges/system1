@@ -1,6 +1,7 @@
 import { Plus, X } from "lucide-react"
 import { useRef, useState } from "react"
 import { toast } from "sonner"
+import { BucketSwatch } from "@/components/BucketChip"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
@@ -127,6 +128,9 @@ export function BucketsPanel({
             className="space-y-2 rounded-lg border p-3"
           >
             <div className="flex items-end gap-2">
+              <div className="flex h-8 items-center">
+                <BucketSwatch index={i} />
+              </div>
               <div className="flex-1">
                 <FieldLabel>Name</FieldLabel>
                 <Input

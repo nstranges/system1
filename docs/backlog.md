@@ -5,7 +5,7 @@ A running catalog of ideas we've parked. Nothing here is planned until it moves 
 - **Adding an item:** put new items in the right section, with the date.
 - **When an item is picked up or dropped:** move it to "Done or dropped", with a line on what happened.
 
-Last updated: Oct 21, 2026. The current plan lives in the [product design](superpowers/specs/2026-10-21-system1-product-design.md).
+Last updated: Oct 25, 2026. The current plan lives in the [product design](superpowers/specs/2026-10-21-system1-product-design.md).
 
 ## Maybe (revisit later)
 
@@ -14,6 +14,11 @@ Last updated: Oct 21, 2026. The current plan lives in the [product design](super
 | Label disagreement check | Opus labels each generated example from its text and the policy, without seeing the correct label. Wherever it disagrees with the rules engine, the example is flagged for a fix or a rewrite. Flagged examples are never silently dropped, because that would remove the hardest cases. On the test set, flag only and never filter, or the test leans toward examples LLMs find easy | Phase 1's pipeline is already running, and the read-back already checks facts | Oct 21 |
 | Two-labeller consensus for judgment rules | For rules marked "needs judgment", two independent Claude passes label each example (two prompts, or Opus plus Sonnet). Agreements are accepted, and only disagreements go to the user | Only matters once projects have judgment rules (S1 or later) | Oct 21 |
 | Jev disagreement view on the report card | Where Jev and sys1 disagree on the test set, show which one matched the rules | Evaluation only, which TypeSafe's terms allow. Good demo material if there's time | Oct 21 |
+| Light and dark theme switch | A toggle in the header and on the landing page. The dark colour tokens already exist; it needs a `ThemeProvider` from `next-themes` and a button | Skipped in the Oct 25 redesign to protect the deadline | Oct 25 |
+| Live decision feed on Use | The last N decisions from the gateway, each with how sure | Cut from the Oct 25 redesign | Oct 25 |
+| Cost per 1,000 decisions on the report | Compare cost as well as accuracy and speed | The server computes no cost today, so it needs pricing data first | Oct 25 |
+| Flat-section restyle of the other canvases | Drop the card-in-card styling on Data, Use and Improve, as the redesign did for the workspace shell | The redesign changed styling globally through tokens and restructured only the screens it touched | Oct 25 |
+| First-run tour | A short guided pass through the six steps for a new project | Not needed for the demo | Oct 25 |
 
 ## Roadmap (planned after V1)
 

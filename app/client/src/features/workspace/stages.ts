@@ -53,3 +53,18 @@ export function normalizeStage(legacy: string): StageId | null {
 export function stageHint(id: StageId): string {
   return STAGES.find((s) => s.id === id)?.hint ?? ""
 }
+
+// Where "Continue" points once the current stage is finished: the next stage
+// that isn't blocked, so the person is never sent to a step they can't use yet.
+export function nextAfter(
+  stages: { id: StageId; status: "done" | "ready" | "blocked" }[],
+  current: StageId,
+): StageId | null {
+  if (stages.find((s) => s.id === current)?.status !== "done") return null
+  const after = STAGES.findIndex((s) => s.id === current) + 1
+  for (const { id } of STAGES.slice(after)) {
+    const status = stages.find((s) => s.id === id)?.status
+    if (status && status !== "blocked") return id
+  }
+  return null
+}

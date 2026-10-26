@@ -26,6 +26,7 @@ from system1.generation.router import router as generation_router
 from system1.ingest.router import router as ingest_router
 from system1.jobs.router import router as jobs_router
 from system1.jobs.service import fail_unfinished_jobs
+from system1.progress.router import router as progress_router
 from system1.projects.router import router as projects_router
 from system1.providers import Providers, build_providers, get_providers
 from system1.registry.router import router as registry_router
@@ -105,6 +106,7 @@ def create_app(
     api.include_router(drafting_router)
     api.include_router(report_router)
     api.include_router(registry_router)
+    api.include_router(progress_router)
     api.include_router(batch_router)
     app.include_router(api)
     app.include_router(public_router)

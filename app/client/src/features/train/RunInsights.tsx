@@ -77,7 +77,7 @@ export function RunInsights({
   }
   if (ece != null) {
     tiles.push({
-      label: "Confidence error",
+      label: "Sureness gap",
       value: pct(ece),
       note: "How far its stated sureness is from how often it's right",
     })

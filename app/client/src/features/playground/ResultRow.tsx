@@ -1,7 +1,9 @@
 import { Check } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
+import { BucketChip } from "@/components/BucketChip"
 import { cn } from "@/lib/utils"
 import { FeedbackControls } from "@/features/improve/FeedbackControls"
+import { bucketIndex } from "@/lib/buckets"
 import type { LaneResult, PolicyOption } from "@/lib/api/types"
 
 export const LANE_NAMES: Record<string, string> = {
@@ -35,6 +37,8 @@ export function ResultRow({
   const isModel = result.lane === "sys1"
   const answer = recordedAnswer ?? result.label
   const p = recordedAnswer ? null : topProbability(result, answer)
+  const answerIndex =
+    answer != null && options ? bucketIndex(options, answer) : -1
   const right = gold !== null && answer !== null && answer === gold
 
   return (
@@ -46,10 +50,7 @@ export function ResultRow({
     >
       <div className="flex items-center gap-2 text-sm font-medium">
         <span
-          className={cn(
-            "size-2 rounded-full",
-            isModel ? "bg-primary" : "bg-jev",
-          )}
+          className={cn("size-2 rounded-full", isModel ? "bg-model" : "bg-jev")}
         />
         {LANE_NAMES[result.lane] ?? result.lane}
         {recordedAnswer && <Badge variant="outline">recorded</Badge>}
@@ -61,7 +62,14 @@ export function ResultRow({
       ) : (
         <>
           <div className="flex items-center gap-1.5 font-mono text-sm sm:order-none">
-            {answer ?? "No answer"}
+            {answerIndex >= 0 && options ? (
+              <BucketChip
+                name={options[answerIndex].name}
+                index={answerIndex}
+              />
+            ) : (
+              (answer ?? "No answer")
+            )}
             {gold !== null && answer !== null && (
               <span
                 className={right ? "text-primary" : "text-destructive"}
@@ -76,7 +84,7 @@ export function ResultRow({
               <>
                 <div className="h-2 flex-1 overflow-hidden rounded-full bg-muted">
                   <div
-                    className={cn("h-full", isModel ? "bg-primary" : "bg-jev")}
+                    className={cn("h-full", isModel ? "bg-model" : "bg-jev")}
                     style={{ width: `${Math.round(p * 100)}%` }}
                   />
                 </div>

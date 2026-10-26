@@ -98,14 +98,6 @@ export function ImproveCanvas({
 
   return (
     <div className="space-y-4">
-      <div>
-        <h2 className="text-xl font-semibold tracking-tight">Improve</h2>
-        <p className="text-sm text-muted-foreground">
-          Check the answers your model wasn't sure about, then teach it again
-          from them.
-        </p>
-      </div>
-
       {summary && <Stats summary={summary} />}
 
       <BatchCheck

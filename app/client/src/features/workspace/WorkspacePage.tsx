@@ -6,6 +6,7 @@ import {
   useNavigate,
   useParams,
 } from "react-router"
+import { MessageCircle } from "lucide-react"
 import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
 import {
@@ -33,8 +34,11 @@ import { ReviewCanvas } from "@/features/review/ReviewCanvas"
 import { TrainCanvas } from "@/features/train/TrainCanvas"
 import { StepHeader } from "@/components/StepHeader"
 import { UseCanvas } from "@/features/use/UseCanvas"
+import { cn } from "@/lib/utils"
+import { NextStep } from "./NextStep"
 import { StageRail } from "./StageRail"
 import { STAGES, isStage, normalizeStage, stageHint } from "./stages"
+import { ProgressReloadContext, useProgress } from "./useProgress"
 
 // Keyed on the project so nothing from the previous one leaks across.
 export function WorkspacePage() {
@@ -52,6 +56,16 @@ function Workspace() {
   const [missing, setMissing] = useState(false)
   const [loadError, setLoadError] = useState<string | null>(null)
   const location = useLocation()
+  const { progress, reload: reloadProgress } = useProgress(projectId ?? "")
+  // Moving between stages, or saving a new policy, can change what the rail shows.
+  const progressLoaded = useRef(false)
+  useEffect(() => {
+    if (!progressLoaded.current) {
+      progressLoaded.current = true
+      return
+    }
+    reloadProgress()
+  }, [stage, policy?.version, reloadProgress])
   // The assistant can be tucked away on wide screens; the choice is remembered.
   const [assistantOpen, setAssistantOpen] = useState(() => {
     try {
@@ -245,80 +259,98 @@ function Workspace() {
   const label = STAGES.find((s) => s.id === stage)?.label ?? ""
 
   return (
-    <div className="space-y-4">
-      <div className="flex flex-wrap items-center gap-3">
-        <Link
-          to="/app"
-          className="text-sm text-muted-foreground hover:text-foreground"
-        >
-          All projects
-        </Link>
-        <span className="text-muted-foreground">/</span>
-        <ProjectName project={project} onProject={setProject} />
-      </div>
-      <StageRail projectId={project.id} current={stage} />
-
-      <div className="flex gap-1 rounded-lg bg-muted p-1 lg:hidden">
-        {(["assistant", "canvas"] as const).map((p) => (
-          <Button
-            key={p}
-            size="sm"
-            variant={panel === p ? "default" : "ghost"}
-            className="flex-1"
-            onClick={() => setPanel(p)}
+    <ProgressReloadContext.Provider value={reloadProgress}>
+      <div className="space-y-4">
+        <div className="flex flex-wrap items-center gap-3">
+          <Link
+            to="/app"
+            className="text-sm text-muted-foreground hover:text-foreground"
           >
-            {p === "assistant" ? "Assistant" : "Workspace"}
-          </Button>
-        ))}
-      </div>
+            All projects
+          </Link>
+          <span className="text-muted-foreground">/</span>
+          <ProjectName project={project} onProject={setProject} />
+        </div>
 
-      <div
-        className={
-          assistantOpen
-            ? "grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,3fr)]"
-            : "grid gap-6"
-        }
-      >
         <div
-          className={
-            panel === "assistant"
-              ? assistantOpen
-                ? ""
-                : "lg:hidden"
-              : assistantOpen
-                ? "hidden lg:block"
-                : "hidden"
-          }
+          className={cn(
+            "grid gap-x-8 gap-y-4",
+            assistantOpen
+              ? "lg:grid-cols-[13rem_minmax(0,1fr)_22rem]"
+              : "lg:grid-cols-[13rem_minmax(0,1fr)]",
+          )}
         >
-          <div className="mb-2 hidden lg:block">
-            <Button size="sm" variant="ghost" onClick={toggleAssistant}>
-              Hide assistant
-            </Button>
+          <div className="lg:sticky lg:top-4 lg:self-start">
+            <StageRail
+              projectId={project.id}
+              current={stage}
+              progress={progress}
+            />
           </div>
-          <AgentPanel
-            project={project}
-            stage={stage}
-            onCanvas={onCanvas}
-            onStage={onStage}
-          />
-        </div>
-        <div
-          className={panel === "canvas" ? "min-w-0" : "hidden min-w-0 lg:block"}
-        >
-          <div className="space-y-4">
-            {!assistantOpen && (
-              <div className="hidden lg:block">
-                <Button size="sm" variant="ghost" onClick={toggleAssistant}>
-                  Show assistant
-                </Button>
-              </div>
+
+          <div className="flex gap-1 rounded-lg bg-muted p-1 lg:hidden">
+            {(["assistant", "canvas"] as const).map((p) => (
+              <Button
+                key={p}
+                size="sm"
+                variant={panel === p ? "default" : "ghost"}
+                className="flex-1"
+                onClick={() => setPanel(p)}
+              >
+                {p === "assistant" ? "Assistant" : "Workspace"}
+              </Button>
+            ))}
+          </div>
+
+          <div
+            className={
+              panel === "canvas" ? "min-w-0" : "hidden min-w-0 lg:block"
+            }
+          >
+            <div className="space-y-4">
+              <StepHeader title={label} hint={stageHint(stage)} />
+              {canvas}
+              <NextStep
+                projectId={project.id}
+                current={stage}
+                progress={progress}
+              />
+            </div>
+          </div>
+
+          <div
+            className={cn(
+              "min-w-0 lg:sticky lg:top-4 lg:self-start",
+              panel === "assistant"
+                ? assistantOpen
+                  ? ""
+                  : "lg:hidden"
+                : assistantOpen
+                  ? "hidden lg:block"
+                  : "hidden",
             )}
-            <StepHeader title={label} hint={stageHint(stage)} />
-            {canvas}
+          >
+            <AgentPanel
+              project={project}
+              stage={stage}
+              onCanvas={onCanvas}
+              onStage={onStage}
+              onHide={toggleAssistant}
+            />
           </div>
         </div>
+
+        {!assistantOpen && (
+          <Button
+            className="fixed right-6 bottom-6 z-30 hidden lg:inline-flex"
+            onClick={toggleAssistant}
+          >
+            <MessageCircle />
+            Assistant
+          </Button>
+        )}
       </div>
-    </div>
+    </ProgressReloadContext.Provider>
   )
 }
 
