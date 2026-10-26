@@ -24,7 +24,7 @@ EPOCHS   ?= 1
 LOAD_ENV := set -a; [ -f .env ] && . ./.env; set +a;
 
 .DEFAULT_GOAL := help
-.PHONY: help env venv install test dev format check docs verify modal-setup check-env jev-check train eval-laya eval-lora eval-jev eval-all modal-deploy grid tickets-check blind readback dataset dataset-provisional clean
+.PHONY: help env venv install test dev format check docs verify modal-setup check-env jev-check train eval-laya eval-lora eval-jev eval-all modal-deploy grid tickets-check blind readback dataset dataset-provisional generate clean
 
 help: ## List available commands
 	@grep -E '^[a-zA-Z_-]+:.*?## ' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-12s\033[0m %s\n", $$1, $$2}'
@@ -121,6 +121,9 @@ dataset-provisional: ## Build data/build/triage_provisional.parquet without the 
 	$(PYTHON) build_dataset.py --provisional
 
 # --- Housekeeping -----------------------------------------------------------
+
+generate: ## Generate new labelled rows with NeMo Data Designer: make generate SOURCE=data/banking/banking_upload.csv PER_LABEL=20 OUT=data/banking/banking_new.csv
+	@$(LOAD_ENV) $(PYTHON) generate_data.py --source $(SOURCE) --per-label $(or $(PER_LABEL),10) $(if $(OUT),--out $(OUT),--dry-run)
 
 clean: ## Remove Python caches (leaves ./lora, data and results alone)
 	find . -path ./$(VENV) -prune -o -type d -name __pycache__ -exec rm -rf {} +

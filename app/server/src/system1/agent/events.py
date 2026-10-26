@@ -66,7 +66,6 @@ class ConfirmEvent(BaseModel):
     title: str
     detail: str
     est_minutes: float
-    est_cost_usd: float
     examples: int | None = None
 
 

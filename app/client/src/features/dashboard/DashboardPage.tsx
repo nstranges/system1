@@ -265,8 +265,6 @@ function ProjectCard({
   }
 
   const stage = normalizeStage(project.stage) ?? "define"
-  // The title link is stretched over the whole card, so clicking anywhere opens the project; the action buttons sit
-  // above it so they still get their own clicks.
   return (
     <Card className="relative h-full transition-colors hover:bg-muted/50">
       <CardHeader>
@@ -289,9 +287,10 @@ function ProjectCard({
           />
         ) : (
           <CardTitle>
+            {/* The pseudo-element stretches the link over the whole card; the action buttons sit above it. */}
             <Link
               to={`/app/p/${project.id}/${stage}`}
-              className="after:absolute after:inset-0 after:content-['']"
+              className="after:absolute after:inset-0"
             >
               {project.name}
             </Link>
@@ -304,7 +303,7 @@ function ProjectCard({
           Created {new Date(project.created_at).toLocaleDateString()}
         </p>
         {confirming ? (
-          <div className="relative z-10 flex items-center gap-2 text-sm">
+          <div className="relative flex items-center gap-2 text-sm">
             <span>Delete this project and its examples?</span>
             <Button
               size="sm"
@@ -324,7 +323,7 @@ function ProjectCard({
             </Button>
           </div>
         ) : (
-          <div className="relative z-10 flex gap-1">
+          <div className="relative flex gap-1">
             <Button
               size="sm"
               variant="ghost"

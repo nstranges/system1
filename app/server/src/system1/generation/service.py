@@ -61,15 +61,13 @@ class _ProjectGone(Exception):
 class Estimate(BaseModel):
     examples: int
     est_minutes: int
-    est_cost_usd: float
 
 
-def estimate(settings: Settings, targets: dict[str, int]) -> Estimate:
+def estimate(targets: dict[str, int]) -> Estimate:
     examples = sum(targets.values())
     return Estimate(
         examples=examples,
         est_minutes=max(1, math.ceil(examples / EXAMPLES_PER_MINUTE)),
-        est_cost_usd=round(examples * settings.est_cost_per_example_usd, 2),
     )
 
 

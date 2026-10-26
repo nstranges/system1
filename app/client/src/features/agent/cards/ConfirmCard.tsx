@@ -72,8 +72,7 @@ export function ConfirmCard({
         </p>
       )}
       <p className="text-xs text-muted-foreground">
-        Takes {minutes(event.est_minutes)} and costs about $
-        {event.est_cost_usd.toFixed(2)}.
+        Takes {minutes(event.est_minutes)}.
       </p>
       {outcome ? (
         <p className="text-sm font-medium">{outcome.text}</p>

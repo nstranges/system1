@@ -226,7 +226,7 @@ def test_request_generation_creates_pending_action_not_job(client_for):
 
     confirm = next(e for e in events if e["type"] == "confirm")
     assert confirm["kind"] == "generation" and confirm["examples"] == 40
-    assert confirm["est_cost_usd"] == round(40 * get_settings().est_cost_per_example_usd, 2)
+    assert confirm["est_minutes"] == 1
     with Session(client.app.state.engine) as session:
         actions = session.scalars(select(PendingAction)).all()
         assert [(a.kind, a.status) for a in actions] == [("generation", "pending")]

@@ -146,8 +146,8 @@ function Body({
       {estimate ? (
         <p className="text-sm">
           Generate {estimate.examples} practice examples (about{" "}
-          {Math.max(1, Math.round(estimate.est_minutes))} minutes, about $
-          {estimate.est_cost_usd.toFixed(2)})? This uses the assistant.
+          {Math.max(1, Math.round(estimate.est_minutes))} minutes)? This uses
+          the assistant.
         </p>
       ) : (
         <div className="space-y-2">
