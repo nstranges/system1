@@ -2,7 +2,9 @@ import asyncio
 
 import pandas as pd
 
+from system1.adapters.anthropic_llm import BUSY, NOT_CONFIGURED, OUT_OF_CREDITS, UNAVAILABLE
 from system1.config import REPO_ROOT
+from system1.contracts.decisions import ProviderError
 from system1.contracts.llm import LLM
 from system1.domain.policy import Option, Policy
 from system1.generation.simple import BATCH_SIZE, SimpleGenerator, _describe, _reference
@@ -23,6 +25,29 @@ _PROMPT = (
     "Never name the target bucket, its label or any other bucket's label, and never explain the decision. "
     "Reply with the input text only."
 )
+
+
+def _provider_error(exc: Exception) -> ProviderError:
+    """Data Designer wraps the model's error in a generation error; the cause chain says what actually went wrong."""
+    from data_designer.engine.models import errors as model_errors
+
+    cause: BaseException | None = exc
+    while cause is not None:
+        if isinstance(cause, model_errors.ModelQuotaExceededError):
+            return ProviderError(OUT_OF_CREDITS)
+        if isinstance(cause, model_errors.ModelAuthenticationError | model_errors.ModelPermissionDeniedError):
+            return ProviderError(NOT_CONFIGURED)
+        if isinstance(cause, model_errors.ModelRateLimitError):
+            return ProviderError(BUSY, retryable=True)
+        if isinstance(
+            cause,
+            model_errors.ModelInternalServerError
+            | model_errors.ModelAPIConnectionError
+            | model_errors.ModelTimeoutError,
+        ):
+            return ProviderError(UNAVAILABLE, retryable=True)
+        cause = cause.__cause__
+    return ProviderError("Writing examples didn't work this time. Try again.", retryable=True)
 
 
 class DataDesignerGenerator(SimpleGenerator):
@@ -101,7 +126,12 @@ class DataDesignerGenerator(SimpleGenerator):
             model_providers=[provider],
             secret_resolver=PlaintextResolver(),
         )
-        result = designer.preview(builder, num_records=ask)
+        from data_designer.errors import DataDesignerError
+
+        try:
+            result = designer.preview(builder, num_records=ask)
+        except DataDesignerError as exc:
+            raise _provider_error(exc) from exc
         texts = [str(t) for t in (result.dataset["text"] if result.dataset is not None else [])]
         # Data Designer doesn't report usage for a preview, so the daily cap sees an estimate (~4 characters/token).
         estimate = (len(seed.iloc[0, 0]) + len(seed.iloc[0, 1]) + 600) * ask // 4 + sum(len(t) for t in texts) // 4
