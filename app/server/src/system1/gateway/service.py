@@ -17,10 +17,13 @@ from system1.errors import InputTooLong, NotFound
 from system1.projects.models import Project
 from system1.projects.service import latest_policy
 from system1.providers import Providers
+from system1.registry.service import live_adapter
 from system1.templates.catalog import Template, get_template
 
 Lane = Literal["jev", "jev_labels", "sys1"]
 State = str | dict | list
+
+NO_LIVE_MODEL = "This project has no live model yet. Train one, or pick one to make live."
 
 
 class LaneResult(BaseModel):
@@ -80,6 +83,12 @@ def _provider(providers: Providers, lane: Lane) -> DecisionProvider | None:
     return providers.sys1 if lane == "sys1" else providers.jev
 
 
+def sys1_ready(session: Session, providers: Providers, project: Project) -> bool:
+    if providers.sys1 is None:
+        return False
+    return not getattr(providers.sys1, "serves_adapters", False) or live_adapter(session, project) is not None
+
+
 async def run_lane(
     session: Session,
     providers: Providers,
@@ -95,9 +104,15 @@ async def run_lane(
     provider = _provider(providers, lane)
     if provider is None:
         return LaneResult(lane=lane, error="sys1 isn't connected yet.")
+    model = get_settings().jev_model if lane != "sys1" else get_settings().sys1_model
+    if lane == "sys1" and getattr(provider, "serves_adapters", False):
+        # This provider runs whichever adapter it is handed, so it answers with the project's live model.
+        adapter = live_adapter(session, project)
+        if adapter is None:
+            return LaneResult(lane=lane, error=NO_LIVE_MODEL)
+        model = adapter
     policy, version = policy_and_version or latest_policy(session, project)
     questions = questions_for(project, policy, lane)
-    model = get_settings().jev_model if lane != "sys1" else get_settings().sys1_model
     try:
         response = await provider.decide(DecisionRequest(model=model, state=state, questions=questions))
     except ProviderError as exc:
@@ -155,7 +170,9 @@ async def try_input(
     check_length(state)
 
     policy_and_version = latest_policy(session, project)
-    lanes: list[Lane] = list(only) if only else ["jev_labels", "jev"] + (["sys1"] if providers.sys1 else [])
+    lanes: list[Lane] = (
+        list(only) if only else ["jev_labels", "jev"] + (["sys1"] if sys1_ready(session, providers, project) else [])
+    )
     # Lanes share one session but never await between touching it, so gather is safe on a single thread.
     results = await asyncio.gather(
         *(

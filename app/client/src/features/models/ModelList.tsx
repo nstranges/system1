@@ -1,0 +1,116 @@
+import { useAuth } from "@clerk/react"
+import { useState } from "react"
+import { Link } from "react-router"
+import { toast } from "sonner"
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table"
+import { useApi } from "@/lib/api/client"
+import { readProblem, type Project, type TrainedModel } from "@/lib/api/types"
+
+const pct = (v: number | null | undefined) =>
+  v == null ? "–" : `${Math.round(v * 100)}%`
+
+// Trained models with the live one marked. An admin can make another one live, which changes what the
+// project's endpoint answers with from the next call on.
+export function ModelList({
+  models,
+  showProject,
+  onLive,
+}: {
+  models: TrainedModel[]
+  showProject: boolean
+  onLive: (project: Project) => void
+}) {
+  const api = useApi()
+  const { orgRole } = useAuth()
+  const isAdmin = orgRole === "org:admin"
+  const [busy, setBusy] = useState<string | null>(null)
+
+  async function makeLive(id: string) {
+    setBusy(id)
+    try {
+      const { data, error } = await api.POST("/api/models/{model_id}/live", {
+        params: { path: { model_id: id } },
+      })
+      if (data) {
+        onLive(data)
+        toast("That model now answers your endpoint")
+      } else {
+        toast.error(readProblem(error).message)
+      }
+    } catch {
+      toast.error("We couldn't reach the server.")
+    } finally {
+      setBusy(null)
+    }
+  }
+
+  return (
+    <Table>
+      <TableHeader>
+        <TableRow>
+          {showProject && <TableHead>Project</TableHead>}
+          <TableHead>Trained</TableHead>
+          <TableHead>Right answers</TableHead>
+          <TableHead>Typical speed</TableHead>
+          <TableHead className="text-right">Endpoint</TableHead>
+        </TableRow>
+      </TableHeader>
+      <TableBody>
+        {models.map((m) => (
+          <TableRow key={m.id}>
+            {showProject && (
+              <TableCell className="font-medium">
+                <Link to={`/app/p/${m.project_id}/use`}>{m.project_name}</Link>
+              </TableCell>
+            )}
+            <TableCell>
+              {new Date(m.created_at).toLocaleString(undefined, {
+                dateStyle: "medium",
+                timeStyle: "short",
+              })}
+              <span className="block font-mono text-xs text-muted-foreground">
+                {m.id.slice(0, 8)}
+              </span>
+            </TableCell>
+            <TableCell>
+              {pct(m.accuracy)}
+              <span className="block text-xs text-muted-foreground">
+                Jev {pct(m.jev_accuracy)}
+                {m.test_examples != null && ` · ${m.test_examples} tests`}
+              </span>
+            </TableCell>
+            <TableCell>
+              {m.median_latency_ms != null
+                ? `${Math.round(m.median_latency_ms)} ms`
+                : "–"}
+            </TableCell>
+            <TableCell className="text-right">
+              {m.live ? (
+                <Badge>Live</Badge>
+              ) : (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  disabled={!isAdmin || busy !== null}
+                  title={isAdmin ? undefined : "Only an admin can change this."}
+                  onClick={() => void makeLive(m.id)}
+                >
+                  Make live
+                </Button>
+              )}
+            </TableCell>
+          </TableRow>
+        ))}
+      </TableBody>
+    </Table>
+  )
+}

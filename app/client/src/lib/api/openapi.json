@@ -1836,6 +1836,96 @@
         }
       }
     },
+    "/api/models": {
+      "get": {
+        "summary": "List Models",
+        "operationId": "list_models_api_models_get",
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Project Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ModelOut"
+                  },
+                  "title": "Response List Models Api Models Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/models/{model_id}/live": {
+      "post": {
+        "summary": "Make Live",
+        "description": "Points the project's sys1 lane at this model. Changing what answers live calls is an admin's call, like keys.",
+        "operationId": "make_live_api_models__model_id__live_post",
+        "parameters": [
+          {
+            "name": "model_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Model Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProjectOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/v1/systemone": {
       "post": {
         "summary": "Decide",
@@ -2210,6 +2300,11 @@
           "sys1_available": {
             "type": "boolean",
             "title": "Sys1 Available"
+          },
+          "sys1_needs_live_model": {
+            "type": "boolean",
+            "title": "Sys1 Needs Live Model",
+            "default": false
           }
         },
         "type": "object",
@@ -3223,6 +3318,89 @@
         "required": ["text"],
         "title": "MessageIn"
       },
+      "ModelOut": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "project_id": {
+            "type": "string",
+            "title": "Project Id"
+          },
+          "project_name": {
+            "type": "string",
+            "title": "Project Name"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "live": {
+            "type": "boolean",
+            "title": "Live"
+          },
+          "accuracy": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Accuracy"
+          },
+          "jev_accuracy": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Jev Accuracy"
+          },
+          "test_examples": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Test Examples"
+          },
+          "median_latency_ms": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Median Latency Ms"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "project_id",
+          "project_name",
+          "created_at",
+          "live",
+          "accuracy",
+          "jev_accuracy",
+          "test_examples",
+          "median_latency_ms"
+        ],
+        "title": "ModelOut",
+        "description": "A trained model: a training run that produced an adapter. Its id is the run's report card id."
+      },
       "NotOf-Input": {
         "properties": {
           "not": {
@@ -3597,6 +3775,17 @@
             ],
             "title": "Live Model Label"
           },
+          "live_model_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Live Model Id"
+          },
           "created_at": {
             "type": "string",
             "format": "date-time",
@@ -3612,6 +3801,7 @@
           "stage",
           "default_lane",
           "live_model_label",
+          "live_model_id",
           "created_at"
         ],
         "title": "ProjectOut"

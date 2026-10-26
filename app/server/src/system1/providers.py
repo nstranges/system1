@@ -6,6 +6,7 @@ from fastapi import Request
 from system1.adapters.anthropic_llm import AnthropicLLM
 from system1.adapters.fakes import FakeDecisionProvider, FakeLLM, FakeTrainer, PreviewTrainer, UnavailableTrainer
 from system1.adapters.jev_typesafe import TypeSafeJevProvider
+from system1.adapters.modal_sys1 import ModalSys1Provider, SdkDeciderRunner
 from system1.adapters.modal_trainer import ModalTrainer, SdkModalRunner
 from system1.adapters.sys1_http import HttpSys1Provider
 from system1.config import Settings
@@ -36,6 +37,8 @@ def build_providers(settings: Settings) -> Providers:
         sys1 = FakeDecisionProvider("sys1", settings.sys1_model)
     elif settings.sys1_provider == "http" and settings.sys1_base_url:
         sys1 = HttpSys1Provider(settings.sys1_base_url, settings.sys1_model)
+    elif settings.sys1_provider == "modal":
+        sys1 = ModalSys1Provider(SdkDeciderRunner(settings.modal_app, settings.modal_decider_class))
 
     if settings.llm_provider == "fake":
         llm: LLM = FakeLLM([])

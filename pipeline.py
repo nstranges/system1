@@ -1,10 +1,13 @@
-"""Modal entry point the product server calls (ModalTrainer): train a project's LoRA, then score it and the
-untrained base on the project's frozen test examples. Deploy with `make modal-deploy`.
+"""Modal entry points the product server calls. run_project (ModalTrainer) trains a project's LoRA, then scores it
+and the untrained base on the project's frozen test examples. Decider (ModalSys1Provider) answers live calls with a
+project's trained adapter. Deploy with `make modal-deploy`.
 
 Reuses train.py's steps unchanged. Not exercised without a GPU: smoke-test with a small project first.
 """
 import json
 import time
+from collections import OrderedDict
+from pathlib import Path
 
 import modal
 
@@ -109,3 +112,83 @@ def run_project(payload):
         "metrics": json.loads(json.dumps({"train": getattr(stats, "metrics", {}), "calibration": calibration}, default = str)),
         "evaluations": {"sys1": sys1, "base": base},
     }
+
+ADAPTER_PREFIX = "laya-outputs:projects/"
+CACHED_ADAPTERS = 3  # each is a full Laya copy (about 1 GB), so a few fit on the L4 next to each other
+
+def adapter_folder(adapter_ref):
+    """The volume folder run_project saved this adapter_ref to. Anything else is refused, so a ref can't escape it."""
+    if not adapter_ref.startswith(ADAPTER_PREFIX) or ".." in adapter_ref.split("/"):
+        raise ValueError(f"not a project adapter: {adapter_ref!r}")
+    return Path("/outputs") / adapter_ref.removeprefix("laya-outputs:")
+
+def load_adapter(folder):
+    """Laya plus a run's saved LoRA, head and calibration, ready to predict. Mirrors eval_lora.py's loader."""
+    from peft import PeftModel, set_peft_model_state_dict
+    from safetensors.torch import load_file
+
+    model, tokenizer = FastDecisionModel.from_pretrained(
+        model_name = "convaiinnovations/laya", max_seq_length = 512, load_in_4bit = False
+    )
+    adapter_config = json.loads((folder / "adapter_config.json").read_text())
+    model = FastDecisionModel.get_peft_model(
+        model,
+        r = adapter_config["r"],
+        lora_alpha = adapter_config["lora_alpha"],
+        lora_dropout = 0,
+        use_gradient_checkpointing = "unsloth",
+        random_state = 3407,
+    )
+
+    peft_model = next(m for m in model.modules() if isinstance(m, PeftModel))
+    result = set_peft_model_state_dict(peft_model, load_file(str(folder / "adapter_model.safetensors")))
+    if result.unexpected_keys:
+        raise RuntimeError(f"{len(result.unexpected_keys)} adapter weights did not match the model")
+    # The head's module name depends on the base model, so find the smallest module holding every saved head weight
+    head_weights = load_file(str(folder / "joint_head.safetensors"))
+    matches = [(len(m.state_dict()), m) for n, m in model.named_modules() if n and set(head_weights) <= set(m.state_dict())]
+    if not matches:
+        raise RuntimeError("no module in the model has all the weights in joint_head.safetensors")
+    min(matches, key = lambda t: t[0])[1].load_state_dict(head_weights, strict = False)
+
+    calibration_file = folder / "calibration.json"
+    if calibration_file.exists():
+        model.decision_config.update(json.loads(calibration_file.read_text()))
+    FastDecisionModel.for_inference(model)
+    return model, tokenizer
+
+# Scales to zero when idle so it costs nothing between demos; the first call after that pays the load (about a minute).
+@app.cls(image = pipeline_image, gpu = "L4", volumes = {"/outputs": vol}, scaledown_window = 10 * 60, timeout = 10 * 60)
+class Decider:
+    @modal.enter()
+    def setup(self):
+        self.models = OrderedDict()  # adapter_ref -> (model, tokenizer), least recently used first
+
+    def _model(self, adapter_ref):
+        if adapter_ref in self.models:
+            self.models.move_to_end(adapter_ref)
+            return self.models[adapter_ref]
+        folder = adapter_folder(adapter_ref)
+        if not folder.exists():
+            vol.reload()  # trained after this container started
+        self.models[adapter_ref] = load_adapter(folder)
+        while len(self.models) > CACHED_ADAPTERS:
+            self.models.popitem(last = False)
+        return self.models[adapter_ref]
+
+    @modal.method()
+    def decide(self, adapter_ref, state, questions):
+        """One Jev-shaped decision: {"answers": {question: {type, choice, confidence, probabilities}}}."""
+        model, tokenizer = self._model(adapter_ref)
+        answers = FastDecisionModel.predict(model, tokenizer, state, questions)
+        return {
+            "answers": {
+                name: {
+                    "type": "choice",
+                    "choice": str(result["answer"]),
+                    "confidence": None if result.get("confidence") is None else float(result["confidence"]),
+                    "probabilities": {str(k): float(v) for k, v in result["probabilities"].items()},
+                }
+                for name, result in answers.items()
+            }
+        }

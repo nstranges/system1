@@ -28,6 +28,7 @@ class ProjectOut(BaseModel):
     stage: str
     default_lane: str
     live_model_label: str | None
+    live_model_id: str | None
     created_at: datetime
 
 

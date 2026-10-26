@@ -606,6 +606,43 @@ export interface paths {
     patch?: never
     trace?: never
   }
+  "/api/models": {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /** List Models */
+    get: operations["list_models_api_models_get"]
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  "/api/models/{model_id}/live": {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    /**
+     * Make Live
+     * @description Points the project's sys1 lane at this model. Changing what answers live calls is an admin's call, like keys.
+     */
+    post: operations["make_live_api_models__model_id__live_post"]
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
   "/v1/systemone": {
     parameters: {
       query?: never
@@ -755,6 +792,11 @@ export interface components {
     ConfigOut: {
       /** Sys1 Available */
       sys1_available: boolean
+      /**
+       * Sys1 Needs Live Model
+       * @default false
+       */
+      sys1_needs_live_model: boolean
     }
     /** ConfirmEvent */
     ConfirmEvent: {
@@ -1194,6 +1236,33 @@ export interface components {
       /** Stage */
       stage?: string | null
     }
+    /**
+     * ModelOut
+     * @description A trained model: a training run that produced an adapter. Its id is the run's report card id.
+     */
+    ModelOut: {
+      /** Id */
+      id: string
+      /** Project Id */
+      project_id: string
+      /** Project Name */
+      project_name: string
+      /**
+       * Created At
+       * Format: date-time
+       */
+      created_at: string
+      /** Live */
+      live: boolean
+      /** Accuracy */
+      accuracy: number | null
+      /** Jev Accuracy */
+      jev_accuracy: number | null
+      /** Test Examples */
+      test_examples: number | null
+      /** Median Latency Ms */
+      median_latency_ms: number | null
+    }
     /** NotOf */
     "NotOf-Input": {
       /** Not */
@@ -1338,6 +1407,8 @@ export interface components {
       default_lane: string
       /** Live Model Label */
       live_model_label: string | null
+      /** Live Model Id */
+      live_model_id: string | null
       /**
        * Created At
        * Format: date-time
@@ -2989,6 +3060,68 @@ export interface operations {
         }
         content: {
           "application/json": components["schemas"]["Report"]
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"]
+        }
+      }
+    }
+  }
+  list_models_api_models_get: {
+    parameters: {
+      query?: {
+        project_id?: string | null
+      }
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["ModelOut"][]
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"]
+        }
+      }
+    }
+  }
+  make_live_api_models__model_id__live_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        model_id: string
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["ProjectOut"]
         }
       }
       /** @description Validation Error */

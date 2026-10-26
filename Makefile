@@ -97,7 +97,7 @@ eval-jev: check-env ## Evaluate Jev (hosted API, pinned to JEV_MODEL) on the tes
 
 eval-all: eval-laya eval-lora eval-jev ## Run all three evals
 
-modal-deploy: ## Deploy pipeline.py to Modal so the server's TRAINER=modal can call it
+modal-deploy: ## Deploy pipeline.py to Modal for the server's TRAINER=modal and SYS1_PROVIDER=modal
 	$(MODAL) deploy pipeline.py
 
 # --- Phase 1 dataset --------------------------------------------------------

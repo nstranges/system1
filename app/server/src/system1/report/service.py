@@ -26,6 +26,7 @@ from system1.jobs.service import JobContext
 from system1.projects import service as project_service
 from system1.projects.models import Project
 from system1.providers import Providers
+from system1.registry import service as registry_service
 from system1.report.evaluation import PredRecord, evaluate_jev, evaluate_lane, load_examples, load_test_examples
 from system1.report.models import ReportCard
 from system1.report.schemas import Confusion, Report, ReportDetails, ReportRow, RowKey, Verdict
@@ -358,6 +359,7 @@ def start_training(
         )
         ctx.session.add(card)
         ctx.session.commit()
+        registry_service.adopt_if_first(ctx.session, own, card)
         # Only a trainer that produced a model ends the job as "succeeded".
         if trained.status == "preview":
             ctx.final_status, ctx.message = "preview", PREVIEW_MESSAGE
