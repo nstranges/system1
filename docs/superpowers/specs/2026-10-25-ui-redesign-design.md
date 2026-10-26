@@ -20,7 +20,7 @@ Submission is due **tonight, Oct 25, at 23:59 ET**, and the demo video comes fro
 
 ## Who and what
 
-The reader is the support-ops lead at a 20–200 person SaaS company, plus two judges scoring UI and design and watching a four-minute video. The primary job of every screen is to answer "where am I, and what do I do next", and on Train, "is my model better than Jev".
+The reader is whoever owns a team's repeated decision (support triage is one example), plus two judges scoring UI and design and watching a four-minute video. The primary job of every screen is to answer "where am I, and what do I do next", and on Train, "is my model better than Jev".
 
 ## Design direction
 

@@ -8,25 +8,25 @@ system1 turns a decision a team makes again and again into its own small decisio
 
 The bet: on a team's own decisions, a small fine-tuned model ("sys1", a LoRA on the 421M-parameter Laya model) is more accurate than Jev, at Jev's latency or better and lower cost. Switching costs one base URL, because the endpoint (`POST /v1/systemone`) speaks Jev's request and response format.
 
-The headline test is BANKING77, 77 real customer-support intents with human labels. It is the benchmark where Laya's own model card shows Jev furthest ahead: 78.3% to 33.4% for untrained Laya.
+The headline test is BANKING77, 77 real customer-support intents with human labels. It is the benchmark where Laya's own model card shows Jev furthest ahead: 87.0% to 42.5% for untrained Laya.
 
 ## The problem
 
 General decision models are good at everyone's decisions and so-so at any one team's. Jev cannot be fine-tuned on customer data: a team can only shape it through the question, the instructions and the bucket descriptions it sends.
 
-That leaves three gaps a support team feels every day:
+That leaves three gaps a team feels every day:
 
 - **Accuracy on their own buckets.** Fine distinctions that matter to one team (a transfer that is pending versus one the recipient never got) are exactly where a general model guesses.
 - **Many options.** Jev's prompt budget is shared across options; above about 20, accuracy drops. Real routing schemes often have 30 to 80 buckets.
 - **Honest confidence.** The Laya model card reports Jev's expected calibration error at 0.246, against Laya's 0.081, both after temperature scaling (its Jev numbers are third-party). An over-confident "how sure" cannot safely decide what a person should check.
 
-The usual fix, fine-tuning, is out of reach for a 20 to 200 person company: it needs labelled data, ML engineers and GPUs. system1 packages all three.
+The usual fix, fine-tuning, is out of reach for most teams: it needs labelled data, ML engineers and GPUs. system1 packages all three.
 
 ## Who it's for
 
-The support-ops lead at a 20 to 200 person SaaS or fintech company. They own routing: which queue, intent or team each incoming message goes to. Today that is a person reading tickets, keyword rules that break, or a general model they can't tune.
+Any team with a decision it makes again and again and wants a model to make for it. Support routing is one example: which queue, intent or team each incoming message goes to. Others are refund approvals, lead routing, expense and policy checks, and content or document classification. Today these decisions are made by a person reading each case, rules that break, or a general model the team can't tune.
 
-The moment they need system1 is when routing mistakes start to cost something they can see: tickets bouncing between queues, slow first responses, agents re-triaging by hand. They have past decisions in their helpdesk export but no ML team.
+The moment a team needs system1 is when those mistakes start to cost something they can see: work bouncing between queues, slow responses, people redoing decisions by hand. They have past decisions in an export somewhere, but no ML team.
 
 What they get:
 
@@ -87,7 +87,7 @@ The benchmark run that decides the headline is next: full train split, 2 to 3 ep
 
 ## Status, risks and what's next
 
-**Status.** The full journey runs end to end locally, with training and inference on Modal and Jev on TypeSafe's API. For the hackathon it is demonstrated on video rather than hosted publicly, to avoid paying for GPUs and API calls on an open site.
+**Status.** The full journey runs end to end and is deployed: the app on Railway, training and inference on Modal, and Jev on TypeSafe's API. Each organization can keep two models and run one training at a time, which keeps GPU spend on an open site bounded.
 
 **Risks and our answers:**
 

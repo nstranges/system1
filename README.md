@@ -2,45 +2,25 @@
 
 **Your team's own decision model, trained on your decisions, behind the API you already use.**
 
-system1 turns a decision a team makes again and again (which queue a support ticket goes to, which intent a customer message is) into a small fine-tuned decision model. It is trained on that team's examples and served behind the same endpoint as Jev, TypeSafe's general decision model, so switching is a one-line change of base URL.
+system1 turns a decision a team makes again and again into its own small, fine-tuned decision model ("sys1"). That might be which queue a ticket goes to, whether a refund is approved, which rep gets a lead, or whether an expense passes policy. The model is trained on the team's own examples and served behind the same endpoint as Jev, TypeSafe's general decision model, so switching is a one-line change of base URL.
 
-Built for [Build North](https://build-north.devpost.com/) by Thomas Michalski and Nicholas Stranges. The product thinking is in [docs/product-brief.md](docs/product-brief.md).
-
-## The bet
-
-On a team's own decisions, a small model trained on their examples ("sys1", a LoRA on the 421M-parameter [Laya](https://huggingface.co/convaiinnovations/laya) decision model) can beat Jev, at Jev's latency or better and lower cost.
-
-The headline test is [BANKING77](https://huggingface.co/datasets/mteb/banking77): 77 real customer-support intents with human labels. It is the benchmark where Laya's own model card shows Jev furthest ahead (87.0% vs 42.5% for untrained Laya), so it is the hardest place to win.
-
-### First result
-
-Our first run through the product used 4,868 BANKING77 examples across all 77 intents (3,422 train, 459 calibration, 988 test), three training epochs and about 44 examples per intent.
-
-| Model | Test accuracy | Median latency |
-| --- | --- | --- |
-| Jev (`jev-1.13.0`) | 78.3% | 230 ms |
-| sys1 | 80.4% | 78 ms |
-| Untrained Laya | 33.4% | |
-
-Fine-tuning more than doubled Laya's accuracy and answers about 3 times faster than Jev, but this first run did not beat Jev. Two caveats cut in opposite directions: sys1 was under-trained (about 44 examples per intent, where the full train split has about 9,000 examples in total), and Jev was under-briefed (that run sent bucket keys without their readable names; the question has since been fixed). The run that decides the headline is next: full train split against the fixed Jev question.
-
-Even where accuracy is close, sys1 offers what Jev cannot: speed, a temperature fitted on the team's own calibration split so "how sure" can safely route work, and improvement from the team's corrections while Jev stays fixed.
+By Thomas Michalski and Nicholas Stranges. The product thinking is in [docs/product-brief.md](docs/product-brief.md).
 
 ## The problem
 
 General decision models are good at everyone's decisions and so-so at any one team's. Jev cannot be fine-tuned on customer data, so a team can only shape it through the question, the instructions and the bucket descriptions it sends. That leaves three gaps:
 
-- **Accuracy on their own buckets.** Fine distinctions that matter to one team (a transfer that is pending versus one the recipient never got) are where a general model guesses.
-- **Many options.** Jev's prompt budget is shared across options, and above about 20 accuracy drops. Real routing schemes often have 30 to 80 buckets.
-- **Honest confidence.** The Laya model card reports Jev's expected calibration error at 0.246 against Laya's 0.081, both after temperature scaling (its Jev numbers are third-party). An over-confident "how sure" cannot safely decide what a person should check.
+- **Accuracy on their own buckets.** The fine distinctions that matter to one team, like two refund reasons that look alike, are where a general model guesses.
+- **Many options.** Jev's prompt budget is shared across options, and accuracy drops as the list grows. Real decisions often have dozens of buckets.
+- **Honest confidence.** An over-confident "how sure" cannot safely decide which answers a person should check.
 
-Fine-tuning fixes this but needs labelled data, ML engineers and GPUs, which a 20 to 200 person company doesn't have. system1 packages all three.
+Fine-tuning fixes this, but it needs labelled data, ML engineers and GPUs, which most teams don't have. system1 packages all three.
 
-**Who it's for:** the support-ops lead at a 20 to 200 person SaaS or fintech company, who owns routing today with people reading tickets, keyword rules that break, or a general model they can't tune. They get a model that knows their buckets (including the ones that look alike), a "how sure" signal to send sure answers straight through and unsure ones to a person, and an endpoint their existing Jev integration can call without code changes.
+**Who it's for:** any team with a repeated decision it wants a model to make, whether that's routing, approvals, triage, classification or policy checks. They get a model that knows their buckets (including the ones that look alike), a "how sure" signal to send sure answers straight through and unsure ones to a person, and an endpoint their existing Jev integration can call without code changes.
 
 ## What it does
 
-A support-ops lead goes from "we route these by hand" to a working endpoint in six steps, with an onboarding agent (Claude) at each one. Once a model is live, Use and Improve feed each other.
+A team goes from "we decide these by hand" to a working endpoint in six steps, with an onboarding agent (Claude) at each one. Once a model is live, Use and Improve feed each other.
 
 | Step | What happens |
 | --- | --- |
@@ -161,27 +141,15 @@ make docs     # regenerate the OpenAPI schema and client types after an API chan
 - **People stay in the loop.** Unsure answers go to a person, and a retrained model never replaces the live one without an admin's click.
 - **No real customer data in the repo.** BANKING77 is a public dataset (CC BY 4.0, from PolyAI); the support-ticket data is synthetic.
 
-## Status, risks and what's next
+## Roadmap
 
-**Status.** The full journey runs end to end locally, with training and inference on Modal and Jev on TypeSafe's API. For the hackathon it is demonstrated on video rather than hosted publicly, to avoid paying for GPUs and API calls on an open site.
-
-| Risk | Answer |
-| --- | --- |
-| "Fine-tuning beats zero-shot on BANKING77 is expected." | The product is how a team gets there from zero. Next: a learning curve showing how few examples per intent it takes to pass Jev. |
-| Many options favour Jev. | Laya reads all bucket names in a 512-token window, and the model card shows Jev ahead above about 20 options. The full-data run tests whether fine-tuning closes that gap at 77. |
-| Cold starts. | The first call after 10 idle minutes waits about a minute. Production would keep one container warm per active customer. |
-| GPU cost per customer. | One shared base model; each customer adds only an adapter (about 135 MB), loaded on demand. |
-| TypeSafe adds fine-tuning. | system1 is the workflow around the model (rules, data, review, the improve loop), and it can wrap any Jev-compatible model. |
-
-**Roadmap:**
-
-- **Next:** the full BANKING77 benchmark run, then the examples-needed learning curve.
+- **Next:** a learning curve showing how many examples per bucket a team needs.
 - **V2:** Era by Eon, to test the onboarding agent.
 - **V3:** SurrealDB agent memory, so the agent remembers a team's decisions across sessions.
 - **Later:** a Claude connector and MCP server, so teams can build and call their models from Claude.
 
 ## Prior work, templates and AI tools
 
-- **Prior work:** Modal and Unsloth training experiments on the public `LocalLLaMA/typed-decisions` dataset, made before the build week.
+- **Prior work:** Modal and Unsloth training experiments on the public `LocalLLaMA/typed-decisions` dataset, made before this project started.
 - **Templates and libraries:** UI components follow [shadcn/ui](https://ui.shadcn.com/). Example generation can use NVIDIA NeMo Data Designer. Models: [Laya](https://huggingface.co/convaiinnovations/laya) (Apache 2.0), trained with [Unsloth](https://unsloth.ai/).
 - **AI tools:** Claude Code (Anthropic) was used throughout for planning, code, tests and documentation. Claude also powers the in-app onboarding agent.

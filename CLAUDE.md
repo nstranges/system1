@@ -25,7 +25,7 @@ The benchmark still decides the pitch. On 2026-10-21 Thomas decided to start bui
   - Jev with the policy
   - base Laya
   - sys1
-- **Product:** a B2B website for the support-ops lead at a 20–200 person SaaS company. It has:
+- **Product:** a B2B website for any team with a decision it makes again and again (support triage is one use case, alongside approvals, lead routing and policy checks). It has:
   - an onboarding agent
   - a Jev-compatible gateway
   - sys1 served live

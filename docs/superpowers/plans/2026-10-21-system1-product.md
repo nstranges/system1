@@ -156,7 +156,7 @@
     - Uses `<Show when="signed-in" fallback={<Navigate to="/sign-in" />}>`.
     - If `useAuth().orgId` is missing, it renders a friendly card with a `<CreateOrganization />` button.
     - It keys its children on `orgId`, so switching org remounts the pages and drops cached data.
-  - **The landing page** speaks to the support-ops lead, using the spec's pitch line. It has a short "how it works" (rules, try, your model, improve) and Sign up / Sign in buttons.
+  - **The landing page** speaks to any team with a repeated decision, using the spec's pitch line. It has a short "how it works" (rules, try, your model, improve) and Sign up / Sign in buttons.
 - Before starting, the implementer checks the installed `@clerk/react` exports for `Show`, `TaskChooseOrganization`, the organization components and the `taskUrls` prop, and follows what's actually installed.
 
 - [ ] **Step 1:** Add `@clerk/react` and `@clerk/themes`, then implement the files above.

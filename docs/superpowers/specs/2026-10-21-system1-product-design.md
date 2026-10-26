@@ -17,7 +17,7 @@ Pitch line: **"Jev knows decisions. Your model knows *your* decisions."**
 
 system1 is a B2B product, sold self-serve first. One person at a company signs up free, gets value from the Quick lane, and the team pays for trained models and volume. The UI is friendly because the buyer is an operations lead, not a developer.
 
-- **First customer:** the support-operations lead at a 20–200 person SaaS company. They route thousands of tickets a month using rules in a doc that nobody applies consistently. They know the rules, but they don't write code or know what a LoRA is. The flagship demo (Tallyfern triage) is exactly this person's problem, so the benchmark is direct evidence for the pitch.
+- **Who it's for:** any team with a decision it makes again and again, using rules in a doc that nobody applies consistently. They know the rules, but they don't write code or know what a LoRA is. Support-ticket triage is the first use case and the flagship demo (Tallyfern triage); refund approvals, lead routing and policy checks have the same shape.
 - **Expansion:** other operations decisions at the same companies, such as refunds, lead routing and expense checks. Same buyer, more projects.
 - **Channel:** consultants, agencies and developers who build automations for clients. They use the API now, and the MCP server later (see Roadmap).
 - **Free tier:** individuals and hobbyists can use the Quick lane. They're not part of the pitch.
@@ -34,7 +34,7 @@ system1 is a B2B product, sold self-serve first. One person at a company signs u
 | Criterion (Devpost wording) | What we show |
 |---|---|
 | **Innovation:** going beyond the obvious | A model per team, trained from its own written rules using rule-labelled synthetic data. Answers that cite the rule behind them (S5) |
-| **Real-world impact:** clear user, value-add, path to production | One named user (the support-ops lead), a benchmark on that user's exact problem, and a Jev-compatible API, so adoption is a URL change |
+| **Real-world impact:** clear user, value-add, path to production | A clear user (a team that owns a repeated decision), a benchmark on one such decision, and a Jev-compatible API, so adoption is a URL change |
 | **UI & design:** usable by a real user | An agent with clickable answers next to an editable canvas, in plain words |
 | **Tech & deployment:** solid architecture, deployed, serving | Live on Modal, with the gateway serving Jev and sys1, a model registry, and tests |
 | **Security & ethics:** guardrails, safe handling of user data | Clerk sign-in, hashed keys, separation between projects, a click to confirm before any spend, human review for unsure decisions, no training on Jev output, a frozen test set, an audit log of every decision, and declining high-stakes uses |
@@ -611,7 +611,7 @@ Claude builds in blocks on the `product-design` branch, in the main checkout (no
 
 | Time | Scene |
 |---|---|
-| 0:00–0:15 | The user and the problem: a support-ops lead whose routing rules live in a doc. Jev is fast and cheap but doesn't know those rules, and misses the thresholds |
+| 0:00–0:15 | The user and the problem: a team whose routing rules live in a doc. Jev is fast and cheap but doesn't know those rules, and misses the thresholds |
 | 0:15–0:45 | Sign in, then pick "Refund approval" from the gallery. The agent asks three questions with chips, and the options and rules appear on the canvas |
 | 0:45–1:00 | Try: Jev with your rules answers right away. "Use it now" gives a key. The Quick lane is done in about two minutes |
 | 1:00–1:15 | Examples: 30 generated, labelled by the rules, spot-checked (S1, if built) |
@@ -634,7 +634,7 @@ Thomas decided to start the app on Thursday, before the decision gate, and to bu
 
 ## Business story (for Devpost and the pitch)
 
-- **Who pays:** support and operations teams at SaaS companies with 20–200 people and thousands of repeated decisions a month. The buyer is the ops lead.
+- **Who pays:** teams with thousands of repeated decisions a month, such as support, operations, finance and sales ops. The buyer is whoever owns the decision.
 - **How it sells:** B2B, self-serve first. One person tries the Quick lane free, shows it works, and the team pays.
 - **Pricing shape:**
   - a free playground and Quick lane on Jev, with a cap
@@ -669,7 +669,7 @@ Thomas decided to start the app on Thursday, before the decision gate, and to bu
 2. **Starting the app on Thursday:** yes. It's built on the side with minimal hands-on time.
 3. **Anthropic API budget:** yes, `claude-opus-5-5` throughout. The rough estimates are about $5–10 per 500 generated and read-back-checked examples, and under about $1 per onboarding conversation.
 4. **Nicholas owning sys1 serving (M2):** probably. The demo project may not end up being Tallyfern, so the flagship project is configuration, not code. M2 matters because serving is what makes "your model" real in the product. Without a live sys1 behind the endpoint, the playground's sys1 row, the `sys1` and `auto` lanes, and "Switch to your model" can only replay recorded results. The serving code is generic: base Laya plus whichever adapter the flagship project has.
-5. **Market:** B2B, with the support-ops lead at a 20–200 person SaaS company as the first customer.
+5. **Market:** B2B, for any team with a repeated decision; support triage is the first use case.
 6. **Category prizes:** Clerk in V1, Era by Eon in V2, SurrealDB Agent Memory in V3 if there's time.
 7. **Commits:** Claude may commit on feature branches without asking, never on `main`, and never with Claude attribution.
 
@@ -686,7 +686,7 @@ Thomas decided to start the app on Thursday, before the decision gate, and to bu
 - Start the app on Thursday, built on the side with minimal hands-on time.
 - `claude-opus-5-5` for the agent and example generation.
 - The flagship demo project is configurable. Tallyfern is the likely choice.
-- B2B, with the support-ops lead at a 20–200 person SaaS company as the first customer.
+- B2B, for any team with a repeated decision; support triage is the first use case.
 - Clerk sign-in in V1. Era by Eon in V2. SurrealDB Agent Memory in V3 if there's time.
 - The Claude connector and MCP server move to Future.
 - Build in blocks with gates, with the detailed implementation plan written with Thomas first.
