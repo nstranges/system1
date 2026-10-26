@@ -199,3 +199,33 @@ def test_modal_provider_gives_up_on_a_cold_start_that_never_finishes():
     provider = ModalSys1Provider(Hanging(), timeout_s=0.01)
     with pytest.raises(ProviderError):
         asyncio.run(provider.decide(DecisionRequest(model="m", state="hi", questions={})))
+
+
+class DiscardingTrainer(AdapterTrainer):
+    def __init__(self):
+        super().__init__()
+        self.discarded: list[str] = []
+
+    def discard(self, adapter_ref: str) -> None:
+        self.discarded.append(adapter_ref)
+
+
+def test_a_third_model_replaces_the_oldest_one_that_isnt_live(client_for):
+    trainer = DiscardingTrainer()
+    client = client_for("org_a", providers=_providers(trainer=trainer))
+    pid = _project(client)
+    for _ in range(3):
+        assert _train(client, pid)["status"] == "succeeded"
+    models = client.get("/api/models").json()
+    # run-1 went live first; run-2 was the oldest one not live, so it made room for run-3.
+    assert [m["live"] for m in models] == [False, True]
+    assert trainer.discarded == ["laya-outputs:projects/p/run-2"]
+
+
+def test_training_is_refused_when_every_kept_model_is_live(client_for):
+    client = client_for("org_a", providers=_providers())
+    pids = [_project(client, name) for name in ("Triage", "Refunds")]
+    for pid in pids:
+        _train(client, pid)
+    res = client.post(f"/api/projects/{pids[0]}/training")
+    assert res.status_code == 409 and res.json()["detail"]["code"] == "model_limit_reached"

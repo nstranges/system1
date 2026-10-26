@@ -63,7 +63,7 @@ class TrainingNotReady(ApiError):
 class TrainingRunning(ApiError):
     status_code = 409
     code = "training_running"
-    message = "A training run is already going for this project."
+    message = "A training run is already going. Wait for it to finish before starting another."
 
 
 class TrainerFailed(ApiError):
@@ -263,13 +263,15 @@ def _carry_feedback(session: Session, project: Project, policy: Policy) -> tuple
 def _check_ready(session: Session, project: Project, policy: Policy) -> None:
     if validate_policy(policy):
         raise BucketsUnfinished("Finish your buckets before training.")
+    # One run at a time per org, not per project: each run holds a GPU, and sign-ups are open.
     running = session.scalar(
         select(func.count())
         .select_from(Job)
-        .where(Job.project_id == project.id, Job.kind == "training", Job.status.in_(("queued", "running")))
+        .where(Job.org_id == project.org_id, Job.kind == "training", Job.status.in_(("queued", "running")))
     )
     if running:
         raise TrainingRunning()
+    registry_service.check_room(session, project.org_id)
     health = dataset_service.health(session, project)
     if health.below_minimum:
         raise TrainingNotReady(f"Add at least {MIN_PER_BUCKET} examples to: {_names(policy, health.below_minimum)}.")
@@ -390,6 +392,11 @@ def start_training(
         ctx.session.add(card)
         ctx.session.commit()
         registry_service.adopt_if_first(ctx.session, own, card)
+        if registry_service.is_model(card):
+            discard = getattr(providers.trainer, "discard", None)
+            for adapter_ref in registry_service.retire_extra(ctx.session, org_id, card.id):
+                if discard is not None:
+                    await asyncio.to_thread(discard, adapter_ref)
         # Only a trainer that produced a model ends the job as "succeeded".
         if trained.status == "preview":
             ctx.final_status, ctx.message = "preview", PREVIEW_MESSAGE
