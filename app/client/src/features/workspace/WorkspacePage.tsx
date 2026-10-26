@@ -280,7 +280,7 @@ function Workspace() {
               : "lg:grid-cols-[13rem_minmax(0,1fr)]",
           )}
         >
-          <div className="lg:sticky lg:top-4 lg:self-start">
+          <div className="lg:sticky lg:top-[4.5rem] lg:self-start">
             <StageRail
               projectId={project.id}
               current={stage}
@@ -320,7 +320,7 @@ function Workspace() {
 
           <div
             className={cn(
-              "min-w-0 lg:sticky lg:top-4 lg:self-start",
+              "min-w-0 lg:sticky lg:top-[4.5rem] lg:self-start",
               panel === "assistant"
                 ? assistantOpen
                   ? ""

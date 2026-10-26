@@ -8,7 +8,7 @@ export function AppShell() {
   const width = wide ? "max-w-[1600px]" : "max-w-6xl"
   return (
     <div className="min-h-svh bg-background">
-      <header className="border-b">
+      <header className="sticky top-0 z-30 border-b bg-background/95 backdrop-blur">
         <div className={cn("mx-auto flex h-14 items-center gap-4 px-4", width)}>
           <Link to="/app" className="text-lg font-semibold tracking-tight">
             system<span className="text-primary">1</span>
